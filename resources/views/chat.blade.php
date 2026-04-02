@@ -6,9 +6,9 @@
     <title>DevBot - Development Assistant</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50 h-screen flex flex-col">
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden">
     <!-- Chat Container -->
-    <div class="flex-1 flex flex-col max-w-4xl mx-auto w-full h-full bg-white shadow-lg">
+    <div class="flex-1 flex flex-col w-full max-w-4xl mx-auto h-full bg-white shadow-lg sm:my-4 sm:rounded-lg overflow-hidden">
         
         <!-- Header -->
         <header class="bg-linear-to-r from-blue-600 to-blue-700 text-white px-4 md:px-6 py-4 shadow-md shrink-0">
@@ -46,7 +46,7 @@
         @endif
 
         <!-- Messages Area -->
-        <div id="messages-container" class="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-4">
+        <div id="messages-container" class="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-4 scroll-smooth">
             @if($messages->isEmpty())
                 <!-- Welcome Message -->
                 <div class="flex items-start space-x-3">
@@ -130,7 +130,7 @@
         </div>
 
         <!-- Message Input Form -->
-        <div class="shrink-0 border-t border-gray-200 bg-white px-4 md:px-6 py-4">
+        <div class="shrink-0 border-t border-gray-200 bg-white px-4 md:px-6 py-4 sticky bottom-0 z-10">
             <form id="chat-form" action="{{ route('chat.message') }}" method="POST" class="space-y-3">
                 @csrf
                 @if($conversation)

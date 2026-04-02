@@ -61,13 +61,13 @@
 
 ## 7. Responsive Design and Styling
 
-- [ ] 7.1 Ensure chat container is responsive on mobile (< 768px)
-- [ ] 7.2 Ensure chat container has max-width on desktop (>= 768px)
-- [ ] 7.3 Fix message input at bottom of viewport
-- [ ] 7.4 Make message history area scrollable
-- [ ] 7.5 Ensure touch targets are at least 44px tall on mobile
-- [ ] 7.6 Test on various screen sizes and adjust as needed
-- [ ] 7.7 Run `npm run build` to compile Tailwind CSS assets
+- [x] 7.1 Ensure chat container is responsive on mobile (< 768px)
+- [x] 7.2 Ensure chat container has max-width on desktop (>= 768px)
+- [x] 7.3 Fix message input at bottom of viewport
+- [x] 7.4 Make message history area scrollable
+- [x] 7.5 Ensure touch targets are at least 44px tall on mobile
+- [x] 7.6 Test on various screen sizes and adjust as needed
+- [x] 7.7 Run `npm run build` to compile Tailwind CSS assets
 
 ## 8. Testing and Validation
 
