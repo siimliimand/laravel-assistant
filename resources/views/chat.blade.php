@@ -102,7 +102,7 @@
                                     <span class="font-semibold text-sm text-gray-900">DevBot</span>
                                     <span class="text-xs text-gray-500">{{ $message->created_at->format('g:i A') }}</span>
                                 </div>
-                                <div class="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                                <div class="text-gray-700 text-sm leading-relaxed markdown-content">
                                     {!! $message->formattedContent() !!}
                                 </div>
                             </div>
@@ -257,7 +257,7 @@
                                 <span class="font-semibold text-sm text-gray-900">DevBot</span>
                                 <span class="text-xs text-gray-500">${timestamp}</span>
                             </div>
-                            <div class="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                            <div class="text-gray-700 text-sm leading-relaxed markdown-content">
                                 ${content}
                             </div>
                         </div>

@@ -52,12 +52,12 @@
 
 ## 6. Markdown and Code Formatting
 
-- [ ] 6.1 Install and configure a markdown parsing library (e.g., parsedown or similar)
-- [ ] 6.2 Create Blade component or helper for rendering markdown
-- [ ] 6.3 Implement code block rendering with syntax highlighting
-- [ ] 6.4 Add CSS styles for code blocks (scrollable, monospace font)
-- [ ] 6.5 Style inline code with distinct background and monospace font
-- [ ] 6.6 Test markdown rendering with various code examples
+- [x] 6.1 Install and configure a markdown parsing library (e.g., parsedown or similar)
+- [x] 6.2 Create Blade component or helper for rendering markdown
+- [x] 6.3 Implement code block rendering with syntax highlighting
+- [x] 6.4 Add CSS styles for code blocks (scrollable, monospace font)
+- [x] 6.5 Style inline code with distinct background and monospace font
+- [x] 6.6 Test markdown rendering with various code examples
 
 ## 7. Responsive Design and Styling
 
