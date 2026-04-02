@@ -17,9 +17,12 @@ class ChatController extends Controller
      */
     public function show(?Conversation $conversation = null): View
     {
-        // If no conversation specified, try to get the most recent one
+        // If no conversation specified, try to get the most recent one with eager loaded messages
         if (! $conversation) {
-            $conversation = Conversation::latest()->first();
+            $conversation = Conversation::with('messages')->latest()->first();
+        } else {
+            // Ensure messages are eager loaded for the provided conversation
+            $conversation->load('messages');
         }
 
         $messages = $conversation ? $conversation->messages()->orderBy('created_at', 'asc')->get() : collect();
