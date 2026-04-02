@@ -7,9 +7,14 @@
 - [DatabaseSchemaTool.php](file://app/Ai/Tools/DatabaseSchemaTool.php)
 - [SearchDocsTool.php](file://app/Ai/Tools/SearchDocsTool.php)
 - [TinkerTool.php](file://app/Ai/Tools/TinkerTool.php)
+- [FileSystemTool.php](file://app/Ai/Tools/FileSystemTool.php)
+- [GitTool.php](file://app/Ai/Tools/GitTool.php)
+- [GitHubTool.php](file://app/Ai/Tools/GitHubTool.php)
+- [OpenSpecTool.php](file://app/Ai/Tools/OpenSpecTool.php)
 - [DevBot.php](file://app/Ai/Agents/DevBot.php)
-- [services.php](file://config/services.php)
-- [composer.json](file://composer.json)
+- [SKILL.md](file://.agents/skills/project-creation/SKILL.md)
+- [ai.php](file://config/ai.php)
+- [FileSystemToolTest.php](file://tests/Unit/FileSystemToolTest.php)
 - [mcp-client-service/spec.md](file://openspec/specs/mcp-client-service/spec.md)
 - [mcp-tool-integration/spec.md](file://openspec/specs/mcp-tool-integration/spec.md)
 - [mcp-tool-proxy/spec.md](file://openspec/specs/mcp-tool-proxy/spec.md)
@@ -18,6 +23,15 @@
 - [ToolProxyTest.php](file://tests/Unit/ToolProxyTest.php)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Added comprehensive documentation for new project creation tools (FileSystemTool, GitTool, GitHubTool, OpenSpecTool)
+- Enhanced DevBot agent documentation to include project creation capabilities
+- Updated tool proxy implementation section with new project management tools
+- Added project creation workflow documentation and skill reference
+- Expanded configuration management to include project creation settings
+- Updated testing framework to cover new project creation tools
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [System Architecture](#system-architecture)
@@ -25,18 +39,21 @@
 4. [MCP Client Service](#mcp-client-service)
 5. [Tool Proxy Implementation](#tool-proxy-implementation)
 6. [Agent Integration](#agent-integration)
-7. [Configuration Management](#configuration-management)
-8. [Error Handling and Resilience](#error-handling-and-resilience)
-9. [Testing Framework](#testing-framework)
-10. [Performance Considerations](#performance-considerations)
-11. [Troubleshooting Guide](#troubleshooting-guide)
-12. [Conclusion](#conclusion)
+7. [Project Creation Tools](#project-creation-tools)
+8. [Configuration Management](#configuration-management)
+9. [Error Handling and Resilience](#error-handling-and-resilience)
+10. [Testing Framework](#testing-framework)
+11. [Performance Considerations](#performance-considerations)
+12. [Troubleshooting Guide](#troubleshooting-guide)
+13. [Conclusion](#conclusion)
 
 ## Introduction
 
-The MCP Client Integration System represents a sophisticated architecture that bridges Laravel's AI agent ecosystem with external MCP (Model Context Protocol) servers through a robust client service. This system enables DevBot, the primary AI agent, to execute development-related tasks such as database queries, schema inspection, documentation searches, and PHP code execution through standardized MCP protocols.
+The MCP Client Integration System represents a sophisticated architecture that bridges Laravel's AI agent ecosystem with external MCP (Model Context Protocol) servers through a robust client service. This system enables DevBot, the primary AI agent, to execute development-related tasks such as database queries, schema inspection, documentation searches, PHP code execution, and comprehensive project creation workflows through standardized MCP protocols.
 
 The integration leverages the php-mcp/client library to establish reliable STDIO-based connections to the Laravel Boost MCP server, implementing comprehensive error handling, auto-reconnection mechanisms, and persistent connection management. This architecture ensures seamless communication between the Laravel application and specialized development tools while maintaining the flexibility to extend functionality through additional MCP-compatible tools.
+
+**Updated** The system now includes enhanced project creation capabilities that enable DevBot to orchestrate complete micro-SaaS project workflows from idea to GitHub repository, providing developers with AI-powered project orchestration capabilities.
 
 ## System Architecture
 
@@ -47,6 +64,7 @@ graph TB
 subgraph "AI Layer"
 DevBot[DevBot Agent]
 Tools[Tool Proxies]
+ProjectCreation[Project Creation Tools]
 end
 subgraph "Integration Layer"
 McpService[MCP Client Service]
@@ -59,26 +77,31 @@ end
 subgraph "Supporting Services"
 Logger[Logging Service]
 ErrorHandler[Error Handler]
+Security[Security Manager]
 end
 DevBot --> Tools
 Tools --> McpService
+ProjectCreation --> Tools
 McpService --> BoostServer
 McpService --> StdioPipe
 McpService --> Logger
 McpService --> ErrorHandler
 Config --> McpService
+Config --> ProjectCreation
 BoostServer --> StdioPipe
+Security --> ProjectCreation
 ```
 
 **Diagram sources**
 - [McpClientService.php:13-279](file://app/Services/McpClientService.php#L13-L279)
-- [DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
+- [FileSystemTool.php:14-298](file://app/Ai/Tools/FileSystemTool.php#L14-L298)
 
 The architecture implements a proxy pattern where individual tool classes act as lightweight wrappers around MCP service calls, ensuring that all tool operations are executed through the standardized MCP protocol rather than direct PHP execution. This design provides several advantages including improved security, better resource management, and enhanced scalability.
 
 **Section sources**
 - [McpClientService.php:13-279](file://app/Services/McpClientService.php#L13-L279)
-- [DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
 
 ## Core Components
 
@@ -123,6 +146,46 @@ class TinkerTool {
 +schema(schema) array
 -stripPhpTags(code) string
 }
+class FileSystemTool {
++description() string
++handle(request) string
++schema(schema) array
+-createProject(name) string
+-writeFile(project, path, content) string
+-readFile(project, path) string
+-listFiles(project) string
+-projectExists(project) string
+-validatePath(project, path) string
+-isPathSafe(path) bool
+}
+class GitTool {
++description() string
++handle(request) string
++schema(schema) array
+-init(project) string
+-add(project, files) string
+-commit(project, message) string
+-remoteAdd(project, name, url) string
+-push(project, branch) string
+-status(project) string
+-isGitAvailable() bool
+-configureGitUser(projectPath) void
+}
+class GitHubTool {
++description() string
++handle(request) string
++schema(schema) array
+-createRepo(name, private) string
+-getRepoInfo(name) string
+-validateToken() string
+}
+class OpenSpecTool {
++description() string
++handle(request) string
++schema(schema) array
+-getStatus(project) string
+-getInstructions(project) string
+}
 class DevBot {
 +model() string
 +instructions() string
@@ -133,10 +196,18 @@ McpClientService --> DatabaseQueryTool : "proxies calls"
 McpClientService --> DatabaseSchemaTool : "proxies calls"
 McpClientService --> SearchDocsTool : "proxies calls"
 McpClientService --> TinkerTool : "proxies calls"
+McpClientService --> FileSystemTool : "proxies calls"
+McpClientService --> GitTool : "proxies calls"
+McpClientService --> GitHubTool : "proxies calls"
+McpClientService --> OpenSpecTool : "proxies calls"
 DevBot --> DatabaseQueryTool : "uses"
 DevBot --> DatabaseSchemaTool : "uses"
 DevBot --> SearchDocsTool : "uses"
 DevBot --> TinkerTool : "uses"
+DevBot --> FileSystemTool : "uses"
+DevBot --> GitTool : "uses"
+DevBot --> GitHubTool : "uses"
+DevBot --> OpenSpecTool : "uses"
 ```
 
 **Diagram sources**
@@ -145,7 +216,11 @@ DevBot --> TinkerTool : "uses"
 - [DatabaseSchemaTool.php:13-69](file://app/Ai/Tools/DatabaseSchemaTool.php#L13-L69)
 - [SearchDocsTool.php:13-75](file://app/Ai/Tools/SearchDocsTool.php#L13-L75)
 - [TinkerTool.php:13-89](file://app/Ai/Tools/TinkerTool.php#L13-L89)
-- [DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [FileSystemTool.php:14-298](file://app/Ai/Tools/FileSystemTool.php#L14-L298)
+- [GitTool.php:14-324](file://app/Ai/Tools/GitTool.php#L14-L324)
+- [GitHubTool.php:13-224](file://app/Ai/Tools/GitHubTool.php#L13-L224)
+- [OpenSpecTool.php:12-184](file://app/Ai/Tools/OpenSpecTool.php#L12-L184)
+- [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
 
 ### Connection Management Strategy
 
@@ -279,6 +354,8 @@ DevBot serves as the primary AI agent that orchestrates tool usage within conver
 
 The DevBot agent is configured with specific parameters including model selection, instruction sets, and tool availability. The agent maintains conversation state and integrates tool responses into contextual messaging.
 
+**Updated** The DevBot agent now includes comprehensive project creation capabilities, enabling it to guide users through complete micro-SaaS project workflows from idea to GitHub repository.
+
 ```mermaid
 sequenceDiagram
 participant User as User
@@ -300,7 +377,7 @@ DevBot-->>User : Response with tool insights
 ```
 
 **Diagram sources**
-- [DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
 - [mcp-tool-proxy/spec.md:121-139](file://openspec/specs/mcp-tool-proxy/spec.md#L121-L139)
 
 ### Tool Registration and Management
@@ -308,8 +385,60 @@ DevBot-->>User : Response with tool insights
 The agent maintains a registry of available tools, each implementing the Laravel AI Tool contract. This registration system ensures proper tool discovery and execution coordination.
 
 **Section sources**
-- [DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
 - [mcp-tool-proxy/spec.md:121-139](file://openspec/specs/mcp-tool-proxy/spec.md#L121-L139)
+
+## Project Creation Tools
+
+The project creation tools represent a significant expansion of the MCP Client Integration System's capabilities, enabling DevBot to orchestrate complete micro-SaaS project workflows. These tools provide secure, scoped operations within the Laravel application's storage directory.
+
+### FileSystemTool
+
+The FileSystemTool provides secure file system operations within the `storage/projects/` directory, implementing comprehensive path validation and security measures to prevent directory traversal attacks.
+
+```mermaid
+classDiagram
+class FileSystemTool {
++description() string
++handle(request) string
++schema(schema) array
+-createProject(name) string
+-writeFile(project, path, content) string
+-readFile(project, path) string
+-listFiles(project) string
+-projectExists(project) string
+-validatePath(project, path) string
+-isPathSafe(path) bool
+}
+class SecurityManager {
+-validatePathTraversal(path) bool
+-validateAbsolutePath(path) bool
+-checkBasePathSafety(basePath, fullPath) bool
+}
+FileSystemTool --> SecurityManager : "uses for validation"
+note for FileSystemTool : "Secure project directory operations\nPath traversal prevention\nScoped to storage/projects/"
+```
+
+**Diagram sources**
+- [FileSystemTool.php:14-298](file://app/Ai/Tools/FileSystemTool.php#L14-L298)
+
+### GitTool
+
+The GitTool enables Git repository operations within project directories, providing a secure interface for repository initialization, staging, committing, and remote management.
+
+### GitHubTool
+
+The GitHubTool integrates with the GitHub API for repository creation, authentication validation, and repository information retrieval, requiring proper token configuration for full functionality.
+
+### OpenSpecTool
+
+The OpenSpecTool manages OpenSpec workflow artifacts, providing status checks and instructions for specification-driven development methodologies.
+
+**Section sources**
+- [FileSystemTool.php:14-298](file://app/Ai/Tools/FileSystemTool.php#L14-L298)
+- [GitTool.php:14-324](file://app/Ai/Tools/GitTool.php#L14-L324)
+- [GitHubTool.php:13-224](file://app/Ai/Tools/GitHubTool.php#L13-L224)
+- [OpenSpecTool.php:12-184](file://app/Ai/Tools/OpenSpecTool.php#L12-L184)
 
 ## Configuration Management
 
@@ -319,19 +448,24 @@ The system implements comprehensive configuration management through Laravel's c
 
 The configuration system supports multiple MCP client configurations with flexible parameterization for different deployment scenarios and operational requirements.
 
+**Updated** The configuration now includes dedicated project creation settings for secure project directory management and GitHub integration.
+
 | Configuration Key | Default Value | Description |
 |-------------------|---------------|-------------|
 | `command` | `php artisan boost:mcp` | Artisan command to spawn MCP server |
 | `timeout` | `60` | Maximum seconds to wait for tool responses |
 | `max_retries` | `3` | Maximum retry attempts for failed calls |
 | `retry_delay` | `1000` | Base delay between retries in milliseconds |
+| `projects.base_path` | `storage_path('projects')` | Base directory for project creation |
+| `projects.github_token` | `env('GITHUB_TOKEN')` | GitHub API authentication token |
+| `projects.default_branch` | `'main'` | Default Git branch for new repositories |
 
 ### Environment Integration
 
 Configuration values are loaded from environment variables, enabling deployment flexibility across different environments while maintaining security through environment isolation.
 
 **Section sources**
-- [services.php:38-43](file://config/services.php#L38-L43)
+- [ai.php:52-56](file://config/ai.php#L52-L56)
 - [mcp-client-service/spec.md:89-105](file://openspec/specs/mcp-client-service/spec.md#L89-L105)
 
 ## Error Handling and Resilience
@@ -377,37 +511,52 @@ The system includes comprehensive testing infrastructure that validates MCP clie
 
 The testing framework encompasses multiple testing domains including unit testing for individual components, integration testing for end-to-end workflows, and mock-based testing for external service dependencies.
 
+**Updated** The testing framework now includes comprehensive coverage for new project creation tools, validating security measures, path handling, and error conditions.
+
 ```mermaid
 graph LR
 subgraph "Test Categories"
 UnitTests[Unit Tests]
 IntegrationTests[Integration Tests]
 MockTests[Mock Tests]
+SecurityTests[Security Tests]
 end
 subgraph "Test Components"
 ServiceTests[MCP Client Service Tests]
 ToolTests[Tool Proxy Tests]
+ProjectToolTests[Project Creation Tool Tests]
 AgentTests[Agent Integration Tests]
+SecurityTests[Path Validation Tests]
 end
 subgraph "Validation Scenarios"
 ConnectionValidation[Connection Validation]
 ErrorHandling[Error Handling Tests]
 RetryLogic[Retry Logic Tests]
 ResponseProcessing[Response Processing Tests]
+PathSecurity[Path Security Tests]
+GitOperations[Git Operation Tests]
+GitHubAPI[GitHub API Tests]
+OpenSpecWorkflow[OpenSpec Workflow Tests]
 end
 UnitTests --> ServiceTests
 UnitTests --> ToolTests
+UnitTests --> ProjectToolTests
 IntegrationTests --> AgentTests
 MockTests --> ConnectionValidation
 MockTests --> ErrorHandling
 MockTests --> RetryLogic
 MockTests --> ResponseProcessing
+SecurityTests --> PathSecurity
+SecurityTests --> GitOperations
+SecurityTests --> GitHubAPI
+SecurityTests --> OpenSpecWorkflow
 ```
 
 **Diagram sources**
 - [McpClientServiceTest.php:1-193](file://tests/Unit/McpClientServiceTest.php#L1-L193)
 - [McpToolsTest.php:1-236](file://tests/Unit/McpToolsTest.php#L1-L236)
 - [ToolProxyTest.php:1-313](file://tests/Unit/ToolProxyTest.php#L1-L313)
+- [FileSystemToolTest.php:1-346](file://tests/Unit/FileSystemToolTest.php#L1-L346)
 
 ### Mock-Based Testing Strategy
 
@@ -416,6 +565,7 @@ The testing framework extensively uses mocking to isolate components and validat
 **Section sources**
 - [McpClientServiceTest.php:1-193](file://tests/Unit/McpClientServiceTest.php#L1-L193)
 - [ToolProxyTest.php:1-313](file://tests/Unit/ToolProxyTest.php#L1-L313)
+- [FileSystemToolTest.php:1-346](file://tests/Unit/FileSystemToolTest.php#L1-L346)
 
 ## Performance Considerations
 
@@ -432,6 +582,8 @@ The service implements careful memory management practices including proper reso
 ### Timeout Configuration
 
 Configurable timeout settings allow tuning of response waiting periods based on operational requirements and system capabilities, balancing responsiveness with adequate processing time for complex operations.
+
+**Updated** Project creation tools implement efficient file system operations with minimal memory footprint and optimized Git command execution for large repositories.
 
 ## Troubleshooting Guide
 
@@ -461,16 +613,35 @@ Common issues and their resolution strategies for the MCP Client Integration Sys
 **Problem**: Retry configuration conflicts
 **Solution**: Review retry settings and adjust based on operational requirements
 
+**Updated** Project Creation Tool Issues
+
+**Problem**: FileSystemTool rejects path operations
+**Solution**: Ensure project name follows kebab-case format and verify path is within project directory
+
+**Problem**: GitTool reports "Git not installed"
+**Solution**: Install Git system-wide and verify PATH includes Git executable
+
+**Problem**: GitHubTool returns token validation errors
+**Solution**: Generate GitHub token with proper scopes and add to environment configuration
+
+**Problem**: OpenSpecTool shows missing artifacts
+**Solution**: Run OpenSpec propose skill with detailed project description and verify artifact generation
+
 **Section sources**
 - [McpClientService.php:141-179](file://app/Services/McpClientService.php#L141-L179)
-- [services.php:38-43](file://config/services.php#L38-L43)
+- [ai.php:52-56](file://config/ai.php#L52-L56)
+- [SKILL.md:252-286](file://.agents/skills/project-creation/SKILL.md#L252-L286)
 
 ## Conclusion
 
 The MCP Client Integration System represents a comprehensive solution for bridging Laravel's AI ecosystem with external MCP-compatible services. Through its robust architecture, the system provides reliable tool execution, comprehensive error handling, and flexible configuration options that support diverse development workflows.
 
+**Updated** The system now includes enhanced project creation capabilities that enable AI-powered project orchestration, transforming micro-SaaS ideas into structured projects with automated file system operations, Git repository management, GitHub integration, and OpenSpec workflow automation. This expansion demonstrates the system's adaptability and forward-thinking design that supports evolving development needs.
+
 The implementation demonstrates best practices in system design including separation of concerns, test-driven development, and resilient error handling. The proxy pattern implementation ensures that all tool operations adhere to standardized protocols while maintaining the flexibility to extend functionality through additional MCP-compatible tools.
 
-Key strengths of the system include its persistent connection management, sophisticated retry logic, comprehensive logging and monitoring capabilities, and extensive testing coverage. These features combine to create a production-ready integration that enhances Laravel applications with powerful development tool capabilities while maintaining system stability and performance.
+Key strengths of the system include its persistent connection management, sophisticated retry logic, comprehensive logging and monitoring capabilities, extensive testing coverage, and robust security measures for project creation operations. These features combine to create a production-ready integration that enhances Laravel applications with powerful development tool capabilities while maintaining system stability and performance.
 
 The modular design facilitates future enhancements and extensions, supporting the addition of new tool proxies and integration with emerging MCP-compatible services. This foundation positions the system for continued evolution as development tooling requirements advance and new capabilities become available through the MCP ecosystem.
+
+The addition of project creation tools and enhanced DevBot capabilities represents a significant advancement in AI-powered development assistance, providing developers with comprehensive tooling for both code execution and project management workflows.
