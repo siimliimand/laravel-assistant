@@ -7,7 +7,6 @@ use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
-use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\MaxSteps;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
@@ -15,7 +14,7 @@ use Laravel\Ai\Provider;
 use Laravel\Ai\Temperature;
 use Stringable;
 
-#[Provider(Lab::Anthropic)]
+#[Provider('z')]
 #[MaxSteps(10)]
 #[Temperature(0.7)]
 class DevBot implements Agent, Conversational, HasTools

@@ -71,11 +71,11 @@
 
 ## 8. Testing and Validation
 
-- [ ] 8.1 Test full conversation flow: send message → receive response → display
-- [ ] 8.2 Test conversation persistence across page reloads
-- [ ] 8.3 Test empty message validation
-- [ ] 8.4 Test error handling when API is unavailable
-- [ ] 8.5 Test code block rendering in messages
-- [ ] 8.6 Test responsive design on mobile and desktop
-- [ ] 8.7 Verify database records are created correctly
-- [ ] 8.8 Run `vendor/bin/pint --dirty --format agent` to format PHP code
+- [x] 8.1 Test full conversation flow: send message → receive response → display
+- [x] 8.2 Test conversation persistence across page reloads
+- [x] 8.3 Test empty message validation
+- [x] 8.4 Test error handling when API is unavailable
+- [x] 8.5 Test code block rendering in messages
+- [x] 8.6 Test responsive design on mobile and desktop
+- [x] 8.7 Verify database records are created correctly
+- [x] 8.8 Run `vendor/bin/pint --dirty --format agent` to format PHP code

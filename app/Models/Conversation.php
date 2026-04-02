@@ -20,10 +20,25 @@ class Conversation extends Model
     public function generateTitleFromFirstMessage(string $message): void
     {
         $this->title = substr($message, 0, 50);
+        $this->save();
     }
 
     public function getRecentMessagesAttribute()
     {
         return $this->messages()->limit(50)->get();
+    }
+
+    public function getMessagesForAgent(): array
+    {
+        return $this->messages()
+            ->limit(50)
+            ->get()
+            ->map(function ($message) {
+                return new \Laravel\Ai\Messages\Message(
+                    role: $message->role,
+                    content: $message->content
+                );
+            })
+            ->toArray();
     }
 }

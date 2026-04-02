@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'default' => 'anthropic',
+    'default' => 'z',
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -54,6 +54,12 @@ return [
             'driver' => 'anthropic',
             'key' => env('ANTHROPIC_API_KEY'),
             'url' => env('ANTHROPIC_URL', 'https://api.anthropic.com/v1'),
+        ],
+
+        'z' => [
+            'driver' => 'anthropic',
+            'key' => env('Z_API_KEY'),
+            'url' => env('Z_URL', 'https://api.z.ai/api/anthropic/v1'),
         ],
 
         'azure' => [

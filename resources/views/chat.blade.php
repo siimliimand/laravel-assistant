@@ -276,6 +276,7 @@
                 
                 // Client-side validation for empty messages
                 if (!message) {
+                    showError('Please enter a message');
                     messageInput.focus();
                     return;
                 }
@@ -291,8 +292,14 @@
                 scrollToBottom();
 
                 try {
-                    // Prepare form data
-                    const formData = new FormData(chatForm);
+                    // Prepare form data with explicit fields
+                    const formData = new FormData();
+                    formData.append('_token', document.querySelector('input[name="_token"]').value);
+                    formData.append('message', message);
+                    
+                    if (document.querySelector('input[name="conversation_id"]')) {
+                        formData.append('conversation_id', document.querySelector('input[name="conversation_id"]').value);
+                    }
                     
                     // Send AJAX request
                     const response = await fetch(chatForm.action, {
@@ -305,6 +312,12 @@
                     });
 
                     if (!response.ok) {
+                        // Handle validation errors
+                        if (response.status === 422) {
+                            const errorData = await response.json();
+                            const errorMessage = errorData.errors.message ? errorData.errors.message[0] : errorData.message;
+                            throw new Error(errorMessage || 'Validation failed');
+                        }
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
 

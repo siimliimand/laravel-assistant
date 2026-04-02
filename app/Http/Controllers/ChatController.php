@@ -43,13 +43,13 @@ class ChatController extends Controller
         $conversation = null;
 
         // Get or create conversation
-        if ($validated['conversation_id']) {
+        if (isset($validated['conversation_id']) && $validated['conversation_id']) {
             $conversation = Conversation::find($validated['conversation_id']);
         }
 
         if (! $conversation) {
             $conversation = Conversation::create([
-                'title' => null, // Will be set from first message
+                'title' => 'New Chat', // Will be updated from first message
             ]);
         }
 
@@ -60,8 +60,8 @@ class ChatController extends Controller
             'content' => $validated['message'],
         ]);
 
-        // Generate conversation title from first message
-        if (! $conversation->title) {
+        // Generate conversation title from first message (only for new conversations with default title)
+        if ($conversation->title === 'New Chat' || ! $conversation->title) {
             $conversation->generateTitleFromFirstMessage($validated['message']);
         }
 
