@@ -12,11 +12,11 @@
 
 ## 2. DevBot AI Agent
 
-- [ ] 2.1 Create DevBot agent class using `php artisan make:agent DevBot`
-- [ ] 2.2 Configure DevBot with PHP attributes (Provider, Model, MaxSteps, Temperature)
-- [ ] 2.3 Implement instructions() method with development-focused system prompt
-- [ ] 2.4 Implement messages() method to retrieve conversation history
-- [ ] 2.5 Test DevBot agent instantiation and basic prompt response
+- [x] 2.1 Create DevBot agent class using `php artisan make:agent DevBot`
+- [x] 2.2 Configure DevBot with PHP attributes (Provider, Model, MaxSteps, Temperature)
+- [x] 2.3 Implement instructions() method with development-focused system prompt
+- [x] 2.4 Implement messages() method to retrieve conversation history
+- [x] 2.5 Test DevBot agent instantiation and basic prompt response
 
 ## 3. Routes and Controller
 
