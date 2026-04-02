@@ -16,7 +16,21 @@
 - [CLAUDE.md](file://CLAUDE.md)
 - [GEMINI.md](file://GEMINI.md)
 - [AGENTS.md](file://AGENTS.md)
+- [app/Helpers/Markdown.php](file://app/Helpers/Markdown.php)
+- [app/Models/Message.php](file://app/Models/Message.php)
+- [resources/views/chat.blade.php](file://resources/views/chat.blade.php)
+- [resources/css/app.css](file://resources/css/app.css)
+- [tests/Feature/MarkdownRenderingTest.php](file://tests/Feature/MarkdownRenderingTest.php)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive documentation for the new league/commonmark markdown rendering system
+- Documented GitHub Flavored Markdown support and security features
+- Added detailed coverage of the Markdown helper class and Message model integration
+- Included UI rendering patterns and CSS styling for markdown content
+- Added security considerations for markdown processing and XSS prevention
+- Updated architecture diagrams to reflect markdown processing pipeline
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -24,21 +38,25 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
-10. [Appendices](#appendices)
+6. [Markdown Rendering System](#markdown-rendering-system)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
+11. [Appendices](#appendices)
 
 ## Introduction
 This document describes the AI Integration System for multi-provider AI configuration and agent-based development workflow. It explains how the AI service abstraction layer enables seamless switching between providers such as Anthropic, Gemini, OpenAI, Azure OpenAI, Cohere, Groq, Mistral, Ollama, OpenRouter, Voyage AI, and XAI. It documents configuration options in config/ai.php, environment variable management, provider-specific settings, caching strategies, fallback mechanisms, performance optimization, practical usage patterns, error handling strategies, provider-specific features, Laravel service container integration, extension points for custom providers, security considerations, rate limiting, and cost optimization strategies. It also connects AI configuration to the agent development workflow.
 
+**Updated** Added comprehensive markdown rendering system documentation with league/commonmark integration, GitHub Flavored Markdown support, and security features.
+
 ## Project Structure
 The AI Integration System centers around:
 - A configuration file that defines default providers per task type and provider credentials.
-- Laravel’s service container integration via the official AI SDK service provider.
+- Laravel's service container integration via the official AI SDK service provider.
 - Database migrations for agent conversations and messages.
 - Stubs for building agents, structured agents, tools, and middleware.
+- **New**: Comprehensive markdown rendering system using league/commonmark library with GitHub Flavored Markdown support.
 
 ```mermaid
 graph TB
@@ -48,17 +66,29 @@ BOOT["bootstrap/app.php"]
 SVC_CACHE["bootstrap/cache/services.php"]
 MIG["database/migrations/*_create_agent_conversations_table.php"]
 STUBS["stubs/*.stub"]
+MD_HELPER["app/Helpers/Markdown.php"]
+MD_MODEL["app/Models/Message.php"]
+CHAT_VIEW["resources/views/chat.blade.php"]
+CSS["resources/css/app.css"]
 end
 subgraph "Laravel AI SDK"
 SDK_PKG["composer.json<br/>require laravel/ai"]
 SDK_LOCK["composer.lock<br/>AiServiceProvider"]
+end
+subgraph "Markdown Processing"
+COMMONMARK["league/commonmark<br/>GitHub Flavored Markdown"]
+SECURITY["Security Config<br/>HTML escaping, unsafe links"]
 end
 CFG --> BOOT
 BOOT --> SVC_CACHE
 CFG --> MIG
 CFG --> STUBS
 SDK_PKG --> SDK_LOCK
-SVC_CACHE --> SDK_LOCK
+MD_HELPER --> COMMONMARK
+MD_MODEL --> MD_HELPER
+CHAT_VIEW --> MD_MODEL
+CSS --> CHAT_VIEW
+COMMONMARK --> SECURITY
 ```
 
 **Diagram sources**
@@ -72,6 +102,10 @@ SVC_CACHE --> SDK_LOCK
 - [stubs/structured-agent.stub:1-56](file://stubs/structured-agent.stub#L1-L56)
 - [stubs/tool.stub:1-38](file://stubs/tool.stub#L1-L38)
 - [stubs/agent-middleware.stub:1-21](file://stubs/agent-middleware.stub#L1-L21)
+- [app/Helpers/Markdown.php:1-62](file://app/Helpers/Markdown.php#L1-L62)
+- [app/Models/Message.php:1-44](file://app/Models/Message.php#L1-L44)
+- [resources/views/chat.blade.php:1-391](file://resources/views/chat.blade.php#L1-L391)
+- [resources/css/app.css:13-141](file://resources/css/app.css#L13-L141)
 
 **Section sources**
 - [config/ai.php:1-132](file://config/ai.php#L1-L132)
@@ -90,11 +124,13 @@ SVC_CACHE --> SDK_LOCK
 - Laravel AI SDK: registered via AiServiceProvider, enabling dependency injection and runtime provider selection.
 - Agent development workflow: stubs define contracts for agents, tools, and middleware to build conversational AI experiences.
 - Agent conversation persistence: migrations define tables for storing conversations and messages.
+- **New**: Markdown rendering system: comprehensive markdown processing using league/commonmark with GitHub Flavored Markdown support and security features.
 
 Key configuration highlights:
 - Defaults for general text, images, audio, transcription, embeddings, and reranking.
 - Embedding caching toggle and store selection.
 - Provider list with driver and environment-backed keys and optional provider-specific settings.
+- **New**: Markdown helper class with singleton pattern and configurable security settings.
 
 **Section sources**
 - [config/ai.php:16-39](file://config/ai.php#L16-L39)
@@ -106,9 +142,10 @@ Key configuration highlights:
 - [stubs/structured-agent.stub:15-56](file://stubs/structured-agent.stub#L15-L56)
 - [stubs/tool.stub:10-38](file://stubs/tool.stub#L10-L38)
 - [stubs/agent-middleware.stub:9-21](file://stubs/agent-middleware.stub#L9-L21)
+- [app/Helpers/Markdown.php:10-61](file://app/Helpers/Markdown.php#L10-L61)
 
 ## Architecture Overview
-The AI Integration System integrates with Laravel through the official AI SDK. The configuration file defines providers and defaults. The service provider registers the SDK into the container. Agents, tools, and middleware are scaffolded via stubs. Conversations and messages are persisted using dedicated migrations.
+The AI Integration System integrates with Laravel through the official AI SDK. The configuration file defines providers and defaults. The service provider registers the SDK into the container. Agents, tools, and middleware are scaffolded via stubs. Conversations and messages are persisted using dedicated migrations. **New**: Markdown rendering is handled through a dedicated helper class that processes AI-generated content with security and GitHub Flavored Markdown support.
 
 ```mermaid
 graph TB
@@ -118,11 +155,19 @@ LSP["Laravel\\Ai\\AiServiceProvider"]
 SDK["Laravel\\Ai SDK"]
 AGENT["Agent Contracts<br/>stubs/*.stub"]
 DB["Agent Conversation Tables<br/>migrations"]
+MD_HELPER["Markdown Helper<br/>app/Helpers/Markdown.php"]
+MD_MODEL["Message Model<br/>app/Models/Message.php"]
+CHAT_VIEW["Chat View<br/>resources/views/chat.blade.php"]
+CSS["Markdown Styles<br/>resources/css/app.css"]
 APP --> CFG
 CFG --> LSP
 LSP --> SDK
 SDK --> AGENT
 SDK --> DB
+MD_HELPER --> COMMONMARK["league/commonmark"]
+MD_MODEL --> MD_HELPER
+CHAT_VIEW --> MD_MODEL
+CSS --> CHAT_VIEW
 ```
 
 **Diagram sources**
@@ -133,6 +178,10 @@ SDK --> DB
 - [stubs/structured-agent.stub:15-56](file://stubs/structured-agent.stub#L15-L56)
 - [stubs/tool.stub:10-38](file://stubs/tool.stub#L10-L38)
 - [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
+- [app/Helpers/Markdown.php:5-8](file://app/Helpers/Markdown.php#L5-L8)
+- [app/Models/Message.php:5-42](file://app/Models/Message.php#L5-L42)
+- [resources/views/chat.blade.php:105-107](file://resources/views/chat.blade.php#L105-L107)
+- [resources/css/app.css:13-141](file://resources/css/app.css#L13-L141)
 
 ## Detailed Component Analysis
 
@@ -319,18 +368,18 @@ Provider-->>App : "Register AI bindings"
 - Restrict access to admin panels and routes that expose AI configurations.
 - Sanitize inputs and outputs in agents and tools; validate tool schemas.
 - Use HTTPS endpoints for providers where applicable.
+- **New**: Markdown processing includes security features: HTML input escaping, unsafe link blocking, and configurable nesting levels.
 
 **Section sources**
 - [config/ai.php:55](file://config/ai.php#L55)
 - [config/ai.php:112](file://config/ai.php#L112)
+- [app/Helpers/Markdown.php:20-24](file://app/Helpers/Markdown.php#L20-L24)
 
 ### Rate Limiting and Cost Optimization
 - Implement client-side throttling and retry with backoff for provider rate limits.
 - Prefer caching for embeddings and repeated prompts.
 - Select providers optimized for your workload (e.g., cheaper models for inference, local providers for low-latency tasks).
 - Monitor usage metrics exposed by providers and track costs.
-
-[No sources needed since this section provides general guidance]
 
 ### Relationship Between AI Configuration and Agent Workflow
 - Defaults in config/ai.php influence which provider is used for different tasks in agent workflows.
@@ -342,31 +391,108 @@ Provider-->>App : "Register AI bindings"
 - [stubs/agent.stub:13-44](file://stubs/agent.stub#L13-L44)
 - [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
 
+## Markdown Rendering System
+
+**New Section** The AI Integration System now includes a comprehensive markdown rendering system powered by league/commonmark library with GitHub Flavored Markdown support and robust security features.
+
+### Markdown Helper Class
+The `App\Helpers\Markdown` class provides centralized markdown processing with the following features:
+
+- **Singleton Pattern**: Maintains a single converter instance for performance optimization
+- **GitHub Flavored Markdown**: Full support for GFM syntax including tables, task lists, and strikethrough
+- **Security Configuration**: Built-in XSS protection with HTML escaping and unsafe link blocking
+- **Customizable Environment**: Supports runtime configuration overrides for specialized use cases
+
+```mermaid
+flowchart TD
+MD_HELPER["Markdown Helper<br/>app/Helpers/Markdown.php"] --> ENV["Environment Config<br/>HTML escape, Unsafe links, Nesting level"]
+ENV --> EXT["Extensions<br/>CommonMark + GitHub Flavored Markdown"]
+EXT --> CONVERTER["Markdown Converter<br/>Singleton Instance"]
+CONVERTER --> USER_CONTENT["User Generated Content"]
+CONVERTER --> AI_RESPONSES["AI Generated Responses"]
+USER_CONTENT --> OUTPUT["Safe HTML Output"]
+AI_RESPONSES --> OUTPUT
+```
+
+**Diagram sources**
+- [app/Helpers/Markdown.php:10-61](file://app/Helpers/Markdown.php#L10-L61)
+- [app/Helpers/Markdown.php:17-33](file://app/Helpers/Markdown.php#L17-L33)
+- [app/Helpers/Markdown.php:46-60](file://app/Helpers/Markdown.php#L46-L60)
+
+### Security Features
+The markdown processing system implements multiple layers of security:
+
+- **HTML Input Escaping**: Prevents raw HTML injection in user content
+- **Unsafe Link Blocking**: Blocks potentially malicious URLs and protocols
+- **Nesting Level Control**: Limits markdown nesting depth to prevent stack exhaustion
+- **Content Sanitization**: Ensures processed content is safe for web display
+
+### Message Model Integration
+The `App\Models\Message` class integrates markdown rendering seamlessly:
+
+- **Automatic Formatting**: All assistant messages are automatically processed through the markdown helper
+- **Performance Optimization**: Uses cached converter instances to minimize processing overhead
+- **Consistent Styling**: Ensures all AI-generated content follows established design patterns
+
+### UI Rendering Pipeline
+The chat interface demonstrates comprehensive markdown rendering:
+
+- **Blade Template Integration**: Messages are processed using `{{ $message->formattedContent() }}`
+- **CSS Styling**: Dedicated `.markdown-content` classes provide consistent visual presentation
+- **Responsive Design**: Styles adapt to different screen sizes and device types
+- **Accessibility**: Proper semantic markup for screen readers and assistive technologies
+
+### Supported Markdown Features
+The system supports comprehensive markdown syntax:
+
+- **Basic Formatting**: Bold, italic, strikethrough, inline code
+- **Headings**: H1-H6 with proper semantic structure
+- **Lists**: Ordered and unordered lists with nested support
+- **Code Blocks**: Multi-language syntax highlighting with automatic detection
+- **Tables**: Complex tabular data with alignment support
+- **Blockquotes**: Nested quote blocks with attribution
+- **Links**: Safe hyperlink creation with protocol validation
+- **Horizontal Rules**: Section separators and content organization
+
+**Section sources**
+- [app/Helpers/Markdown.php:10-61](file://app/Helpers/Markdown.php#L10-L61)
+- [app/Models/Message.php:36-42](file://app/Models/Message.php#L36-L42)
+- [resources/views/chat.blade.php:105-107](file://resources/views/chat.blade.php#L105-L107)
+- [resources/css/app.css:13-141](file://resources/css/app.css#L13-L141)
+- [tests/Feature/MarkdownRenderingTest.php:16-115](file://tests/Feature/MarkdownRenderingTest.php#L16-L115)
+
 ## Dependency Analysis
-The AI Integration System depends on the Laravel AI SDK, which is registered via its service provider. Composer metadata and lock files confirm the SDK presence and provider registration.
+The AI Integration System depends on the Laravel AI SDK, which is registered via its service provider. Composer metadata and lock files confirm the SDK presence and provider registration. **New**: The markdown rendering system depends on league/commonmark library version 2.8.2 with GitHub Flavored Markdown extensions.
 
 ```mermaid
 graph LR
 Composer["composer.json"] --> SDK["laravel/ai ^0.4.3"]
+Composer --> COMMONMARK["league/commonmark ^2.8"]
 Lock["composer.lock"] --> Provider["Laravel\\Ai\\AiServiceProvider"]
+Lock --> CommonMarkLock["league/commonmark v2.8.2"]
 Provider --> App["Application Services"]
+CommonMarkLock --> MarkdownHelper["Markdown Processing"]
 ```
 
 **Diagram sources**
 - [composer.json:11-16](file://composer.json#L11-L16)
+- [composer.json:16](file://composer.json#L16)
 - [composer.lock:1090-1093](file://composer.lock#L1090-L1093)
+- [composer.lock:1533-1629](file://composer.lock#L1533-L1629)
 
 **Section sources**
 - [composer.json:11-16](file://composer.json#L11-L16)
+- [composer.json:16](file://composer.json#L16)
 - [composer.lock:1090-1093](file://composer.lock#L1090-L1093)
+- [composer.lock:1533-1629](file://composer.lock#L1533-L1629)
 
 ## Performance Considerations
 - Enable embedding caching and choose a persistent store.
 - Select providers optimized for each task type to minimize latency and cost.
 - Use structured outputs to reduce post-processing overhead.
 - Implement middleware for request/response batching and normalization.
-
-[No sources needed since this section provides general guidance]
+- **New**: Leverage the singleton pattern in the markdown helper to avoid converter instantiation overhead.
+- **New**: Use CSS-in-JS for dynamic styling to minimize DOM manipulation during rendering.
 
 ## Troubleshooting Guide
 - Verify environment variables for the selected providers are present.
@@ -374,15 +500,19 @@ Provider --> App["Application Services"]
 - Check migration status for agent conversation tables.
 - Review agent stubs to ensure contracts are implemented correctly.
 - Use structured agents to simplify debugging output parsing.
+- **New**: Test markdown rendering with the built-in test suite using `php artisan test`.
+- **New**: Verify commonmark library installation with `composer show league/commonmark`.
+- **New**: Check markdown helper functionality with simple test cases in tinker.
 
 **Section sources**
 - [bootstrap/cache/services.php:27-52](file://bootstrap/cache/services.php#L27-L52)
 - [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
 - [stubs/agent.stub:13-44](file://stubs/agent.stub#L13-L44)
 - [stubs/structured-agent.stub:15-56](file://stubs/structured-agent.stub#L15-L56)
+- [tests/Feature/MarkdownRenderingTest.php:10-115](file://tests/Feature/MarkdownRenderingTest.php#L10-L115)
 
 ## Conclusion
-The AI Integration System provides a flexible, configurable, and extensible foundation for multi-provider AI workflows in Laravel. With environment-backed configuration, caching for embeddings, default provider selection per task type, and robust agent scaffolding, teams can rapidly build secure, efficient, and maintainable agent-driven features. Integrating with Laravel’s service container and leveraging the official AI SDK ensures smooth developer experience and scalability.
+The AI Integration System provides a flexible, configurable, and extensible foundation for multi-provider AI workflows in Laravel. With environment-backed configuration, caching for embeddings, default provider selection per task type, and robust agent scaffolding, teams can rapidly build secure, efficient, and maintainable agent-driven features. Integrating with Laravel's service container and leveraging the official AI SDK ensures smooth developer experience and scalability. **New**: The comprehensive markdown rendering system with league/commonmark library enhances content presentation capabilities while maintaining strict security standards, providing users with rich, formatted AI-generated content in a safe and accessible manner.
 
 ## Appendices
 
@@ -402,7 +532,21 @@ The AI Integration System provides a flexible, configurable, and extensible foun
 
 ### Agent Development Workflow References
 - Agent contracts and scaffolding: [stubs/agent.stub:13-44](file://stubs/agent.stub#L13-L44), [stubs/structured-agent.stub:15-56](file://stubs/structured-agent.stub#L15-L56)
-- Tool contracts and scaffolding: [stubs/tool.stub:10-38](file://stubs/tool.stub#L10-38)
-- Agent middleware scaffolding: [stubs/agent-middleware.stub:9-21](file://stubs/agent-middleware.stub#L9-21)
-- Agent conversation persistence: [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-39)
+- Tool contracts and scaffolding: [stubs/tool.stub:10-38](file://stubs/tool.stub#L10-L38)
+- Agent middleware scaffolding: [stubs/agent-middleware.stub:9-21](file://stubs/agent-middleware.stub#L9-L21)
+- Agent conversation persistence: [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
 - Boost and agent guidelines: [README.md:32-42](file://README.md#L32-L42), [CLAUDE.md:24-30](file://CLAUDE.md#L24-L30), [GEMINI.md:24-30](file://GEMINI.md#L24-L30), [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
+
+### Markdown Rendering Features
+- **Library**: league/commonmark 2.8.2
+- **Extensions**: CommonMark Core + GitHub Flavored Markdown
+- **Security**: HTML escaping, unsafe link blocking, nesting level control
+- **Performance**: Singleton converter pattern, caching support
+- **UI Integration**: Blade template processing, CSS styling, responsive design
+
+**Section sources**
+- [app/Helpers/Markdown.php:5-8](file://app/Helpers/Markdown.php#L5-L8)
+- [app/Helpers/Markdown.php:20-24](file://app/Helpers/Markdown.php#L20-L24)
+- [resources/views/chat.blade.php:105-107](file://resources/views/chat.blade.php#L105-L107)
+- [resources/css/app.css:13-141](file://resources/css/app.css#L13-L141)
+- [tests/Feature/MarkdownRenderingTest.php:16-115](file://tests/Feature/MarkdownRenderingTest.php#L16-L115)
