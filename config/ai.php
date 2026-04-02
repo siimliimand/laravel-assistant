@@ -40,6 +40,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Projects Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for DevBot's project creation capabilities. This includes
+    | the base path where projects are stored, GitHub authentication, and
+    | default Git settings.
+    |
+    */
+
+    'projects' => [
+        'base_path' => storage_path('projects'),
+        'github_token' => env('GITHUB_TOKEN'),
+        'default_branch' => env('PROJECT_DEFAULT_BRANCH', 'main'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | AI Providers
     |--------------------------------------------------------------------------
     |

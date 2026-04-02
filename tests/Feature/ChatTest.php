@@ -3,6 +3,10 @@
 use App\Ai\Agents\DevBot;
 use App\Ai\Tools\DatabaseQueryTool;
 use App\Ai\Tools\DatabaseSchemaTool;
+use App\Ai\Tools\FileSystemTool;
+use App\Ai\Tools\GitHubTool;
+use App\Ai\Tools\GitTool;
+use App\Ai\Tools\OpenSpecTool;
 use App\Ai\Tools\SearchDocsTool;
 use App\Ai\Tools\TinkerTool;
 use App\Models\Conversation;
@@ -748,13 +752,17 @@ test('DevBot has MCP tool proxies registered', function () {
     $devBot = new DevBot;
     $tools = iterator_to_array($devBot->tools());
 
-    expect($tools)->toHaveCount(4);
+    expect($tools)->toHaveCount(8);
 
     $toolClasses = array_map('get_class', $tools);
     expect($toolClasses)->toContain(DatabaseQueryTool::class);
     expect($toolClasses)->toContain(DatabaseSchemaTool::class);
     expect($toolClasses)->toContain(SearchDocsTool::class);
     expect($toolClasses)->toContain(TinkerTool::class);
+    expect($toolClasses)->toContain(FileSystemTool::class);
+    expect($toolClasses)->toContain(GitTool::class);
+    expect($toolClasses)->toContain(GitHubTool::class);
+    expect($toolClasses)->toContain(OpenSpecTool::class);
 });
 
 test('DevBot tools implement Laravel AI Tool interface', function () {

@@ -7,11 +7,17 @@ DevBot is an AI-powered development assistant built with Laravel. It provides an
 - **Interactive Chat Interface** - Modern, responsive UI with real-time messaging
 - **Conversation Management** - Create, switch, and search through conversation history
 - **AI-Powered Responses** - Powered by Laravel AI with support for multiple providers (Anthropic, OpenAI, Gemini, etc.)
+- **Project Creation** - Transform micro-SaaS ideas into structured projects with GitHub integration
 - **MCP Tool Integration** - Connects to Laravel Boost MCP server for enhanced capabilities:
   - **Database Query Tool** - Execute read-only SQL queries safely
   - **Database Schema Tool** - Inspect table structure and relationships
   - **Search Docs Tool** - Search Laravel and package documentation
   - **Tinker Tool** - Execute PHP code in application context
+- **Project Management Tools** - Built-in tools for project creation:
+  - **FileSystem Tool** - Secure file operations within project directories
+  - **Git Tool** - Initialize, commit, and push to Git repositories
+  - **GitHub Tool** - Create GitHub repositories via API
+  - **OpenSpec Tool** - Manage project specifications and workflow
 - **Markdown Rendering** - Rich formatting for code blocks and technical content
 - **Mobile Responsive** - Works seamlessly on desktop and mobile devices
 - **Conversation Persistence** - All conversations stored in SQLite database
@@ -93,6 +99,17 @@ Customize the AI model used by DevBot:
 DEVBOT_MODEL=claude-haiku-4-5-20251001
 ```
 
+### GitHub Integration (Optional)
+
+Enable project creation with GitHub repository support:
+
+```env
+GITHUB_TOKEN=your-github-personal-access-token
+PROJECT_DEFAULT_BRANCH=main
+```
+
+The GitHub token needs `repo` scope. Create one at https://github.com/settings/tokens.
+
 ### MCP Client (Optional)
 
 Override default MCP client settings:
@@ -151,6 +168,10 @@ app/
 │   └── Tools/
 │       ├── DatabaseQueryTool.php    # Read-only SQL queries
 │       ├── DatabaseSchemaTool.php   # Schema inspection
+│       ├── FileSystemTool.php       # Project file operations
+│       ├── GitHubTool.php           # GitHub API integration
+│       ├── GitTool.php              # Git repository management
+│       ├── OpenSpecTool.php         # OpenSpec workflow assistance
 │       ├── SearchDocsTool.php       # Documentation search
 │       └── TinkerTool.php           # PHP code execution
 ├── Helpers/
@@ -169,7 +190,10 @@ resources/views/
 .agents/skills/
 ├── laravel-best-practices/     # Laravel coding standards
 ├── pest-testing/               # Pest testing guidelines
+├── project-creation/           # Project creation workflow guide
 └── tailwindcss-development/    # Tailwind CSS patterns
+
+storage/projects/               # Created projects directory (gitignored)
 ```
 
 ## Development
@@ -239,6 +263,20 @@ The `McpClientService` manages connections to the Laravel Boost MCP server:
 4. Agent may call MCP tools for database/docs access
 5. Response stored and returned to user
 
+### Project Creation Workflow
+
+DevBot can create complete micro-SaaS projects from user ideas:
+
+1. **Gather Requirements** - Ask clarifying questions about features and goals
+2. **Create Project Directory** - Secure directory in `storage/projects/`
+3. **Generate OpenSpec Artifacts** - Create proposal, design, specs, and tasks
+4. **Initialize Git** - Set up version control with initial commit
+5. **Create GitHub Repo** - Create remote repository via GitHub API
+6. **Push to GitHub** - Push project to remote for collaboration
+
+All file operations are scoped to `storage/projects/` for security.
+Path traversal attacks are blocked and logged.
+
 ## AI Providers Supported
 
 | Provider      | Driver       | Environment Variable   |
@@ -260,6 +298,7 @@ This project includes pre-configured AI skills for enhanced development:
 
 - **Laravel Best Practices** - Database performance, security, caching, Eloquent patterns, and more
 - **Pest Testing** - Testing patterns, assertions, mocking, and browser testing
+- **Project Creation** - Complete workflow for creating micro-SaaS projects from idea to GitHub repository
 - **Tailwind CSS Development** - Responsive layouts, components, and styling patterns
 
 ## Troubleshooting

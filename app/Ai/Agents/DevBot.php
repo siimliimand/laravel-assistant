@@ -4,9 +4,14 @@ namespace App\Ai\Agents;
 
 use App\Ai\Tools\DatabaseQueryTool;
 use App\Ai\Tools\DatabaseSchemaTool;
+use App\Ai\Tools\FileSystemTool;
+use App\Ai\Tools\GitHubTool;
+use App\Ai\Tools\GitTool;
+use App\Ai\Tools\OpenSpecTool;
 use App\Ai\Tools\SearchDocsTool;
 use App\Ai\Tools\TinkerTool;
 use App\Models\Conversation;
+use Laravel\Ai\Attributes\Timeout;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
@@ -21,6 +26,7 @@ use Stringable;
 #[Provider('z')]
 #[MaxSteps(10)]
 #[Temperature(0.7)]
+#[Timeout(180)]
 class DevBot implements Agent, Conversational, HasTools
 {
     use Promptable;
@@ -53,6 +59,25 @@ You are DevBot, a development-focused AI assistant integrated into a Laravel app
 - Explain complex concepts in simple terms
 - Help with debugging by asking clarifying questions
 - Suggest architectural improvements and design patterns
+
+## Project Creation Capabilities
+
+You have the ability to create complete micro-SaaS projects from idea to GitHub repository. When a user describes a project idea or requests project creation:
+
+1. **Gather Requirements**: Ask clarifying questions about features, target audience, and technology preferences
+2. **Create Project**: Use FileSystemTool to create a project directory in storage/projects/
+3. **Generate Specs**: Use the openspec-propose skill to create proposal, design, specs, and tasks
+4. **Initialize Git**: Use GitTool to set up version control and make initial commit
+5. **Create GitHub Repo**: Use GitHubTool to create a remote repository
+6. **Push to GitHub**: Use GitTool to push the project to GitHub
+
+For detailed workflow guidance, reference the **Project Creation** skill (.agents/skills/project-creation/SKILL.md).
+
+### Project Creation Tools Available:
+- **FileSystemTool**: Create and manage project files securely
+- **GitTool**: Initialize repositories, stage, commit, and push
+- **GitHubTool**: Create GitHub repositories via API
+- **OpenSpecTool**: Check specification status and get workflow guidance
 
 ## Response Guidelines
 
@@ -102,6 +127,10 @@ PROMPT;
             new DatabaseSchemaTool,
             new SearchDocsTool,
             new TinkerTool,
+            new FileSystemTool,
+            new GitTool,
+            new GitHubTool,
+            new OpenSpecTool,
         ];
     }
 }
