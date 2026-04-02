@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Ai\Agents\DevBot;
 use App\Models\Conversation;
 use App\Models\Message;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,7 +33,7 @@ class ChatController extends Controller
     /**
      * Handle message submission and get AI response.
      */
-    public function sendMessage(Request $request): RedirectResponse
+    public function sendMessage(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
             'message' => 'required|string|min:1|max:5000',
@@ -70,22 +71,39 @@ class ChatController extends Controller
             $response = $devBot->prompt($validated['message']);
 
             // Save assistant message
-            Message::create([
+            $assistantMessage = Message::create([
                 'conversation_id' => $conversation->id,
                 'role' => 'assistant',
                 'content' => $response->text,
             ]);
+
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'response' => $assistantMessage->formattedContent(),
+                    'conversation_id' => $conversation->id,
+                ]);
+            }
+
+            return redirect()->route('chat.show', ['conversation' => $conversation]);
         } catch (\Exception $e) {
-            // Log the error and redirect with error message
+            // Log the error
             \Log::error('DevBot API error: '.$e->getMessage(), [
                 'conversation_id' => $conversation->id,
                 'exception' => $e,
             ]);
 
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to get a response from DevBot. Please try again later.',
+                ], 500);
+            }
+
             return redirect()->route('chat.show', ['conversation' => $conversation])
                 ->with('error', 'Failed to get a response from DevBot. Please try again later.');
         }
-
-        return redirect()->route('chat.show', ['conversation' => $conversation]);
     }
 }

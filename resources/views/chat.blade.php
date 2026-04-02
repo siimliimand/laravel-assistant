@@ -176,6 +176,7 @@
             const sendButton = document.getElementById('send-button');
             const loadingIndicator = document.getElementById('loading-indicator');
             const messagesContainer = document.getElementById('messages-container');
+            const chatForm = document.getElementById('chat-form');
 
             // Auto-scroll to bottom on page load
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -186,26 +187,181 @@
                 this.style.height = Math.min(this.scrollHeight, 150) + 'px';
             });
 
-            // Handle form submission with loading state
-            form.addEventListener('submit', function(e) {
+            // Show error message function
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bg-red-50 border-l-4 border-red-500 p-4 mx-4 mt-4 rounded';
+                errorDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-red-500 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                        <p class="text-red-700 text-sm">${message}</p>
+                    </div>
+                `;
+                
+                // Insert error before messages container
+                const header = document.querySelector('header');
+                header.insertAdjacentElement('afterend', errorDiv);
+                
+                // Auto-remove after 5 seconds
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, 5000);
+            }
+
+            // Reset form state function
+            function resetFormState() {
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
+                loadingIndicator.classList.add('hidden');
+            }
+
+            // Scroll to bottom function
+            function scrollToBottom() {
+                messagesContainer.scrollTo({
+                    top: messagesContainer.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+
+            // Append new message to chat
+            function appendMessage(role, content, timestamp) {
+                const messageWrapper = document.createElement('div');
+                
+                if (role === 'user') {
+                    messageWrapper.className = 'flex items-start space-x-3 flex-row-reverse space-x-reverse';
+                    messageWrapper.innerHTML = `
+                        <div class="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-white font-bold text-sm">
+                            U
+                        </div>
+                        <div class="flex-1 bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-3xl">
+                            <div class="flex items-baseline space-x-2 mb-1 justify-end">
+                                <span class="text-xs text-blue-100">${timestamp}</span>
+                                <span class="font-semibold text-sm text-blue-50">You</span>
+                            </div>
+                            <div class="text-sm leading-relaxed prose prose-invert max-w-none">
+                                ${content.replace(/\n/g, '<br>')}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    messageWrapper.className = 'flex items-start space-x-3';
+                    messageWrapper.innerHTML = `
+                        <div class="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                            AI
+                        </div>
+                        <div class="flex-1 bg-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
+                            <div class="flex items-baseline space-x-2 mb-1">
+                                <span class="font-semibold text-sm text-gray-900">DevBot</span>
+                                <span class="text-xs text-gray-500">${timestamp}</span>
+                            </div>
+                            <div class="text-gray-700 text-sm leading-relaxed prose prose-sm max-w-none">
+                                ${content}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Insert before loading indicator
+                loadingIndicator.insertAdjacentElement('beforebegin', messageWrapper);
+            }
+
+            // Handle form submission with AJAX
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
                 const message = messageInput.value.trim();
                 
-                // Client-side validation
+                // Client-side validation for empty messages
                 if (!message) {
-                    e.preventDefault();
                     messageInput.focus();
                     return;
                 }
 
-                // Show loading state
+                // Disable input field and button while waiting for response
                 sendButton.disabled = true;
                 messageInput.disabled = true;
+                
+                // Show loading indicator
                 loadingIndicator.classList.remove('hidden');
                 
-                // Scroll to show loading indicator
-                setTimeout(() => {
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 100);
+                // Auto-scroll to bottom to show loading indicator
+                scrollToBottom();
+
+                try {
+                    // Prepare form data
+                    const formData = new FormData(chatForm);
+                    
+                    // Send AJAX request
+                    const response = await fetch(chatForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Clear input
+                        messageInput.value = '';
+                        messageInput.style.height = 'auto';
+                        
+                        // Append user message
+                        const userTimestamp = new Date().toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                        });
+                        appendMessage('user', message.replace(/</g, '&lt;').replace(/>/g, '&gt;'), userTimestamp);
+                        
+                        // Append assistant message
+                        const assistantTimestamp = new Date().toLocaleTimeString('en-US', { 
+                            hour: 'numeric', 
+                            minute: '2-digit',
+                            hour12: true 
+                        });
+                        appendMessage('assistant', data.response, assistantTimestamp);
+                        
+                        // Update conversation ID if this was a new conversation
+                        if (data.conversation_id) {
+                            const hiddenInput = chatForm.querySelector('input[name="conversation_id"]');
+                            if (hiddenInput) {
+                                hiddenInput.value = data.conversation_id;
+                            } else {
+                                const newInput = document.createElement('input');
+                                newInput.type = 'hidden';
+                                newInput.name = 'conversation_id';
+                                newInput.value = data.conversation_id;
+                                chatForm.appendChild(newInput);
+                            }
+                        }
+                        
+                        // Reset form state
+                        resetFormState();
+                        
+                        // Scroll to show new messages
+                        scrollToBottom();
+                    } else {
+                        throw new Error(data.message || 'Failed to send message');
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    
+                    // Show error message
+                    showError(error.message || 'Failed to send message. Please try again.');
+                    
+                    // Reset form state
+                    resetFormState();
+                }
             });
 
             // Enter key to submit (Shift+Enter for new line)

@@ -43,12 +43,12 @@
 
 ## 5. JavaScript Enhancement
 
-- [ ] 5.1 Add JavaScript for AJAX form submission
-- [ ] 5.2 Implement loading state toggle during message send
-- [ ] 5.3 Add auto-scroll to bottom when new messages appear
-- [ ] 5.4 Implement client-side validation for empty messages
-- [ ] 5.5 Add error message display for failed requests
-- [ ] 5.6 Disable input field while waiting for response
+- [x] 5.1 Add JavaScript for AJAX form submission
+- [x] 5.2 Implement loading state toggle during message send
+- [x] 5.3 Add auto-scroll to bottom when new messages appear
+- [x] 5.4 Implement client-side validation for empty messages
+- [x] 5.5 Add error message display for failed requests
+- [x] 5.6 Disable input field while waiting for response
 
 ## 6. Markdown and Code Formatting
 
