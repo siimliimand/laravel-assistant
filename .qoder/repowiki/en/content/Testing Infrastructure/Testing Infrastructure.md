@@ -10,10 +10,20 @@
 - [tests/Feature/ChatTest.php](file://tests/Feature/ChatTest.php)
 - [tests/Feature/MarkdownRenderingTest.php](file://tests/Feature/MarkdownRenderingTest.php)
 - [tests/Unit/ExampleTest.php](file://tests/Unit/ExampleTest.php)
+- [tests/Unit/McpClientServiceTest.php](file://tests/Unit/McpClientServiceTest.php)
+- [tests/Unit/McpToolsTest.php](file://tests/Unit/McpToolsTest.php)
+- [tests/Unit/ToolProxyTest.php](file://tests/Unit/ToolProxyTest.php)
 - [app/Http/Controllers/ChatController.php](file://app/Http/Controllers/ChatController.php)
 - [app/Ai/Agents/DevBot.php](file://app/Ai/Agents/DevBot.php)
+- [app/Services/McpClientService.php](file://app/Services/McpClientService.php)
+- [app/Ai/Tools/DatabaseQueryTool.php](file://app/Ai/Tools/DatabaseQueryTool.php)
+- [app/Ai/Tools/DatabaseSchemaTool.php](file://app/Ai/Tools/DatabaseSchemaTool.php)
+- [app/Ai/Tools/SearchDocsTool.php](file://app/Ai/Tools/SearchDocsTool.php)
+- [app/Ai/Tools/TinkerTool.php](file://app/Ai/Tools/TinkerTool.php)
+- [app/Models/Conversation.php](file://app/Models/Conversation.php)
 - [resources/views/chat.blade.php](file://resources/views/chat.blade.php)
 - [routes/web.php](file://routes/web.php)
+- [config/services.php](file://config/services.php)
 - [database/factories/UserFactory.php](file://database/factories/UserFactory.php)
 - [database/migrations/0001_01_01_000000_create_users_table.php](file://database/migrations/0001_01_01_000000_create_users_table.php)
 - [database/migrations/0001_01_01_000001_create_cache_table.php](file://database/migrations/0001_01_01_000001_create_cache_table.php)
@@ -25,12 +35,13 @@
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive ChatTest.php documentation covering over 500 lines of chat functionality tests
-- Enhanced feature test patterns section with detailed chat interface testing examples
-- Expanded validation and error handling test coverage
-- Added AI agent integration testing documentation
-- Updated database testing patterns for chat functionality
-- Enhanced mocking strategies for AI responses and error scenarios
+- Added comprehensive conversation listing functionality tests with pagination limits (50 conversations)
+- Enhanced conversation creation endpoint testing with proper JSON response validation
+- Expanded conversation detail retrieval tests with message ordering validation
+- Added enhanced message sending response tests with conversation title inclusion
+- Integrated new controller endpoints for chat conversations, new conversation creation, and conversation detail retrieval
+- Updated conversation model with recent messages limit functionality
+- Enhanced ChatTest.php with over 145 lines of new test coverage for conversation management
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -38,22 +49,28 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
-10. [Appendices](#appendices)
+6. [MCP Client Integration Testing](#mcp-client-integration-testing)
+7. [MCP Tool Testing](#mcp-tool-testing)
+8. [Conversation Management Testing](#conversation-management-testing)
+9. [Dependency Analysis](#dependency-analysis)
+10. [Performance Considerations](#performance-considerations)
+11. [Troubleshooting Guide](#troubleshooting-guide)
+12. [Conclusion](#conclusion)
+13. [Appendices](#appendices)
 
 ## Introduction
-This document explains the Testing Infrastructure for the project, focusing on Pest PHP integration and Laravel-specific testing patterns. It covers test organization, feature and unit test patterns, assertion syntax, mocking strategies, configuration, database testing, and practical examples drawn from the repository. The infrastructure now includes comprehensive chat functionality testing with over 500 lines of feature tests covering chat interface, message processing, validation, and error handling. It also connects testing infrastructure to AI-assisted development workflows and outlines best practices for test-driven development and continuous integration.
+This document explains the Testing Infrastructure for the project, focusing on Pest PHP integration and Laravel-specific testing patterns. It covers test organization, feature and unit test patterns, assertion syntax, mocking strategies, configuration, database testing, and practical examples drawn from the repository. The infrastructure now includes comprehensive conversation management testing with pagination limits, enhanced message sending responses, and sophisticated MCP client integration testing with over 500 lines of chat functionality tests covering chat interface, message processing, validation, error handling, and AI agent integration. It also connects testing infrastructure to AI-assisted development workflows and outlines best practices for test-driven development and continuous integration.
 
 ## Project Structure
-The testing setup is organized around Pest and Laravel's testing facilities with enhanced chat functionality testing:
+The testing setup is organized around Pest and Laravel's testing facilities with enhanced chat functionality testing and comprehensive MCP client integration:
 - Pest bootstrap and shared expectations are configured centrally.
-- Unit and Feature tests are separated into dedicated directories, with comprehensive chat tests in Feature/.
+- Unit and Feature tests are separated into dedicated directories, with comprehensive chat tests in Feature/ and new MCP integration tests in Unit/.
 - Laravel's testing environment is configured via phpunit.xml, including in-memory SQLite for speed and isolation.
 - Factories and migrations support realistic database-backed tests.
 - AI agent testing with DevBot integration and mocking strategies.
+- **Updated**: Enhanced conversation management testing with pagination limits and message ordering.
+- **Updated**: MCP client service testing with configuration validation and error handling.
+- **Updated**: MCP tool proxy testing with sophisticated mocking strategies for database queries, documentation search, and PHP execution.
 
 ```mermaid
 graph TB
@@ -64,41 +81,79 @@ U["Unit Tests<br/>tests/Unit/*"]
 F["Feature Tests<br/>tests/Feature/*"]
 CT["Chat Tests<br/>tests/Feature/ChatTest.php"]
 MT["Markdown Tests<br/>tests/Feature/MarkdownRenderingTest.php"]
+MCU["MCP Client Unit Tests<br/>tests/Unit/McpClientServiceTest.php"]
+MPT["MCP Tools Unit Tests<br/>tests/Unit/McpToolsTest.php"]
+TP["Tool Proxy Tests<br/>tests/Unit/ToolProxyTest.php"]
 end
 subgraph "Laravel Testing"
 PU["PHPUnit Config<br/>phpunit.xml"]
 DB["Database Migrations<br/>database/migrations/*"]
 FCT["Model Factories<br/>database/factories/*"]
+CFG["Service Configuration<br/>config/services.php"]
 end
 subgraph "AI Integration"
 DC["Chat Controller<br/>app/Http/Controllers/ChatController.php"]
 DBT["DevBot Agent<br/>app/Ai/Agents/DevBot.php"]
+MCS["MCP Client Service<br/>app/Services/McpClientService.php"]
+DQT["Database Query Tool<br/>app/Ai/Tools/DatabaseQueryTool.php"]
+DST["Database Schema Tool<br/>app/Ai/Tools/DatabaseSchemaTool.php"]
+SDT["Search Docs Tool<br/>app/Ai/Tools/SearchDocsTool.php"]
+TT["Tinker Tool<br/>app/Ai/Tools/TinkerTool.php"]
+CM["Conversation Model<br/>app/Models/Conversation.php"]
 CV["Chat View<br/>resources/views/chat.blade.php"]
+end
+subgraph "Routes"
+R["Web Routes<br/>routes/web.php"]
 end
 Pest --> TC
 TC --> U
 TC --> F
 TC --> CT
 TC --> MT
+TC --> MCU
+TC --> MPT
+TC --> TP
 PU --> TC
 DB --> TC
 FCT --> TC
+CFG --> MCS
 DC --> CT
 DBT --> CT
+MCS --> DQT
+MCS --> DST
+MCS --> SDT
+MCS --> TT
+DQT --> TP
+DST --> TP
+SDT --> TP
+TT --> TP
+CM --> CT
 CV --> CT
+R --> DC
 ```
 
 **Diagram sources**
 - [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
 - [tests/TestCase.php:1-11](file://tests/TestCase.php#L1-L11)
-- [tests/Feature/ChatTest.php:1-590](file://tests/Feature/ChatTest.php#L1-L590)
+- [tests/Feature/ChatTest.php:1-934](file://tests/Feature/ChatTest.php#L1-L934)
 - [tests/Feature/MarkdownRenderingTest.php:1-116](file://tests/Feature/MarkdownRenderingTest.php#L1-L116)
+- [tests/Unit/McpClientServiceTest.php:1-193](file://tests/Unit/McpClientServiceTest.php#L1-L193)
+- [tests/Unit/McpToolsTest.php:1-236](file://tests/Unit/McpToolsTest.php#L1-L236)
+- [tests/Unit/ToolProxyTest.php:1-313](file://tests/Unit/ToolProxyTest.php#L1-L313)
 - [phpunit.xml:1-37](file://phpunit.xml#L1-L37)
+- [config/services.php:38-43](file://config/services.php#L38-L43)
 - [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
 - [database/factories/UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
-- [app/Http/Controllers/ChatController.php:1-113](file://app/Http/Controllers/ChatController.php#L1-L113)
+- [app/Http/Controllers/ChatController.php:1-182](file://app/Http/Controllers/ChatController.php#L1-L182)
 - [app/Ai/Agents/DevBot.php:1-99](file://app/Ai/Agents/DevBot.php#L1-L99)
-- [resources/views/chat.blade.php:1-391](file://resources/views/chat.blade.php#L1-L391)
+- [app/Services/McpClientService.php:1-279](file://app/Services/McpClientService.php#L1-L279)
+- [app/Ai/Tools/DatabaseQueryTool.php:1-84](file://app/Ai/Tools/DatabaseQueryTool.php#L1-L84)
+- [app/Ai/Tools/DatabaseSchemaTool.php:1-84](file://app/Ai/Tools/DatabaseSchemaTool.php#L1-L84)
+- [app/Ai/Tools/SearchDocsTool.php:1-84](file://app/Ai/Tools/SearchDocsTool.php#L1-L84)
+- [app/Ai/Tools/TinkerTool.php:1-84](file://app/Ai/Tools/TinkerTool.php#L1-L84)
+- [app/Models/Conversation.php:1-45](file://app/Models/Conversation.php#L1-L45)
+- [resources/views/chat.blade.php:1-731](file://resources/views/chat.blade.php#L1-L731)
+- [routes/web.php:1-16](file://routes/web.php#L1-L16)
 
 **Section sources**
 - [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
@@ -116,7 +171,10 @@ CV --> CT
 - Unit and Feature Tests
   - Unit tests focus on isolated logic and assertions using Pest's expect syntax.
   - Feature tests exercise HTTP requests, middleware, and database interactions using Laravel's HTTP test helpers.
-  - **Updated**: Comprehensive chat functionality tests covering interface display, message processing, validation, error handling, and AI integration.
+  - **Updated**: Comprehensive chat functionality tests covering interface display, message processing, validation, error handling, AI integration, and MCP tool integration.
+  - **Updated**: Enhanced conversation management testing with pagination limits (50 conversations), message ordering, and JSON response validation.
+  - **Updated**: MCP client service testing with connection management, tool calling, and error handling validation.
+  - **Updated**: MCP tool proxy testing with sophisticated mocking strategies for database queries, documentation search, and PHP execution.
 
 - Database Configuration and Factories
   - phpunit.xml configures an in-memory SQLite database for fast, isolated tests.
@@ -133,7 +191,7 @@ CV --> CT
 - [database/factories/UserFactory.php:25-44](file://database/factories/UserFactory.php#L25-L44)
 
 ## Architecture Overview
-The testing architecture integrates Pest with Laravel's HTTP and database testing capabilities, now enhanced with comprehensive chat functionality testing. Pest's DSL simplifies test authoring, while Laravel's TestCase provides convenient helpers for requests, authentication, and database assertions. The architecture now includes AI agent testing with DevBot integration and sophisticated mocking strategies.
+The testing architecture integrates Pest with Laravel's HTTP and database testing capabilities, now enhanced with comprehensive chat functionality testing and MCP client integration. Pest's DSL simplifies test authoring, while Laravel's TestCase provides convenient helpers for requests, authentication, and database assertions. The architecture now includes AI agent testing with DevBot integration, sophisticated MCP client service testing, comprehensive tool proxy testing with mocking strategies, and enhanced conversation management testing with pagination limits and message ordering.
 
 ```mermaid
 sequenceDiagram
@@ -144,14 +202,22 @@ participant BaseTC as "tests/TestCase.php"
 participant ChatTest as "tests/Feature/ChatTest.php"
 participant Controller as "ChatController"
 participant DevBot as "DevBot Agent"
+participant MCPClient as "McpClientService"
+participant Tools as "MCP Tools"
 participant HTTP as "Laravel HTTP Kernel"
 participant DB as "SQLite in-memory"
-Dev->>Pest : "Run chat tests"
+Dev->>Pest : "Run conversation management tests"
 Pest->>Boot : "Load bootstrap"
 Boot->>BaseTC : "Extend TestCase for Feature suite"
-Pest->>ChatTest : "Execute chat test closures"
-ChatTest->>Controller : "Call chat endpoints"
+Pest->>ChatTest : "Execute conversation test closures"
+ChatTest->>Controller : "Call conversation endpoints"
+Controller->>Controller : "Apply pagination limits (50)"
+Controller->>Controller : "Order messages by created_at asc"
 Controller->>DevBot : "Process AI responses"
+DevBot->>MCPClient : "Call MCP tools"
+MCPClient->>Tools : "Execute tool commands"
+Tools-->>MCPClient : "Tool results"
+MCPClient-->>DevBot : "Formatted results"
 DevBot-->>Controller : "Mocked AI responses"
 Controller->>HTTP : "Issue HTTP request/response"
 HTTP-->>Controller : "Response"
@@ -166,8 +232,10 @@ Pest-->>Dev : "Test results"
 - [tests/Pest.php:16-18](file://tests/Pest.php#L16-L18)
 - [tests/TestCase.php:7-10](file://tests/TestCase.php#L7-L10)
 - [tests/Feature/ChatTest.php:86-125](file://tests/Feature/ChatTest.php#L86-L125)
-- [app/Http/Controllers/ChatController.php:39-111](file://app/Http/Controllers/ChatController.php#L39-L111)
+- [app/Http/Controllers/ChatController.php:39-182](file://app/Http/Controllers/ChatController.php#L39-L182)
 - [app/Ai/Agents/DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
+- [app/Services/McpClientService.php:48-96](file://app/Services/McpClientService.php#L48-L96)
+- [app/Ai/Tools/DatabaseQueryTool.php:26-69](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L69)
 - [phpunit.xml:20-35](file://phpunit.xml#L20-L35)
 
 ## Detailed Component Analysis
@@ -216,6 +284,13 @@ Practical implications:
   - Validation and error handling
   - Conversation management and persistence
   - AI agent integration and mocking
+  - **Updated**: Enhanced conversation management testing with:
+    - Pagination limits (50 conversations)
+    - Message ordering validation
+    - JSON response structure validation
+    - Conversation creation and retrieval endpoints
+  - **Updated**: MCP tool integration testing with sophisticated mocking strategies
+  - **Updated**: End-to-end integration tests for database queries, documentation search, and PHP execution
 
 **Section sources**
 - [tests/Feature/ExampleTest.php:3-7](file://tests/Feature/ExampleTest.php#L3-L7)
@@ -228,6 +303,8 @@ Practical implications:
 - [tests/Feature/ChatTest.php:411-470](file://tests/Feature/ChatTest.php#L411-L470)
 - [tests/Feature/ChatTest.php:477-534](file://tests/Feature/ChatTest.php#L477-L534)
 - [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
+- [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
+- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
 
 ### Chat Functionality Testing Patterns
 - **Chat Interface Display Tests**
@@ -245,9 +322,14 @@ Practical implications:
 - **Conversation Management Tests**
   - Tests conversation creation, title generation, and persistence across requests.
   - Validates conversation switching and message ordering.
+  - **Updated**: Enhanced with pagination limits (50 conversations) and message ordering validation.
 - **Integration Tests**
   - Full conversation flow testing with multiple messages and AI responses.
   - Validates end-to-end chat functionality.
+- **MCP Tool Integration Tests**
+  - Validates DevBot tool registration and interface compliance.
+  - Tests MCP tool proxy functionality with sophisticated mocking strategies.
+  - Includes end-to-end integration scenarios for database queries, documentation search, and PHP execution.
 
 **Section sources**
 - [tests/Feature/ChatTest.php:18-77](file://tests/Feature/ChatTest.php#L18-L77)
@@ -259,6 +341,37 @@ Practical implications:
 - [tests/Feature/ChatTest.php:411-470](file://tests/Feature/ChatTest.php#L411-L470)
 - [tests/Feature/ChatTest.php:477-534](file://tests/Feature/ChatTest.php#L477-L534)
 - [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
+- [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
+- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
+
+### Conversation Management Testing
+- **Conversation Listing Tests**
+  - Validates JSON endpoint for retrieving conversations with pagination limits (50 conversations).
+  - Tests sorting by created_at descending order.
+  - Validates JSON structure with id, title, created_at, and updated_at fields.
+- **Conversation Creation Tests**
+  - Tests POST endpoint for creating new conversations.
+  - Validates JSON response structure with success flag and conversation details.
+  - Ensures default title "New Chat" is set for new conversations.
+- **Conversation Detail Retrieval Tests**
+  - Tests GET endpoint for retrieving conversation details and messages.
+  - Validates message ordering by created_at ascending order.
+  - Tests JSON response structure with conversation and messages arrays.
+- **Enhanced Message Sending Tests**
+  - Tests AJAX message sending with enhanced response validation.
+  - Validates conversation_title field is included in JSON response.
+  - Tests proper conversation title generation from first message.
+- **Message Ordering Tests**
+  - Validates messages are ordered by created_at ascending order in both HTML and JSON responses.
+  - Tests proper chronological display of user and assistant messages.
+  - Validates conversation model recent messages attribute with 50-message limit.
+
+**Section sources**
+- [tests/Feature/ChatTest.php:418-480](file://tests/Feature/ChatTest.php#L418-L480)
+- [tests/Feature/ChatTest.php:482-540](file://tests/Feature/ChatTest.php#L482-L540)
+- [tests/Feature/ChatTest.php:541-556](file://tests/Feature/ChatTest.php#L541-L556)
+- [tests/Feature/ChatTest.php:562-622](file://tests/Feature/ChatTest.php#L562-L622)
+- [tests/Feature/ChatTest.php:655-685](file://tests/Feature/ChatTest.php#L655-L685)
 
 ### Database Testing and Factories
 - In-memory SQLite configuration
@@ -270,7 +383,8 @@ Practical implications:
 - **Updated**: Enhanced with chat-specific models and relationships:
   - Conversation and Message models with proper foreign key relationships
   - AI agent conversation tables for DevBot integration
-  - Support for chat history and message ordering
+  - Support for chat history, message ordering, and pagination limits
+  - Recent messages attribute with 50-message limit for performance optimization
 
 ```mermaid
 flowchart TD
@@ -278,6 +392,7 @@ Start(["Start Chat Test"]) --> LoadConfig["Load phpunit.xml<br/>DB: SQLite in-me
 LoadConfig --> Seed["Optional: Seed / Migrate"]
 Seed --> CreateFactory["Use Factory to create models<br/>Conversation, Message"]
 CreateFactory --> Exercise["Exercise chat functionality<br/>Controller, DevBot, Views"]
+Exercise --> Pagination["Apply Pagination Limits (50)<br/>Message Ordering Asc"]
 Exercise --> Assert["Assert response / model state<br/>HTML, JSON, Database"]
 Assert --> Cleanup["Cleanup / Reset"]
 Cleanup --> End(["End"])
@@ -300,20 +415,25 @@ Cleanup --> End(["End"])
   - Tests AI agent integration with comprehensive mocking strategies.
   - Validates AI response processing and error handling.
   - Tests conversation context preservation and message ordering.
+  - **Updated**: MCP tool integration testing with sophisticated mocking strategies.
 - **Mocking Strategies**
   - Uses DevBot::fake() for AI response mocking.
   - Tests both successful responses and error scenarios.
   - Validates AI agent configuration and model selection.
+  - **Updated**: MCP tool proxy testing with Mockery for tool argument validation and response simulation.
 - **Integration Patterns**
   - Tests full chat flow with AI integration.
   - Validates conversation persistence across AI interactions.
   - Tests error recovery and graceful degradation.
+  - **Updated**: End-to-end MCP integration testing with database queries, documentation search, and PHP execution.
 
 **Section sources**
 - [app/Ai/Agents/DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
 - [tests/Feature/ChatTest.php:155-171](file://tests/Feature/ChatTest.php#L155-L171)
 - [tests/Feature/ChatTest.php:315-359](file://tests/Feature/ChatTest.php#L315-L359)
 - [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
+- [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
+- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
 
 ### Assertion Syntax and Patterns
 - Prefer semantic assertions
@@ -325,6 +445,9 @@ Cleanup --> End(["End"])
   - JSON structure validation for AJAX responses
   - Markdown content validation for formatted messages
   - Conversation state assertions for persistence testing
+  - Pagination limit assertions for conversation listing
+  - Message ordering assertions for chronological display
+  - **Updated**: MCP tool assertion patterns for tool proxy validation and error handling.
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:44-58](file://.agents/skills/pest-testing/SKILL.md#L44-L58)
@@ -342,11 +465,15 @@ Cleanup --> End(["End"])
   - Exception-based mocking for error scenarios
   - Multiple response mocking for conversation flows
   - Log verification using Log::shouldReceive()
+  - **Updated**: Sophisticated MCP tool proxy mocking with Mockery for argument validation and response simulation.
+  - **Updated**: MCP client service mocking with reflection-based property injection for complex state management.
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:61-61](file://.agents/skills/pest-testing/SKILL.md#L61-L61)
 - [tests/Feature/ChatTest.php:155-171](file://tests/Feature/ChatTest.php#L155-L171)
 - [tests/Feature/ChatTest.php:347-359](file://tests/Feature/ChatTest.php#L347-L359)
+- [tests/Unit/ToolProxyTest.php:14-17](file://tests/Unit/ToolProxyTest.php#L14-L17)
+- [tests/Unit/McpClientServiceTest.php:63-71](file://tests/Unit/McpClientServiceTest.php#L63-L71)
 
 ### Datasets and Repetitive Validation
 - Use datasets to reduce repetition in validation and boundary tests.
@@ -355,6 +482,7 @@ Cleanup --> End(["End"])
   - Message length boundary testing (minimum and maximum limits)
   - Validation error scenarios
   - Conversation ID validation patterns
+  - **Updated**: MCP tool validation datasets for query types, parameter validation, and error scenarios.
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:67-75](file://.agents/skills/pest-testing/SKILL.md#L67-L75)
@@ -369,42 +497,246 @@ Cleanup --> End(["End"])
   - JavaScript-enabled testing for AJAX functionality
   - Real-time message rendering validation
   - Form submission and error handling in browser context
+  - Pagination and conversation switching in browser context
+  - **Updated**: MCP tool browser testing considerations for tool proxy validation and error handling.
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:87-118](file://.agents/skills/pest-testing/SKILL.md#L87-L118)
 - [.agents/skills/pest-testing/SKILL.md:139-149](file://.agents/skills/pest-testing/SKILL.md#L139-L149)
 
+## MCP Client Integration Testing
+
+### McpClientService Testing
+The McpClientService is thoroughly tested with comprehensive coverage of connection management, tool calling, error handling, and configuration validation:
+
+- **Singleton Registration**
+  - Validates that McpClientService is properly registered as a singleton in the Laravel service container.
+- **Initialization and Connection Management**
+  - Tests that the service starts in a disconnected state with null client instances.
+  - Validates client initialization process and connection establishment.
+  - Tests proper cleanup and disconnection procedures.
+- **Tool Calling and Error Handling**
+  - Tests tool calling functionality with proper argument passing and result extraction.
+  - Validates error handling for tool call failures and connection loss.
+  - Tests auto-reconnect functionality after server crashes or connection failures.
+- **Configuration Validation**
+  - Validates timeout configuration settings and bounds checking.
+  - Tests retry configuration validation with proper bounds and defaults.
+- **Advanced Features**
+  - Tests text content extraction from CallToolResult objects.
+  - Validates graceful shutdown and resource cleanup.
+  - Tests exponential backoff retry logic with proper delay calculations.
+
+```mermaid
+flowchart TD
+Start(["MCP Client Test"]) --> Singleton["Test Singleton Registration"]
+Singleton --> Init["Test Initialization Process"]
+Init --> Connect["Test Connection Management"]
+Connect --> ToolCall["Test Tool Calling"]
+ToolCall --> Error["Test Error Handling"]
+Error --> Config["Test Configuration Validation"]
+Config --> Advanced["Test Advanced Features"]
+Advanced --> End(["Complete"])
+```
+
+**Diagram sources**
+- [tests/Unit/McpClientServiceTest.php:16-21](file://tests/Unit/McpClientServiceTest.php#L16-L21)
+- [tests/Unit/McpClientServiceTest.php:32-45](file://tests/Unit/McpClientServiceTest.php#L32-L45)
+- [tests/Unit/McpClientServiceTest.php:51-77](file://tests/Unit/McpClientServiceTest.php#L51-L77)
+- [tests/Unit/McpClientServiceTest.php:79-103](file://tests/Unit/McpClientServiceTest.php#L79-L103)
+- [tests/Unit/McpClientServiceTest.php:105-132](file://tests/Unit/McpClientServiceTest.php#L105-L132)
+- [tests/Unit/McpClientServiceTest.php:134-150](file://tests/Unit/McpClientServiceTest.php#L134-L150)
+- [tests/Unit/McpClientServiceTest.php:152-175](file://tests/Unit/McpClientServiceTest.php#L152-L175)
+- [tests/Unit/McpClientServiceTest.php:177-192](file://tests/Unit/McpClientServiceTest.php#L177-L192)
+
+**Section sources**
+- [tests/Unit/McpClientServiceTest.php:16-21](file://tests/Unit/McpClientServiceTest.php#L16-L21)
+- [tests/Unit/McpClientServiceTest.php:32-45](file://tests/Unit/McpClientServiceTest.php#L32-L45)
+- [tests/Unit/McpClientServiceTest.php:51-77](file://tests/Unit/McpClientServiceTest.php#L51-L77)
+- [tests/Unit/McpClientServiceTest.php:79-103](file://tests/Unit/McpClientServiceTest.php#L79-L103)
+- [tests/Unit/McpClientServiceTest.php:105-132](file://tests/Unit/McpClientServiceTest.php#L105-L132)
+- [tests/Unit/McpClientServiceTest.php:134-150](file://tests/Unit/McpClientServiceTest.php#L134-L150)
+- [tests/Unit/McpClientServiceTest.php:152-175](file://tests/Unit/McpClientServiceTest.php#L152-L175)
+- [tests/Unit/McpClientServiceTest.php:177-192](file://tests/Unit/McpClientServiceTest.php#L177-L192)
+
+### McpTools Testing
+The MCP tools are comprehensively tested for interface compliance, functionality, and error handling:
+
+- **Interface Compliance**
+  - Validates that all MCP tools implement the Laravel AI Tool interface correctly.
+  - Tests tool description generation and schema definition.
+- **Database Query Tool Testing**
+  - Tests read-only query validation (SELECT, SHOW, EXPLAIN, DESCRIBE).
+  - Validates write operation blocking and appropriate error messages.
+  - Tests database connection parameter passing.
+  - Includes integration tests for valid queries and error scenarios.
+- **Database Schema Tool Testing**
+  - Tests table listing functionality and schema retrieval.
+  - Validates nonexistent table error handling.
+  - Tests database connection parameter passing.
+- **Search Docs Tool Testing**
+  - Tests documentation search functionality with query validation.
+  - Validates required parameters and error handling.
+  - Tests package filtering and token limit configuration.
+- **Tinker Tool Testing**
+  - Tests PHP code execution with timeout validation.
+  - Validates code parameter requirements and error handling.
+  - Tests PHP tag stripping and timeout enforcement.
+  - Includes exception handling validation.
+
+```mermaid
+flowchart TD
+Tools["MCP Tools Testing"] --> Interface["Interface Compliance"]
+Interface --> Database["Database Query Tool"]
+Database --> Schema["Database Schema Tool"]
+Schema --> Docs["Search Docs Tool"]
+Docs --> Tinker["Tinker Tool"]
+Database --> QueryValidation["Query Validation"]
+Database --> ConnectionParam["Connection Parameter"]
+Schema --> TableListing["Table Listing"]
+Schema --> ErrorHandling["Error Handling"]
+Docs --> QueryValidation
+Docs --> PackageFilter["Package Filtering"]
+Tinker --> CodeExecution["Code Execution"]
+Tinker --> TimeoutValidation["Timeout Validation"]
+Tinker --> ExceptionHandling["Exception Handling"]
+```
+
+**Diagram sources**
+- [tests/Unit/McpToolsTest.php:18-22](file://tests/Unit/McpToolsTest.php#L18-L22)
+- [tests/Unit/McpToolsTest.php:41-49](file://tests/Unit/McpToolsTest.php#L41-L49)
+- [tests/Unit/McpToolsTest.php:62-71](file://tests/Unit/McpToolsTest.php#L62-L71)
+- [tests/Unit/McpToolsTest.php:106-115](file://tests/Unit/McpToolsTest.php#L106-L115)
+- [tests/Unit/McpToolsTest.php:117-126](file://tests/Unit/McpToolsTest.php#L117-L126)
+- [tests/Unit/McpToolsTest.php:163-171](file://tests/Unit/McpToolsTest.php#L163-L171)
+- [tests/Unit/McpToolsTest.php:207-215](file://tests/Unit/McpToolsTest.php#L207-L215)
+- [tests/Unit/McpToolsTest.php:217-225](file://tests/Unit/McpToolsTest.php#L217-L225)
+
+**Section sources**
+- [tests/Unit/McpToolsTest.php:18-22](file://tests/Unit/McpToolsTest.php#L18-L22)
+- [tests/Unit/McpToolsTest.php:41-49](file://tests/Unit/McpToolsTest.php#L41-L49)
+- [tests/Unit/McpToolsTest.php:62-71](file://tests/Unit/McpToolsTest.php#L62-L71)
+- [tests/Unit/McpToolsTest.php:106-115](file://tests/Unit/McpToolsTest.php#L106-L115)
+- [tests/Unit/McpToolsTest.php:117-126](file://tests/Unit/McpToolsTest.php#L117-L126)
+- [tests/Unit/McpToolsTest.php:163-171](file://tests/Unit/McpToolsTest.php#L163-L171)
+- [tests/Unit/McpToolsTest.php:207-215](file://tests/Unit/McpToolsTest.php#L207-L215)
+- [tests/Unit/McpToolsTest.php:217-225](file://tests/Unit/McpToolsTest.php#L217-L225)
+
+### ToolProxy Testing
+The ToolProxyTest provides sophisticated mocking strategies for testing MCP tool integration without requiring real MCP server connections:
+
+- **Mock Injection Strategy**
+  - Uses Mockery to inject mock McpClientService instances into tool constructors.
+  - Tests argument validation and proper tool argument construction.
+- **Database Query Tool Testing**
+  - Validates read-only query enforcement and error messages.
+  - Tests SELECT and SHOW query acceptance.
+  - Tests database connection parameter passing.
+- **Database Schema Tool Testing**
+  - Tests table listing and schema retrieval with proper argument validation.
+  - Validates database connection parameter passing.
+- **Search Docs Tool Testing**
+  - Tests query validation and error handling for empty queries.
+  - Validates package filtering parameter passing.
+- **Tinker Tool Testing**
+  - Tests code parameter validation and error handling.
+  - Validates timeout parameter enforcement and PHP tag stripping.
+- **Error Handling Testing**
+  - Tests MCP client exception handling and proper error message formatting.
+  - Validates graceful error handling for all tool types.
+
+```mermaid
+flowchart TD
+ToolProxy["Tool Proxy Testing"] --> MockInjection["Mock Injection Strategy"]
+MockInjection --> DatabaseProxy["Database Query Tool Proxy"]
+DatabaseProxy --> SchemaProxy["Database Schema Tool Proxy"]
+SchemaProxy --> DocsProxy["Search Docs Tool Proxy"]
+DocsProxy --> TinkerProxy["Tinker Tool Proxy"]
+DatabaseProxy --> QueryValidation["Query Validation"]
+DatabaseProxy --> ConnectionParam["Connection Parameter"]
+SchemaProxy --> TableValidation["Table Validation"]
+SchemaProxy --> ConnectionParam
+DocsProxy --> QueryValidation
+DocsProxy --> PackageFilter["Package Filtering"]
+TinkerProxy --> CodeValidation["Code Validation"]
+TinkerProxy --> TimeoutValidation["Timeout Validation"]
+TinkerProxy --> ExceptionHandling["Exception Handling"]
+```
+
+**Diagram sources**
+- [tests/Unit/ToolProxyTest.php:14-17](file://tests/Unit/ToolProxyTest.php#L14-L17)
+- [tests/Unit/ToolProxyTest.php:21-32](file://tests/Unit/ToolProxyTest.php#L21-L32)
+- [tests/Unit/ToolProxyTest.php:34-41](file://tests/Unit/ToolProxyTest.php#L34-L41)
+- [tests/Unit/ToolProxyTest.php:43-52](file://tests/Unit/ToolProxyTest.php#L43-L52)
+- [tests/Unit/ToolProxyTest.php:54-63](file://tests/Unit/ToolProxyTest.php#L54-L63)
+- [tests/Unit/ToolProxyTest.php:87-111](file://tests/Unit/ToolProxyTest.php#L87-L111)
+- [tests/Unit/ToolProxyTest.php:135-149](file://tests/Unit/ToolProxyTest.php#L135-L149)
+- [tests/Unit/ToolProxyTest.php:190-204](file://tests/Unit/ToolProxyTest.php#L190-L204)
+
+**Section sources**
+- [tests/Unit/ToolProxyTest.php:14-17](file://tests/Unit/ToolProxyTest.php#L14-L17)
+- [tests/Unit/ToolProxyTest.php:21-32](file://tests/Unit/ToolProxyTest.php#L21-L32)
+- [tests/Unit/ToolProxyTest.php:34-41](file://tests/Unit/ToolProxyTest.php#L34-L41)
+- [tests/Unit/ToolProxyTest.php:43-52](file://tests/Unit/ToolProxyTest.php#L43-L52)
+- [tests/Unit/ToolProxyTest.php:54-63](file://tests/Unit/ToolProxyTest.php#L54-L63)
+- [tests/Unit/ToolProxyTest.php:87-111](file://tests/Unit/ToolProxyTest.php#L87-L111)
+- [tests/Unit/ToolProxyTest.php:135-149](file://tests/Unit/ToolProxyTest.php#L135-L149)
+- [tests/Unit/ToolProxyTest.php:190-204](file://tests/Unit/ToolProxyTest.php#L190-L204)
+- [tests/Unit/ToolProxyTest.php:281-290](file://tests/Unit/ToolProxyTest.php#L281-L290)
+- [tests/Unit/ToolProxyTest.php:292-301](file://tests/Unit/ToolProxyTest.php#L292-L301)
+- [tests/Unit/ToolProxyTest.php:303-312](file://tests/Unit/ToolProxyTest.php#L303-L312)
+
 ## Dependency Analysis
-The testing stack depends on Pest and Laravel's testing ecosystem, now enhanced with AI agent testing dependencies. Composer lists Pest and the Laravel plugin as development dependencies, while phpunit.xml configures the testing environment.
+The testing stack depends on Pest and Laravel's testing ecosystem, now enhanced with AI agent testing dependencies and MCP client integration. Composer lists Pest and the Laravel plugin as development dependencies, while phpunit.xml configures the testing environment. The MCP integration adds dependencies on php-mcp/client library and Laravel AI contracts.
 
 ```mermaid
 graph LR
 Composer["composer.json<br/>require-dev"] --> PestDep["Pest"]
 Composer --> PestLaravelPlugin["Pest Laravel Plugin"]
+Composer --> McpLib["php-mcp/client"]
+Composer --> LaravelAI["laravel/ai"]
 PestDep --> PestBootstrap["tests/Pest.php"]
 PestBootstrap --> BaseTC["tests/TestCase.php"]
 BaseTC --> UnitTests["tests/Unit/*"]
 BaseTC --> FeatureTests["tests/Feature/*"]
 BaseTC --> ChatTests["tests/Feature/ChatTest.php"]
+BaseTC --> McpTests["tests/Unit/Mcp*Test.php"]
 PHPUnitXML["phpunit.xml"] --> DBConfig["SQLite in-memory"]
 DBConfig --> Migrations["database/migrations/*"]
 Migrations --> Factories["database/factories/*"]
 ChatTests --> Controller["ChatController"]
 ChatTests --> DevBot["DevBot Agent"]
+DevBot --> McpClient["McpClientService"]
+McpClient --> McpTools["MCP Tools"]
+McpTools --> DatabaseQuery["DatabaseQueryTool"]
+McpTools --> DatabaseSchema["DatabaseSchemaTool"]
+McpTools --> SearchDocs["SearchDocsTool"]
+McpTools --> Tinker["TinkerTool"]
 Controller --> Views["Chat Blade View"]
 Controller --> Models["Conversation/Message Models"]
+Controller --> Routes["Web Routes"]
 ```
 
 **Diagram sources**
 - [composer.json:24-25](file://composer.json#L24-L25)
 - [tests/Pest.php:16-18](file://tests/Pest.php#L16-L18)
 - [tests/TestCase.php:7-10](file://tests/TestCase.php#L7-L10)
-- [tests/Feature/ChatTest.php:1-590](file://tests/Feature/ChatTest.php#L1-L590)
+- [tests/Feature/ChatTest.php:1-934](file://tests/Feature/ChatTest.php#L1-L934)
+- [tests/Unit/McpClientServiceTest.php:1-193](file://tests/Unit/McpClientServiceTest.php#L1-L193)
+- [tests/Unit/McpToolsTest.php:1-236](file://tests/Unit/McpToolsTest.php#L1-L236)
+- [tests/Unit/ToolProxyTest.php:1-313](file://tests/Unit/ToolProxyTest.php#L1-L313)
 - [phpunit.xml:20-35](file://phpunit.xml#L20-L35)
 - [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
 - [database/factories/UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
-- [app/Http/Controllers/ChatController.php:1-113](file://app/Http/Controllers/ChatController.php#L1-L113)
+- [app/Http/Controllers/ChatController.php:1-182](file://app/Http/Controllers/ChatController.php#L1-L182)
 - [app/Ai/Agents/DevBot.php:1-99](file://app/Ai/Agents/DevBot.php#L1-L99)
+- [app/Services/McpClientService.php:1-279](file://app/Services/McpClientService.php#L1-L279)
+- [app/Ai/Tools/DatabaseQueryTool.php:1-84](file://app/Ai/Tools/DatabaseQueryTool.php#L1-L84)
+- [app/Ai/Tools/DatabaseSchemaTool.php:1-84](file://app/Ai/Tools/DatabaseSchemaTool.php#L1-L84)
+- [app/Ai/Tools/SearchDocsTool.php:1-84](file://app/Ai/Tools/SearchDocsTool.php#L1-L84)
+- [app/Ai/Tools/TinkerTool.php:1-84](file://app/Ai/Tools/TinkerTool.php#L1-L84)
+- [app/Models/Conversation.php:1-45](file://app/Models/Conversation.php#L1-L45)
+- [routes/web.php:1-16](file://routes/web.php#L1-L16)
 
 **Section sources**
 - [composer.json:24-25](file://composer.json#L24-L25)
@@ -421,12 +753,20 @@ Controller --> Models["Conversation/Message Models"]
   - AI agent mocking reduces external API dependencies
   - Database refresh strategies for chat-heavy tests
   - Efficient conversation and message creation patterns
+  - Pagination limits (50 conversations) for performance optimization
+  - Message ordering optimization with database-level sorting
+- **Updated**: MCP client service performance considerations:
+  - Connection pooling and reuse strategies
+  - Retry logic optimization with exponential backoff
+  - Tool result caching for repeated queries
+  - Configuration-based timeout tuning
 
 **Section sources**
 - [.agents/skills/laravel-best-practices/rules/testing.md:3-5](file://.agents/skills/laravel-best-practices/rules/testing.md#L3-L5)
 - [.agents/skills/laravel-best-practices/rules/testing.md:7-13](file://.agents/skills/laravel-best-practices/rules/testing.md#L7-L13)
 - [phpunit.xml:20-35](file://phpunit.xml#L20-L35)
 - [tests/Feature/ChatTest.php:11-16](file://tests/Feature/ChatTest.php#L11-L16)
+- [app/Services/McpClientService.php:112-179](file://app/Services/McpClientService.php#L112-L179)
 
 ## Troubleshooting Guide
 Common pitfalls and remedies:
@@ -443,34 +783,55 @@ Common pitfalls and remedies:
   - AJAX response validation - verify JSON structure and content-type headers
   - Chat interface rendering - check Blade view template correctness
   - Conversation persistence - validate foreign key relationships and timestamps
+  - Pagination limit issues - verify 50-conversation limit in controller and model
+  - Message ordering problems - check created_at asc sorting in controller and model
+- **Updated**: MCP client troubleshooting:
+  - Connection initialization failures - verify MCP server availability and command configuration
+  - Tool call errors - check argument validation and result extraction logic
+  - Auto-reconnect issues - validate retry configuration and exponential backoff timing
+  - Configuration validation failures - ensure proper environment variable settings
+- **Updated**: MCP tool troubleshooting:
+  - Tool proxy mocking failures - verify Mockery setup and property injection
+  - Argument validation errors - check tool schema definitions and parameter requirements
+  - Error handling issues - validate exception propagation and error message formatting
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:151-157](file://.agents/skills/pest-testing/SKILL.md#L151-L157)
 - [.agents/skills/laravel-best-practices/rules/testing.md:23-33](file://.agents/skills/laravel-best-practices/rules/testing.md#L23-L33)
 - [tests/Feature/ChatTest.php:86-125](file://tests/Feature/ChatTest.php#L86-L125)
 - [tests/Feature/ChatTest.php:315-359](file://tests/Feature/ChatTest.php#L315-L359)
+- [app/Services/McpClientService.php:54-95](file://app/Services/McpClientService.php#L54-L95)
+- [tests/Unit/McpClientServiceTest.php:32-45](file://tests/Unit/McpClientServiceTest.php#L32-L45)
+- [tests/Unit/ToolProxyTest.php:14-17](file://tests/Unit/ToolProxyTest.php#L14-L17)
 
 ## Conclusion
-The project's testing infrastructure combines Pest's expressive DSL with Laravel's robust testing toolkit, now significantly enhanced with comprehensive chat functionality testing. The addition of over 500 lines of ChatTest.php provides extensive coverage of chat interface, message processing, validation, error handling, and AI agent integration. The configuration emphasizes speed and isolation via in-memory SQLite, while the Pest bootstrap and shared expectations streamline Feature test authoring. Following the best practices outlined here ensures maintainable, readable, and performant tests that integrate smoothly with AI-assisted development and CI pipelines.
+The project's testing infrastructure combines Pest's expressive DSL with Laravel's robust testing toolkit, now significantly enhanced with comprehensive conversation management testing and MCP client integration. The addition of over 500 lines of ChatTest.php provides extensive coverage of chat interface, message processing, validation, error handling, AI agent integration, MCP tool integration, and **enhanced conversation management** with pagination limits (50 conversations), message ordering validation, and JSON response structure testing. The new MCP client service testing, MCP tools testing, and tool proxy testing provide comprehensive coverage of the Model Context Protocol integration, including connection management, tool calling, error handling, and sophisticated mocking strategies. The configuration emphasizes speed and isolation via in-memory SQLite, while the Pest bootstrap and shared expectations streamline Feature test authoring. Following the best practices outlined here ensures maintainable, readable, and performant tests that integrate smoothly with AI-assisted development and CI pipelines.
 
 ## Appendices
 
 ### Practical Examples Index
 - Feature test example path: [tests/Feature/ExampleTest.php:1-8](file://tests/Feature/ExampleTest.php#L1-L8)
-- Chat functionality test path: [tests/Feature/ChatTest.php:1-590](file://tests/Feature/ChatTest.php#L1-L590)
+- Chat functionality test path: [tests/Feature/ChatTest.php:1-934](file://tests/Feature/ChatTest.php#L1-L934)
 - Markdown rendering test path: [tests/Feature/MarkdownRenderingTest.php:1-116](file://tests/Feature/MarkdownRenderingTest.php#L1-L116)
 - Unit test example path: [tests/Unit/ExampleTest.php:1-6](file://tests/Unit/ExampleTest.php#L1-L6)
 - Pest bootstrap path: [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
 - Base TestCase path: [tests/TestCase.php:1-11](file://tests/TestCase.php#L1-L11)
-- Chat Controller path: [app/Http/Controllers/ChatController.php:1-113](file://app/Http/Controllers/ChatController.php#L1-L113)
+- Chat Controller path: [app/Http/Controllers/ChatController.php:1-182](file://app/Http/Controllers/ChatController.php#L1-L182)
 - DevBot Agent path: [app/Ai/Agents/DevBot.php:1-99](file://app/Ai/Agents/DevBot.php#L1-L99)
-- Chat View path: [resources/views/chat.blade.php:1-391](file://resources/views/chat.blade.php#L1-L391)
-- Routes path: [routes/web.php:1-12](file://routes/web.php#L1-L12)
+- McpClientService path: [app/Services/McpClientService.php:1-279](file://app/Services/McpClientService.php#L1-L279)
+- DatabaseQueryTool path: [app/Ai/Tools/DatabaseQueryTool.php:1-84](file://app/Ai/Tools/DatabaseQueryTool.php#L1-L84)
+- DatabaseSchemaTool path: [app/Ai/Tools/DatabaseSchemaTool.php:1-84](file://app/Ai/Tools/DatabaseSchemaTool.php#L1-L84)
+- SearchDocsTool path: [app/Ai/Tools/SearchDocsTool.php:1-84](file://app/Ai/Tools/SearchDocsTool.php#L1-L84)
+- TinkerTool path: [app/Ai/Tools/TinkerTool.php:1-84](file://app/Ai/Tools/TinkerTool.php#L1-L84)
+- Conversation Model path: [app/Models/Conversation.php:1-45](file://app/Models/Conversation.php#L1-L45)
+- Chat View path: [resources/views/chat.blade.php:1-731](file://resources/views/chat.blade.php#L1-L731)
+- Routes path: [routes/web.php:1-16](file://routes/web.php#L1-L16)
 - User factory path: [database/factories/UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
 - Users migration path: [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
 - Cache migration path: [database/migrations/0001_01_01_000001_create_cache_table.php:1-36](file://database/migrations/0001_01_01_000001_create_cache_table.php#L1-L36)
 - Jobs migration path: [database/migrations/0001_01_01_000002_create_jobs_table.php:1-58](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L1-L58)
 - Agent conversations migration path: [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:1-51](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L1-L51)
+- Service configuration path: [config/services.php:38-43](file://config/services.php#L38-L43)
 
 ### Chat Testing Coverage Matrix
 - **Interface Display**: ✓ Complete coverage of chat page loading, welcome messages, and conversation display
@@ -478,11 +839,20 @@ The project's testing infrastructure combines Pest's expressive DSL with Laravel
 - **Validation**: ✓ Comprehensive message validation (length, format, conversation_id)
 - **Error Handling**: ✓ AI API failures, network timeouts, and graceful error recovery
 - **Conversation Management**: ✓ New conversation creation, title generation, and switching
+- **Conversation Listing**: ✓ JSON endpoint with pagination limits (50 conversations), sorting by created_at desc
+- **Conversation Creation**: ✓ POST endpoint for new conversations with JSON response validation
+- **Conversation Detail Retrieval**: ✓ GET endpoint with message ordering (created_at asc), JSON response structure
+- **Enhanced Message Sending**: ✓ AJAX response with conversation_title field, proper JSON structure
+- **Message Ordering**: ✓ Chronological display validation for user and assistant messages
 - **Integration**: ✓ Full end-to-end chat flow with multiple messages and AI responses
 - **AI Agent Testing**: ✓ DevBot integration, mocking strategies, and error scenarios
 - **Database Testing**: ✓ Conversation and message relationships, persistence, and ordering
 - **View Rendering**: ✓ HTML content validation, markdown formatting, and UI component testing
-- **Performance**: ✓ Optimized test patterns for chat-heavy scenarios
+- **Performance**: ✓ Optimized test patterns for chat-heavy scenarios with pagination limits
+- **MCP Integration**: ✓ DevBot tool registration and interface compliance
+- **MCP Tool Testing**: ✓ Database query, schema, documentation search, and PHP execution tools
+- **MCP Client Testing**: ✓ Connection management, tool calling, error handling, and configuration validation
+- **Tool Proxy Testing**: ✓ Sophisticated mocking strategies for MCP tool integration
 
 **Section sources**
 - [tests/Feature/ChatTest.php:18-77](file://tests/Feature/ChatTest.php#L18-L77)
@@ -494,3 +864,25 @@ The project's testing infrastructure combines Pest's expressive DSL with Laravel
 - [tests/Feature/ChatTest.php:411-470](file://tests/Feature/ChatTest.php#L411-L470)
 - [tests/Feature/ChatTest.php:477-534](file://tests/Feature/ChatTest.php#L477-L534)
 - [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
+- [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
+- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
+- [tests/Unit/McpClientServiceTest.php:16-193](file://tests/Unit/McpClientServiceTest.php#L16-L193)
+- [tests/Unit/McpToolsTest.php:18-236](file://tests/Unit/McpToolsTest.php#L18-L236)
+- [tests/Unit/ToolProxyTest.php:19-313](file://tests/Unit/ToolProxyTest.php#L19-L313)
+
+### Conversation Management Testing Coverage
+- **Pagination Limits**: ✓ Tests conversation listing with 50-conversation limit, sorting by created_at desc
+- **Message Ordering**: ✓ Tests message ordering by created_at asc in both controller and model
+- **JSON Response Validation**: ✓ Tests comprehensive JSON structure for conversations, messages, and responses
+- **Enhanced Message Responses**: ✓ Tests conversation_title field inclusion in AJAX responses
+- **Recent Messages Limit**: ✓ Tests model-level recent messages attribute with 50-message limit
+- **Controller Endpoint Testing**: ✓ Tests all conversation-related endpoints (list, create, get, show)
+- **Performance Optimization**: ✓ Tests pagination and message ordering for performance scalability
+
+**Section sources**
+- [tests/Feature/ChatTest.php:418-480](file://tests/Feature/ChatTest.php#L418-L480)
+- [tests/Feature/ChatTest.php:482-540](file://tests/Feature/ChatTest.php#L482-L540)
+- [tests/Feature/ChatTest.php:541-556](file://tests/Feature/ChatTest.php#L541-L556)
+- [tests/Feature/ChatTest.php:655-685](file://tests/Feature/ChatTest.php#L655-L685)
+- [app/Http/Controllers/ChatController.php:40-102](file://app/Http/Controllers/ChatController.php#L40-L102)
+- [app/Models/Conversation.php:26-29](file://app/Models/Conversation.php#L26-L29)

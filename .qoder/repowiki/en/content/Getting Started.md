@@ -16,319 +16,683 @@
 - [.agents/skills/pest-testing/SKILL.md](file://.agents/skills/pest-testing/SKILL.md)
 - [.agents/skills/tailwindcss-development/SKILL.md](file://.agents/skills/tailwindcss-development/SKILL.md)
 - [routes/web.php](file://routes/web.php)
-- [resources/views/welcome.blade.php](file://resources/views/welcome.blade.php)
+- [resources/views/chat.blade.php](file://resources/views/chat.blade.php)
 - [database/migrations/2026_04_02_115916_create_agent_conversations_table.php](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php)
 - [bootstrap/providers.php](file://bootstrap/providers.php)
+- [app/Ai/Agents/DevBot.php](file://app/Ai/Agents/DevBot.php)
+- [app/Services/McpClientService.php](file://app/Services/McpClientService.php)
+- [app/Http/Controllers/ChatController.php](file://app/Http/Controllers/ChatController.php)
+- [app/Ai/Tools/DatabaseQueryTool.php](file://app/Ai/Tools/DatabaseQueryTool.php)
+- [app/Ai/Tools/DatabaseSchemaTool.php](file://app/Ai/Tools/DatabaseSchemaTool.php)
+- [app/Ai/Tools/SearchDocsTool.php](file://app/Ai/Tools/SearchDocsTool.php)
+- [app/Ai/Tools/TinkerTool.php](file://app/Ai/Tools/TinkerTool.php)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Complete rewrite of installation section with comprehensive quick start and manual installation procedures
+- Added detailed AI provider configuration and MCP client setup instructions
+- Expanded development workflow documentation with Laravel Boost integration
+- Enhanced chat interface usage instructions and conversation management
+- Updated architecture diagrams to reflect DevBot agent implementation
+- Added practical development scenarios with MCP tool integration examples
+- Improved troubleshooting section with specific error handling guidance
 
 ## Table of Contents
 1. [Introduction](#introduction)
-2. [Project Structure](#project-structure)
-3. [Core Components](#core-components)
-4. [Architecture Overview](#architecture-overview)
-5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
+2. [Quick Start Installation](#quick-start-installation)
+3. [Manual Installation](#manual-installation)
+4. [AI Provider Configuration](#ai-provider-configuration)
+5. [MCP Client Setup](#mcp-client-setup)
+6. [Development Workflow](#development-workflow)
+7. [Chat Interface Usage](#chat-interface-usage)
+8. [Practical Development Scenarios](#practical-development-scenarios)
+9. [Architecture Overview](#architecture-overview)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
 
 ## Introduction
-Laravel Assistant is an AI-powered Laravel 13 application scaffold designed to accelerate development through multi-provider AI integration and agent-based workflows. It combines Laravel’s conventions with modern AI tools to streamline common development tasks, enforce best practices, and improve productivity for both beginners and experienced Laravel developers transitioning to AI-assisted development.
+DevBot is an AI-powered development assistant built with Laravel that provides an interactive chat interface for developers to get help with programming questions, code review, debugging, architecture decisions, and best practices. The application combines Laravel's conventions with modern AI tools to streamline common development tasks while maintaining adherence to Laravel's framework standards.
 
 Key capabilities include:
-- Multi-provider AI integration for text, images, audio, embeddings, and reranking
-- Agent-based development with Laravel Boost, Claude Code, Gemini, and Codex
-- Built-in skills for Laravel best practices, Pest testing, and Tailwind CSS development
-- Preconfigured development environment with Vite, database migrations, and queue workers
+- **Interactive Chat Interface** - Modern, responsive UI with real-time messaging and conversation persistence
+- **Multi-Provider AI Integration** - Support for Anthropic, OpenAI, Gemini, Azure OpenAI, and other providers
+- **MCP Tool Integration** - Connects to Laravel Boost MCP server for enhanced capabilities including database queries, schema inspection, documentation search, and PHP code execution
+- **Conversation Management** - Create, switch, and search through conversation history with SQLite persistence
+- **Agent-Based Development** - Uses DevBot agent with Laravel AI SDK for intelligent responses
+- **Domain-Specific Skills** - Pre-configured skills for Laravel best practices, Pest testing, and Tailwind CSS development
 
-This Getting Started guide walks you through installation, environment setup, and initial development workflow, including Laravel Boost installation and AI agent integration.
+**Section sources**
+- [README.md:1-308](file://README.md#L1-L308)
+- [app/Ai/Agents/DevBot.php:21-77](file://app/Ai/Agents/DevBot.php#L21-L77)
 
-## Project Structure
-At a high level, the project follows Laravel conventions with additional AI scaffolding:
-- Laravel core: app/, config/, database/, routes/, resources/, tests/
-- AI configuration: config/ai.php, .mcp.json, boost.json
-- Agent skills: .agents/skills/*
-- Frontend tooling: package.json, vite.config.js, resources/css/, resources/js/
-- Bootstrap and providers: bootstrap/app.php, bootstrap/providers.php
+## Quick Start Installation
 
-```mermaid
-graph TB
-subgraph "Laravel Core"
-A_App["app/"]
-A_Config["config/"]
-A_DB["database/"]
-A_Routes["routes/"]
-A_Resources["resources/"]
-A_Tests["tests/"]
-end
-subgraph "AI Infrastructure"
-AI_Config["config/ai.php"]
-MCP[".mcp.json"]
-BoostCfg["boost.json"]
-Skills[".agents/skills/*"]
-end
-subgraph "Frontend"
-Pkg["package.json"]
-Vite["vite.config.js"]
-CSS["resources/css/"]
-JS["resources/js/"]
-end
-A_App --> A_Config
-A_DB --> A_Routes
-A_Resources --> CSS
-A_Resources --> JS
-A_Tests --> A_Config
-AI_Config --> A_Config
-MCP --> A_App
-BoostCfg --> A_App
-Skills --> A_App
-Pkg --> JS
-Vite --> JS
+### One-Command Setup
+The fastest way to get DevBot up and running is with the automated setup script:
+
+```bash
+# Clone the repository
+git clone <repository-url> laravel-assistant
+cd laravel-assistant
+
+# Run comprehensive setup (installs dependencies, generates key, migrates database, builds assets)
+composer run setup
 ```
 
-**Diagram sources**
-- [config/ai.php:1-132](file://config/ai.php#L1-L132)
-- [.mcp.json:1-11](file://.mcp.json#L1-L11)
-- [boost.json:1-17](file://boost.json#L1-L17)
-- [package.json:1-18](file://package.json#L1-L18)
-- [vite.config.js](file://vite.config.js)
+This single command performs all necessary setup steps automatically, including:
+- Installing PHP dependencies via Composer
+- Copying environment configuration
+- Generating application key
+- Running database migrations
+- Installing Node.js dependencies
+- Building frontend assets with Vite
+
+### Alternative Quick Start
+If you prefer more control over the process, you can run the setup steps individually:
+
+```bash
+# Install PHP dependencies
+composer install
+
+# Install Node.js dependencies  
+npm install
+
+# Set up environment
+cp .env.example .env
+php artisan key:generate
+
+# Set up database
+php artisan migrate
+
+# Build frontend assets
+npm run build
+```
 
 **Section sources**
-- [config/ai.php:1-132](file://config/ai.php#L1-L132)
-- [.mcp.json:1-11](file://.mcp.json#L1-L11)
-- [boost.json:1-17](file://boost.json#L1-L17)
-- [package.json:1-18](file://package.json#L1-L18)
+- [README.md:37-68](file://README.md#L37-L68)
+- [composer.json:41-49](file://composer.json#L41-L49)
 
-## Core Components
-- Laravel 13 application with framework defaults and conventions
-- Laravel AI SDK for multi-provider AI operations
-- Laravel Boost with MCP server and skills for agent-assisted development
-- Pest for testing and Tailwind CSS v4 for styling
-- Vite for asset bundling and development server
+## Manual Installation
 
-Installation and setup are automated via Composer scripts, ensuring a consistent developer experience across environments.
+### Prerequisites
+Before installing DevBot, ensure your system meets the following requirements:
+- **PHP 8.3+** - Required for Laravel 13 compatibility
+- **Composer** - PHP dependency manager
+- **Node.js 18+** & NPM - For frontend asset compilation
+- **SQLite** - Default database (configurable)
+- **Git** - For cloning the repository
+
+### Step-by-Step Installation Process
+
+#### 1. Clone and Install Dependencies
+```bash
+# Clone the repository
+git clone <repository-url> laravel-assistant
+cd laravel-assistant
+
+# Install PHP dependencies
+composer install
+
+# Install Node.js dependencies
+npm install
+```
+
+#### 2. Environment Configuration
+```bash
+# Copy environment example to .env
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+```
+
+#### 3. Database Setup
+```bash
+# Run database migrations
+php artisan migrate
+```
+
+#### 4. Frontend Asset Compilation
+```bash
+# Build production assets
+npm run build
+
+# Or start development server for live reloading
+npm run dev
+```
+
+#### 5. Development Server Startup
+```bash
+# Start Laravel development server
+php artisan serve
+
+# Or use concurrent development with all services
+composer run dev
+```
 
 **Section sources**
-- [composer.json:1-93](file://composer.json#L1-L93)
-- [README.md:32-42](file://README.md#L32-L42)
+- [README.md:30-68](file://README.md#L30-L68)
+- [composer.json:41-76](file://composer.json#L41-L76)
+
+## AI Provider Configuration
+
+### Supported AI Providers
+DevBot supports multiple AI providers through the Laravel AI SDK. The configuration allows you to choose the provider that best fits your needs and budget.
+
+| Provider | Driver | Environment Variable | Default URL |
+|----------|--------|---------------------|-------------|
+| Anthropic | `anthropic` | `ANTHROPIC_API_KEY` | `https://api.anthropic.com/v1` |
+| Z.ai Proxy | `anthropic` | `Z_API_KEY` | `https://api.z.ai/api/anthropic/v1` |
+| Azure OpenAI | `azure` | `AZURE_OPENAI_API_KEY` | Configurable |
+| Cohere | `cohere` | `COHERE_API_KEY` | N/A |
+| DeepSeek | `deepseek` | `DEEPSEEK_API_KEY` | N/A |
+| ElevenLabs | `eleven` | `ELEVENLABS_API_KEY` | N/A |
+| Google Gemini | `gemini` | `GEMINI_API_KEY` | N/A |
+| Groq | `groq` | `GROQ_API_KEY` | N/A |
+| Jina | `jina` | `JINA_API_KEY` | N/A |
+| Mistral | `mistral` | `MISTRAL_API_KEY` | N/A |
+| Ollama | `ollama` | `OLLAMA_API_KEY` | `http://localhost:11434` |
+| OpenAI | `openai` | `OPENAI_API_KEY` | `https://api.openai.com/v1` |
+| OpenRouter | `openrouter` | `OPENROUTER_API_KEY` | N/A |
+| VoyageAI | `voyageai` | `VOYAGEAI_API_KEY` | N/A |
+| X.AI | `xai` | `XAI_API_KEY` | N/A |
+
+### Provider Selection Strategy
+DevBot uses different providers for different AI operations:
+
+```php
+// config/ai.php - Default provider assignments
+'default' => 'z',                    // General text operations
+'default_for_images' => 'gemini',   // Image generation
+'default_for_audio' => 'openai',    // Audio operations
+'default_for_embeddings' => 'openai',// Embedding generation
+'default_for_reranking' => 'cohere', // Document ranking
+```
+
+### Configuration Examples
+
+#### Using Z.ai Proxy (Recommended for Development)
+```env
+# Z.ai proxy provides Anthropic models with simplified authentication
+Z_API_KEY=your_z_ai_api_key_here
+Z_URL=https://api.z.ai/api/anthropic/v1
+```
+
+#### Direct Anthropic Integration
+```env
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+#### OpenAI Integration
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+#### Azure OpenAI Integration
+```env
+AZURE_OPENAI_API_KEY=your_azure_key
+AZURE_OPENAI_URL=https://your-resource.openai.azure.com
+AZURE_OPENAI_API_VERSION=2024-10-21
+AZURE_OPENAI_DEPLOYMENT=gpt-4o
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-small
+```
+
+**Section sources**
+- [README.md:70-105](file://README.md#L70-L105)
+- [config/ai.php:16-135](file://config/ai.php#L16-L135)
+
+## MCP Client Setup
+
+### What is MCP?
+MCP (Model Context Protocol) enables DevBot to access your Laravel application's internal tools and knowledge. The MCP client connects to Laravel Boost to provide capabilities like database introspection, documentation search, and PHP code execution.
+
+### Laravel Boost Installation
+Laravel Boost provides the MCP server that DevBot connects to:
+
+```bash
+# Install Laravel Boost as a development dependency
+composer require laravel/boost --dev
+
+# Run the Boost installer to initialize configuration
+php artisan boost:install
+```
+
+### Boost Configuration
+The Boost configuration file (`boost.json`) controls which agents and skills are enabled:
+
+```json
+{
+    "agents": ["claude_code", "gemini", "codex"],
+    "guidelines": true,
+    "mcp": true,
+    "nightwatch_mcp": false,
+    "sail": false,
+    "skills": [
+        "laravel-best-practices",
+        "pest-testing", 
+        "tailwindcss-development"
+    ]
+}
+```
+
+### MCP Client Configuration
+Configure the MCP client in your environment:
+
+```env
+# Override default MCP client settings
+MCP_CLIENT_COMMAND=php artisan boost:mcp
+MCP_CLIENT_TIMEOUT=60
+MCP_CLIENT_MAX_RETRIES=3
+MCP_CLIENT_RETRY_DELAY=1000
+```
+
+### MCP Tools Available
+Once connected, DevBot can use these MCP tools:
+
+- **Database Query Tool** - Execute read-only SQL queries safely
+- **Database Schema Tool** - Inspect table structure and relationships  
+- **Search Docs Tool** - Search Laravel and package documentation
+- **Tinker Tool** - Execute PHP code in application context
+
+**Section sources**
+- [README.md:96-105](file://README.md#L96-L105)
+- [boost.json:1-17](file://boost.json#L1-17)
+- [AGENTS.md:63-96](file://AGENTS.md#L63-L96)
+
+## Development Workflow
+
+### Concurrent Development Services
+DevBot provides a convenient way to start all development services simultaneously:
+
+```bash
+# Start server, queue worker, logs watcher, and Vite dev server
+composer run dev
+```
+
+This command runs four services concurrently with colored output and automatic restart on changes:
+- Laravel development server
+- Queue listener for background processing
+- Pail logs watcher for real-time logging
+- Vite dev server for hot module replacement
+
+### Individual Service Control
+For more granular control, start services separately:
+
+```bash
+# Laravel development server
+php artisan serve
+
+# Frontend hot reload
+npm run dev
+
+# Queue worker
+php artisan queue:listen --tries=1 --timeout=0
+
+# Real-time logs
+php artisan pail
+```
+
+### Artisan Commands
+Useful Artisan commands for development:
+
+```bash
+# List all available commands
+php artisan list
+
+# View application routes
+php artisan route:list
+
+# Check AI provider configuration
+php artisan config:show ai.providers
+
+# Run tests
+composer run test
+
+# Format code with Laravel Pint
+vendor/bin/pint --dirty
+```
+
+### Testing Workflow
+DevBot includes comprehensive testing setup with Pest:
+
+```bash
+# Run full test suite
+composer run test
+
+# Run specific test
+php artisan test --filter=ChatTest
+
+# Run tests in compact mode
+php artisan test --compact
+```
+
+**Section sources**
+- [README.md:107-212](file://README.md#L107-L212)
+- [composer.json:50-57](file://composer.json#L50-L57)
+
+## Chat Interface Usage
+
+### Accessing the Application
+After starting the development server:
+
+1. Navigate to `http://localhost:8000`
+2. Click "New Chat" to start a conversation
+3. Ask questions about Laravel, PHP, or development topics
+
+### Chat Features
+The chat interface provides a comprehensive development assistant experience:
+
+- **Real-time Messaging** - Instant responses from DevBot
+- **Conversation History** - Browse and manage previous conversations
+- **Responsive Design** - Works on desktop and mobile devices
+- **Markdown Support** - Rich formatting for code blocks and technical content
+- **Loading Indicators** - Visual feedback during AI processing
+
+### Conversation Management
+Manage your conversations through the sidebar:
+
+- **Create New Chats** - Start fresh conversations
+- **Switch Between Chats** - Quickly toggle between ongoing discussions  
+- **Search Conversations** - Find specific conversations by title
+- **Persistent Storage** - All conversations saved in SQLite database
+
+### Message Submission
+Submit messages via the chat interface:
+
+```javascript
+// AJAX request structure
+{
+    "_token": "csrf_token",
+    "message": "Your development question here",
+    "conversation_id": "optional_existing_conversation_id"
+}
+```
+
+**Section sources**
+- [README.md:127-143](file://README.md#L127-L143)
+- [resources/views/chat.blade.php:182-216](file://resources/views/chat.blade.php#L182-L216)
+
+## Practical Development Scenarios
+
+### Common Development Tasks
+DevBot assists with typical Laravel development workflows:
+
+#### Code Review and Best Practices
+- Request code reviews with Laravel best practices
+- Get suggestions for improving Eloquent queries
+- Receive guidance on security patterns and authorization
+- Learn about caching strategies and performance optimization
+
+#### Testing Assistance
+- Generate Pest test cases for new features
+- Fix failing tests with suggested improvements
+- Learn advanced testing patterns and mocking techniques
+- Convert PHPUnit tests to Pest format
+
+#### UI/UX Development
+- Create responsive layouts with Tailwind CSS
+- Implement complex component structures
+- Apply dark mode and accessibility patterns
+- Optimize for mobile-first design
+
+#### Database Operations
+- Write efficient Eloquent queries
+- Design optimal database schemas
+- Debug slow-running queries
+- Plan migration strategies
+
+### MCP Tool Integration Examples
+When DevBot needs additional information, it can use MCP tools:
+
+#### Database Schema Inspection
+```javascript
+// DevBot might ask to inspect database structure
+await mcpClient.callTool('database-schema', {
+    table: 'users'
+});
+```
+
+#### Documentation Search
+```javascript
+// Search Laravel documentation for solutions
+await mcpClient.callTool('search-docs', {
+    queries: ['middleware configuration', 'route model binding'],
+    token_limit: 3000
+});
+```
+
+#### PHP Code Execution
+```javascript
+// Execute code in application context for debugging
+await mcpClient.callTool('tinker', {
+    code: 'App\\Models\\User::count()',
+    timeout: 30
+});
+```
+
+**Section sources**
+- [README.md:257-264](file://README.md#L257-L264)
+- [AGENTS.md:24-31](file://AGENTS.md#L24-L31)
+- [app/Ai/Tools/DatabaseQueryTool.php:26-69](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L69)
 
 ## Architecture Overview
-The AI-assisted development architecture centers on Laravel Boost as the MCP server, exposing tools and skills to agents. Agents can leverage:
-- Laravel Boost tools for database introspection, configuration inspection, and URL resolution
-- Domain-specific skills for Laravel best practices, testing, and Tailwind CSS
-- Laravel AI SDK for provider-agnostic AI operations
+
+### DevBot Agent Implementation
+DevBot is implemented as a specialized AI agent that follows Laravel AI contracts:
 
 ```mermaid
 graph TB
-Dev["Developer"]
-Agent["AI Agent<br/>Claude Code / Gemini / Codex"]
-Boost["Laravel Boost MCP Server"]
-Tools["Boost Tools<br/>database-query, database-schema,<br/>get-absolute-url, browser-logs"]
-Skills["Agent Skills<br/>laravel-best-practices, pest-testing,<br/>tailwindcss-development"]
-Laravel["Laravel App<br/>Routes, Controllers, Models"]
-Providers["AI Providers<br/>Anthropic, Azure OpenAI, Cohere,<br/>DeepSeek, ElevenLabs, Gemini,<br/>Groq, Jina, Mistral, Ollama,<br/>OpenAI, OpenRouter, VoyageAI, XAI"]
-Dev --> Agent
-Agent --> Boost
-Boost --> Tools
-Boost --> Skills
-Agent --> Laravel
-Laravel --> Providers
+subgraph "DevBot Agent"
+A_DevBot["DevBot.php"]
+A_Agent["Agent Contract"]
+A_Conversational["Conversational Contract"]
+A_HasTools["HasTools Contract"]
+A_Promptable["Promptable Trait"]
+end
+subgraph "AI Tools"
+T_Query["DatabaseQueryTool"]
+T_Schema["DatabaseSchemaTool"]
+T_Docs["SearchDocsTool"]
+T_Tinker["TinkerTool"]
+end
+subgraph "MCP Integration"
+M_Client["McpClientService"]
+M_Server["Laravel Boost MCP Server"]
+end
+A_DevBot --> A_Agent
+A_DevBot --> A_Conversational
+A_DevBot --> A_HasTools
+A_DevBot --> A_Promptable
+A_DevBot --> T_Query
+A_DevBot --> T_Schema
+A_DevBot --> T_Docs
+A_DevBot --> T_Tinker
+T_Query --> M_Client
+T_Schema --> M_Client
+T_Docs --> M_Client
+T_Tinker --> M_Client
+M_Client --> M_Server
 ```
 
 **Diagram sources**
-- [AGENTS.md:63-96](file://AGENTS.md#L63-L96)
-- [config/ai.php:52-129](file://config/ai.php#L52-L129)
-- [boost.json:2-15](file://boost.json#L2-L15)
+- [app/Ai/Agents/DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [app/Services/McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
 
-**Section sources**
-- [AGENTS.md:63-96](file://AGENTS.md#L63-L96)
-- [config/ai.php:52-129](file://config/ai.php#L52-L129)
-- [boost.json:2-15](file://boost.json#L2-L15)
-
-## Detailed Component Analysis
-
-### Installation and Initial Setup
-Follow these steps to install and launch the project locally:
-
-1. Prerequisites
-- PHP 8.3+
-- Composer
-- Node.js and npm
-- A compatible database (SQLite included by default)
-
-2. Clone and install dependencies
-- Install PHP dependencies: Composer handles autoloaders and dev tools
-- Install Node dependencies: npm installs Vite and Tailwind tooling
-
-3. Environment configuration
-- Copy .env.example to .env if missing
-- Generate application key
-- Configure APP_URL and APP_DEBUG as needed
-
-4. Database initialization
-- Run migrations to set up tables (including agent conversations)
-- Seed the database if needed
-
-5. Frontend assets
-- Build assets with Vite or run the dev server
-
-6. Development server
-- Launch the Laravel development server
-- Optionally run queue workers and logs watcher for AI features
-
-```mermaid
-flowchart TD
-Start(["Start"]) --> CopyEnv["Copy .env.example to .env"]
-CopyEnv --> InstallPHP["Install PHP dependencies (Composer)"]
-InstallPHP --> InstallJS["Install Node dependencies (npm)"]
-InstallJS --> Env["Configure .env (APP_URL, APP_DEBUG, DB)"]
-Env --> Key["Generate APP_KEY"]
-Key --> Migrate["Run migrations"]
-Migrate --> Assets["Build assets (Vite)"]
-Assets --> Serve["Start Laravel dev server"]
-Serve --> Done(["Ready"])
-```
-
-**Diagram sources**
-- [composer.json:40-71](file://composer.json#L40-L71)
-- [package.json:5-8](file://package.json#L5-L8)
-- [config/app.php:16-100](file://config/app.php#L16-L100)
-- [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:1-51](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L1-L51)
-
-**Section sources**
-- [composer.json:40-71](file://composer.json#L40-L71)
-- [package.json:5-8](file://package.json#L5-L8)
-- [config/app.php:16-100](file://config/app.php#L16-L100)
-- [database/migrations/2026_04_02_115916_create_agent_conversations_table.php:1-51](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L1-L51)
-
-### Laravel Boost Installation and AI Agent Integration
-Laravel Boost integrates with your AI agents to provide tools and skills tailored to Laravel development. Install and configure Boost as follows:
-
-1. Install Laravel Boost
-- Require the development dependency via Composer
-- Run the Boost installer to initialize configuration
-
-2. Configure Boost
-- Enable agents (Claude Code, Gemini, Codex)
-- Activate skills (Laravel best practices, Pest testing, Tailwind CSS)
-- Enable guidelines and MCP server
-
-3. Start the MCP server
-- Laravel Boost exposes an MCP server that agents can connect to
-- The MCP configuration points to the Laravel Boost command
-
-4. Use Boost tools and skills
-- Use Boost tools for database introspection, configuration inspection, URL resolution, and browser logs
-- Leverage skills for Laravel best practices, testing, and Tailwind CSS development
+### Conversation Flow
+The chat interaction follows a structured flow:
 
 ```mermaid
 sequenceDiagram
-participant Dev as "Developer"
-participant Composer as "Composer"
-participant Artisan as "Artisan CLI"
-participant Boost as "Laravel Boost"
-participant MCP as "MCP Server"
-Dev->>Composer : require laravel/boost
-Dev->>Artisan : boost : install
-Artisan->>Boost : Initialize configuration
-Dev->>MCP : Connect agent (Claude Code / Gemini / Codex)
-MCP-->>Dev : Tools and skills available
+participant User
+participant ChatController
+participant DevBot
+participant McpClientService
+participant LaravelBoost
+User->>ChatController : Submit message
+ChatController->>ChatController : Validate input
+ChatController->>ChatController : Create user message
+ChatController->>DevBot : Generate response
+DevBot->>DevBot : Check conversation context
+DevBot->>McpClientService : Call MCP tools (if needed)
+McpClientService->>LaravelBoost : Execute tool
+LaravelBoost-->>McpClientService : Tool response
+McpClientService-->>DevBot : Processed data
+DevBot-->>ChatController : AI response
+ChatController->>ChatController : Create assistant message
+ChatController-->>User : Display response
 ```
 
 **Diagram sources**
-- [README.md:34-42](file://README.md#L34-L42)
-- [composer.json:19-19](file://composer.json#L19-L19)
-- [boost.json:2-15](file://boost.json#L2-L15)
-- [.mcp.json:1-11](file://.mcp.json#L1-L11)
+- [app/Http/Controllers/ChatController.php:107-180](file://app/Http/Controllers/ChatController.php#L107-L180)
+- [app/Ai/Agents/DevBot.php:84-91](file://app/Ai/Agents/DevBot.php#L84-L91)
 
 **Section sources**
-- [README.md:34-42](file://README.md#L34-L42)
-- [composer.json:19-19](file://composer.json#L19-L19)
-- [boost.json:2-15](file://boost.json#L2-L15)
-- [.mcp.json:1-11](file://.mcp.json#L1-L11)
-
-### Practical Development Scenarios
-Common development tasks powered by Laravel Boost and AI skills:
-
-- Writing and refactoring Laravel code
-- Applying Laravel best practices consistently
-- Generating tests with Pest
-- Building responsive UIs with Tailwind CSS v4
-- Inspecting database schema and running safe queries
-- Resolving URLs and diagnosing browser-side issues
-
-These scenarios are guided by the Boost guidelines and skills, ensuring adherence to Laravel conventions and best practices.
-
-**Section sources**
-- [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
-- [AGENTS.md:63-96](file://AGENTS.md#L63-L96)
-- [.agents/skills/laravel-best-practices/SKILL.md:1-190](file://.agents/skills/laravel-best-practices/SKILL.md#L1-L190)
-- [.agents/skills/pest-testing/SKILL.md:1-157](file://.agents/skills/pest-testing/SKILL.md#L1-L157)
-- [.agents/skills/tailwindcss-development/SKILL.md:1-119](file://.agents/skills/tailwindcss-development/SKILL.md#L1-L119)
-
-### Relationship Between Laravel Conventions and AI-Assisted Development
-Laravel Assistant aligns AI assistance with Laravel’s conventions:
-- Use Artisan commands to create files and inspect configuration
-- Follow Laravel’s routing, controllers, models, and testing patterns
-- Maintain consistent naming and structure across the codebase
-- Apply Laravel best practices enforced by the agent skill
-
-This alignment ensures that AI agents understand and enhance your application without disrupting established conventions.
-
-**Section sources**
-- [AGENTS.md:111-127](file://AGENTS.md#L111-L127)
-- [AGENTS.md:129-133](file://AGENTS.md#L129-L133)
-- [bootstrap/providers.php:1-8](file://bootstrap/providers.php#L1-L8)
-
-## Dependency Analysis
-The project’s dependencies are organized into PHP and Node.js components, with Composer scripts orchestrating setup and development workflows.
-
-```mermaid
-graph LR
-Composer["composer.json"]
-NPM["package.json"]
-PHP["PHP Dependencies"]
-Node["Node Dependencies"]
-Scripts["Composer Scripts"]
-Composer --> PHP
-NPM --> Node
-Scripts --> PHP
-Scripts --> Node
-```
-
-**Diagram sources**
-- [composer.json:11-26](file://composer.json#L11-L26)
-- [package.json:9-16](file://package.json#L9-L16)
-- [composer.json:39-74](file://composer.json#L39-L74)
-
-**Section sources**
-- [composer.json:11-26](file://composer.json#L11-L26)
-- [package.json:9-16](file://package.json#L9-L16)
-- [composer.json:39-74](file://composer.json#L39-L74)
-
-## Performance Considerations
-- Use Laravel AI SDK caching for embeddings and other expensive operations
-- Optimize database queries with eager loading and indexing
-- Keep frontend assets optimized with Vite and Tailwind CSS v4 utilities
-- Monitor queue workers and logs during AI-assisted development
-
-[No sources needed since this section provides general guidance]
+- [app/Ai/Agents/DevBot.php:24-107](file://app/Ai/Agents/DevBot.php#L24-L107)
+- [app/Services/McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
+- [app/Http/Controllers/ChatController.php:107-180](file://app/Http/Controllers/ChatController.php#L107-L180)
 
 ## Troubleshooting Guide
-Common issues and resolutions during setup and development:
 
-- Missing .env or APP_KEY
-- Database connection errors
-- Vite manifest errors requiring build or dev server restart
-- Agent MCP connectivity issues
+### Common Installation Issues
 
-Use the Boost guidelines for resolving environment and tooling problems, and consult the Laravel documentation for framework-specific troubleshooting.
+#### Missing Dependencies
+**Problem**: Composer or npm installation fails
+**Solution**: 
+```bash
+# Update Composer dependencies
+composer install --prefer-dist
+
+# Clear Composer cache
+composer clear-cache
+
+# Update npm dependencies
+npm install --legacy-peer-deps
+```
+
+#### Database Connection Errors
+**Problem**: Migration fails with database connection issues
+**Solution**:
+```bash
+# Check database configuration
+php artisan config:show database
+
+# Reset database (loose data)
+php artisan migrate:fresh
+
+# Create SQLite database file if missing
+touch database/database.sqlite
+```
+
+#### Vite Asset Errors
+**Problem**: "Unable to locate file in Vite manifest" error
+**Solution**:
+```bash
+# Rebuild assets
+npm run build
+
+# Or start development server
+npm run dev
+
+# Clear Vite cache
+rm -rf node_modules/.vite
+```
+
+### AI Provider Issues
+
+#### API Key Configuration
+**Problem**: DevBot returns provider errors
+**Solution**:
+```bash
+# Verify environment variables are set
+cat .env | grep -E "^(ANTHROPIC|OPENAI|GEMINI|Z_)"
+
+# Check provider configuration
+php artisan config:show ai.providers
+
+# Test provider connectivity
+php artisan tinker
+>>> App::make(Laravel\Ai\Contracts\Provider::class)->models()
+```
+
+#### Model Selection Issues
+**Problem**: Wrong AI model being used
+**Solution**:
+```bash
+# Set custom model in .env
+DEVBOT_MODEL=claude-haiku-4-5-20251001
+
+# Verify model availability
+php artisan tinker
+>>> App::make(Laravel\Ai\Contracts\Provider::class)->models('anthropic')
+```
+
+### MCP Client Problems
+
+#### Connection Failures
+**Problem**: MCP tools not responding
+**Solution**:
+```bash
+# Check Laravel Boost installation
+php artisan boost:status
+
+# Verify MCP server is running
+php artisan boost:mcp --status
+
+# Check logs for errors
+php artisan pail
+
+# Restart services
+composer run dev
+```
+
+#### Tool Execution Errors
+**Problem**: Specific MCP tools failing
+**Solution**:
+```bash
+# Test individual tools
+php artisan tinker
+>>> App::make(App\Services\McpClientService::class)->callTool('database-schema')
+
+# Check tool permissions
+php artisan boost:permissions
+```
+
+### Development Server Issues
+
+#### Port Conflicts
+**Problem**: Port 8000 already in use
+**Solution**:
+```bash
+# Use different port
+php artisan serve --port=8080
+
+# Kill processes using port 8000
+lsof -ti:8000 | xargs kill -9
+```
+
+#### Hot Reload Not Working
+**Problem**: Changes not reflecting in browser
+**Solution**:
+```bash
+# Restart Vite dev server
+npm run dev
+
+# Clear browser cache
+# Hard refresh (Ctrl+F5)
+
+# Check firewall settings
+```
 
 **Section sources**
+- [README.md:265-291](file://README.md#L265-L291)
 - [AGENTS.md:135-137](file://AGENTS.md#L135-L137)
-- [resources/views/welcome.blade.php:135-137](file://resources/views/welcome.blade.php#L135-L137)
 
 ## Conclusion
-Laravel Assistant provides a robust, AI-enhanced Laravel 13 development environment. By combining multi-provider AI integration, Laravel Boost, and domain-specific agent skills, it accelerates development while maintaining adherence to Laravel conventions. Use this Getting Started guide to install the project, configure AI agents, and begin building with confidence.
+DevBot provides a comprehensive AI-powered development environment built on Laravel's proven framework. By combining interactive chat capabilities, multi-provider AI integration, and MCP tool connectivity, it accelerates development while maintaining strict adherence to Laravel conventions.
 
-[No sources needed since this section summarizes without analyzing specific files]
+The installation process is streamlined through automated setup scripts, while the manual installation approach gives developers full control over each component. The chat interface offers a modern, responsive experience for real-time development assistance, and the MCP integration provides powerful capabilities for database operations, documentation search, and code execution.
+
+Whether you're new to Laravel or an experienced developer looking to enhance your workflow with AI assistance, DevBot offers a solid foundation for intelligent, efficient development. The comprehensive documentation, testing setup, and troubleshooting guides ensure you can quickly become productive with the platform.
+
+Start with the quick installation for immediate results, or dive into the manual setup to understand each component. Explore the practical development scenarios to see how DevBot can assist with common Laravel development tasks, and leverage the MCP tools for advanced capabilities that go beyond traditional development assistance.

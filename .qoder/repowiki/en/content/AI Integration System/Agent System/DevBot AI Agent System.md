@@ -10,22 +10,27 @@
 - [DatabaseSchemaTool.php](file://app/Ai/Tools/DatabaseSchemaTool.php)
 - [SearchDocsTool.php](file://app/Ai/Tools/SearchDocsTool.php)
 - [TinkerTool.php](file://app/Ai/Tools/TinkerTool.php)
+- [McpClientService.php](file://app/Services/McpClientService.php)
 - [Markdown.php](file://app/Helpers/Markdown.php)
 - [ai.php](file://config/ai.php)
+- [services.php](file://config/services.php)
 - [web.php](file://routes/web.php)
 - [chat.blade.php](file://resources/views/chat.blade.php)
 - [2026_04_02_123216_create_conversations_table.php](file://database/migrations/2026_04_02_123216_create_conversations_table.php)
 - [2026_04_02_123238_create_messages_table.php](file://database/migrations/2026_04_02_123238_create_messages_table.php)
 - [composer.json](file://composer.json)
+- [AppServiceProvider.php](file://app/Providers/AppServiceProvider.php)
+- [AGENTS.md](file://AGENTS.md)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive MCP tool integration documentation including DatabaseQueryTool, DatabaseSchemaTool, SearchDocsTool, and TinkerTool
-- Updated agent implementation section to reflect the new tool capabilities
-- Enhanced conversation management section with tool interaction details
-- Added new sections covering MCP tool capabilities and security considerations
-- Updated system architecture diagrams to include MCP tool integration layer
+- Enhanced MCP tool integration documentation with comprehensive coverage of four new MCP-powered tools
+- Updated agent implementation section to reflect MCP tool proxy architecture
+- Added detailed MCP client service documentation with configuration and error handling
+- Enhanced security considerations section with MCP-specific protections
+- Updated system architecture diagrams to include MCP protocol communication layer
+- Added MCP tool proxy patterns and integration specifications
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,27 +38,28 @@
 3. [Core Components](#core-components)
 4. [Agent Implementation](#agent-implementation)
 5. [MCP Tool Integration](#mcp-tool-integration)
-6. [Conversation Management](#conversation-management)
-7. [User Interface](#user-interface)
-8. [AI Provider Configuration](#ai-provider-configuration)
-9. [Skills and Capabilities](#skills-and-capabilities)
-10. [Database Schema](#database-schema)
-11. [API Endpoints](#api-endpoints)
-12. [Error Handling](#error-handling)
-13. [Security Considerations](#security-considerations)
-14. [Performance Considerations](#performance-considerations)
-15. [Deployment and Setup](#deployment-and-setup)
-16. [Conclusion](#conclusion)
+6. [MCP Client Service](#mcp-client-service)
+7. [Conversation Management](#conversation-management)
+8. [User Interface](#user-interface)
+9. [AI Provider Configuration](#ai-provider-configuration)
+10. [Skills and Capabilities](#skills-and-capabilities)
+11. [Database Schema](#database-schema)
+12. [API Endpoints](#api-endpoints)
+13. [Error Handling](#error-handling)
+14. [Security Considerations](#security-considerations)
+15. [Performance Considerations](#performance-considerations)
+16. [Deployment and Setup](#deployment-and-setup)
+17. [Conclusion](#conclusion)
 
 ## Introduction
 
-DevBot is an AI-powered development assistant integrated into a Laravel application with comprehensive MCP (Model Context Protocol) tool integration. This intelligent chat system provides developers with instant access to programming knowledge, code review capabilities, debugging assistance, architectural guidance, and direct database interaction through specialized tools. Built with Laravel's AI framework and enhanced with MCP tool capabilities, DevBot serves as a comprehensive development companion that understands Laravel and PHP best practices while offering real-time conversational AI responses with powerful tool execution capabilities.
+DevBot is an AI-powered development assistant integrated into a Laravel application with comprehensive MCP (Model Context Protocol) tool integration. This intelligent chat system provides developers with instant access to programming knowledge, code review capabilities, debugging assistance, architectural guidance, and direct database interaction through specialized MCP-powered tools. Built with Laravel's AI framework and enhanced with MCP protocol communication, DevBot serves as a comprehensive development companion that understands Laravel and PHP best practices while offering real-time conversational AI responses with powerful tool execution capabilities.
 
-The system combines modern AI technologies with Laravel's robust framework and MCP protocol to create an intuitive development environment where developers can ask questions, receive code examples, get guidance on best practices, and directly interact with their application's database and documentation systems. DevBot is particularly focused on Laravel ecosystem development, making it an invaluable tool for PHP developers working within the Laravel framework.
+The system combines modern AI technologies with Laravel's robust framework and MCP protocol to create an intuitive development environment where developers can ask questions, receive code examples, get guidance on best practices, and directly interact with their application's database and documentation systems through secure MCP tool proxies. DevBot is particularly focused on Laravel ecosystem development, making it an invaluable tool for PHP developers working within the Laravel framework.
 
 ## System Architecture
 
-The DevBot system follows a clean, layered architecture that separates concerns between presentation, business logic, data persistence, AI integration, and MCP tool execution. The architecture is designed around Laravel's MVC pattern while incorporating modern AI agent capabilities and comprehensive tool integration.
+The DevBot system follows a clean, layered architecture that separates concerns between presentation, business logic, data persistence, AI integration, and MCP tool execution. The architecture is designed around Laravel's MVC pattern while incorporating modern AI agent capabilities and comprehensive MCP tool integration with secure external service communication.
 
 ```mermaid
 graph TB
@@ -68,16 +74,16 @@ Agent[DevBot Agent]
 Conversation[Conversation Management]
 Message[Message Processing]
 end
-subgraph "Infrastructure Layer"
-Models[Eloquent Models]
-Database[(Database)]
+subgraph "AI Integration Layer"
 AI_Provider[AI Provider Interface]
-Tools[MCPTools]
+Tools[MCP Tool Proxies]
+end
+subgraph "MCP Communication Layer"
+McpClientService[McpClientService]
+BoostServer[Laravel Boost MCP Server]
 end
 subgraph "External Services"
-Anthropic[Anthropic API]
-Gemini[Gemini API]
-Local[Local Models]
+Database[(Database)]
 Docs[Laravel Documentation]
 end
 UI --> Controller
@@ -87,33 +93,36 @@ Controller --> Conversation
 Controller --> Message
 Agent --> AI_Provider
 Agent --> Tools
-Tools --> Database
-Tools --> Docs
-Conversation --> Models
+Tools --> McpClientService
+McpClientService --> BoostServer
+BoostServer --> Database
+BoostServer --> Docs
+Conversation --> Models[Eloquent Models]
 Message --> Models
 Models --> Database
-AI_Provider --> Anthropic
-AI_Provider --> Gemini
-AI_Provider --> Local
+AI_Provider --> Anthropic[Anthropic API]
+AI_Provider --> Gemini[Gemini API]
+AI_Provider --> Local[Local Models]
 ```
 
 **Diagram sources**
 - [ChatController.php:13-113](file://app/Http/Controllers/ChatController.php#L13-L113)
 - [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
-- [Conversation.php:8-45](file://app/Models/Conversation.php#L8-L45)
-- [Message.php:9-44](file://app/Models/Message.php#L9-L44)
+- [McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
+- [AppServiceProvider.php:9-65](file://app/Providers/AppServiceProvider.php#L9-L65)
 
-The architecture ensures clear separation of concerns with the controller handling HTTP requests, the agent managing AI interactions and tool execution, and the models handling data persistence. The MCP tool integration layer provides secure, controlled access to application resources while maintaining system security boundaries.
+The architecture ensures clear separation of concerns with the controller handling HTTP requests, the agent managing AI interactions and MCP tool proxy execution, and the models handling data persistence. The MCP tool integration layer provides secure, controlled access to application resources while maintaining system security boundaries through the McpClientService abstraction.
 
 **Section sources**
 - [ChatController.php:13-113](file://app/Http/Controllers/ChatController.php#L13-L113)
 - [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
+- [McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
 
 ## Core Components
 
 ### AI Agent System
 
-The heart of DevBot is the DevBot AI agent, which implements Laravel's AI agent interface with comprehensive MCP tool integration. This agent is configured with specific parameters optimized for development assistance and includes four specialized tools for enhanced functionality.
+The heart of DevBot is the DevBot AI agent, which implements Laravel's AI agent interface with comprehensive MCP tool proxy integration. This agent is configured with specific parameters optimized for development assistance and includes four specialized MCP-powered tools for enhanced functionality.
 
 ```mermaid
 classDiagram
@@ -160,6 +169,12 @@ class TinkerTool {
 +handle(request) string
 +schema(schema) array
 }
+class McpClientService {
++initialize() void
++callTool(toolName, arguments) string
++disconnect() void
++isConnected() bool
+}
 DevBot ..|> Agent
 DevBot ..|> Conversational
 DevBot ..|> HasTools
@@ -167,39 +182,47 @@ DevBot --> DatabaseQueryTool
 DevBot --> DatabaseSchemaTool
 DevBot --> SearchDocsTool
 DevBot --> TinkerTool
+DatabaseQueryTool --> McpClientService
+DatabaseSchemaTool --> McpClientService
+SearchDocsTool --> McpClientService
+TinkerTool --> McpClientService
 ```
 
 **Diagram sources**
-- [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
-- [DatabaseQueryTool.php:13-89](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L89)
-- [DatabaseSchemaTool.php:14-115](file://app/Ai/Tools/DatabaseSchemaTool.php#L14-L115)
-- [SearchDocsTool.php:12-126](file://app/Ai/Tools/SearchDocsTool.php#L12-L126)
-- [TinkerTool.php:12-107](file://app/Ai/Tools/TinkerTool.php#L12-L107)
+- [DevBot.php:24-106](file://app/Ai/Agents/DevBot.php#L24-L106)
+- [DatabaseQueryTool.php:13-84](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L84)
+- [DatabaseSchemaTool.php:13-69](file://app/Ai/Tools/DatabaseSchemaTool.php#L13-L69)
+- [SearchDocsTool.php:13-75](file://app/Ai/Tools/SearchDocsTool.php#L13-L75)
+- [TinkerTool.php:13-89](file://app/Ai/Tools/TinkerTool.php#L13-L89)
+- [McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
 
-The agent is configured with a maximum step limit of 10 and a temperature setting of 0.7, providing balanced responses that are both helpful and accurate for development scenarios. The four integrated tools provide comprehensive development assistance capabilities.
+The agent is configured with a maximum step limit of 10 and a temperature setting of 0.7, providing balanced responses that are both helpful and accurate for development scenarios. The four integrated MCP tool proxies provide comprehensive development assistance capabilities through secure external service communication.
 
 **Section sources**
-- [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
+- [DevBot.php:24-106](file://app/Ai/Agents/DevBot.php#L24-L106)
 
 ### Controller Layer
 
-The ChatController serves as the primary entry point for user interactions, handling both web interface rendering and API requests. It manages conversation lifecycle, validates user input, coordinates with the AI agent for responses, and integrates with the MCP tool system for enhanced functionality.
+The ChatController serves as the primary entry point for user interactions, handling both web interface rendering and API requests. It manages conversation lifecycle, validates user input, coordinates with the AI agent for responses, and integrates with the MCP tool proxy system for enhanced functionality.
 
 ```mermaid
 sequenceDiagram
 participant User as User Browser
 participant Controller as ChatController
 participant Agent as DevBot Agent
-participant Tools as MCP Tools
-participant DB as Database
+participant Tools as MCP Tool Proxies
+participant McpService as McpClientService
+participant Boost as Laravel Boost Server
 User->>Controller : POST /chat/message
 Controller->>Controller : Validate Request
 Controller->>DB : Create/Load Conversation
 Controller->>DB : Save User Message
 Controller->>Agent : prompt(user_message)
 Agent->>Tools : Execute Tool Requests
-Tools->>DB : Database Operations
-Tools->>Tools : Documentation Search
+Tools->>McpService : callTool(tool_name, arguments)
+McpService->>Boost : JSON-RPC 2.0 request
+Boost-->>McpService : Tool response
+McpService-->>Tools : Formatted result
 Tools-->>Agent : Tool Results
 Agent->>Agent : Generate AI Response
 Agent-->>Controller : Response Text
@@ -218,7 +241,7 @@ Note over Controller,DB : Conversation and Messages stored
 
 ### Configuration and Behavior
 
-The DevBot agent is configured with specific parameters that optimize its behavior for development assistance and includes comprehensive instructions for appropriate responses. The agent uses environment variables for flexible deployment configurations and includes four specialized tools for enhanced functionality.
+The DevBot agent is configured with specific parameters that optimize its behavior for development assistance and includes comprehensive instructions for appropriate responses. The agent uses environment variables for flexible deployment configurations and includes four specialized MCP-powered tools for enhanced functionality.
 
 ```mermaid
 flowchart TD
@@ -226,7 +249,7 @@ Start([Agent Initialization]) --> LoadConfig["Load Environment Config"]
 LoadConfig --> SetModel["Set Model: claude-haiku-4-5-20251001"]
 SetModel --> SetTemperature["Set Temperature: 0.7"]
 SetTemperature --> SetMaxSteps["Set Max Steps: 10"]
-SetMaxSteps --> LoadTools["Load MCP Tools"]
+SetMaxSteps --> LoadTools["Load MCP Tool Proxies"]
 LoadTools --> Ready([Agent Ready])
 Ready --> ProcessMessage["Process User Message"]
 ProcessMessage --> ValidateInput["Validate Input"]
@@ -234,7 +257,7 @@ ValidateInput --> InputValid{"Valid Input?"}
 InputValid --> |No| ReturnError["Return Error Response"]
 InputValid --> |Yes| CheckTools["Check Tool Requests"]
 CheckTools --> ToolRequested{"Tool Request?"}
-ToolRequested --> |Yes| ExecuteTool["Execute MCP Tool"]
+ToolRequested --> |Yes| ExecuteTool["Execute MCP Tool Proxy"]
 ToolRequested --> |No| GenerateResponse["Generate AI Response"]
 ExecuteTool --> ToolResult["Process Tool Result"]
 ToolResult --> GenerateResponse
@@ -245,87 +268,87 @@ ReturnResponse --> End
 ```
 
 **Diagram sources**
-- [DevBot.php:24-34](file://app/Ai/Agents/DevBot.php#L24-L34)
-- [DevBot.php:17-19](file://app/Ai/Agents/DevBot.php#L17-L19)
+- [DevBot.php:28-38](file://app/Ai/Agents/DevBot.php#L28-L38)
+- [DevBot.php:43-77](file://app/Ai/Agents/DevBot.php#L43-L77)
 - [DevBot.php:98-106](file://app/Ai/Agents/DevBot.php#L98-L106)
 
-The agent's instructions emphasize development-focused assistance, including Laravel and PHP best practices, code review capabilities, architectural guidance, and MCP tool usage. This ensures responses remain relevant and helpful for developer use cases while leveraging the power of integrated tools.
+The agent's instructions emphasize development-focused assistance, including Laravel and PHP best practices, code review capabilities, architectural guidance, and MCP tool usage. This ensures responses remain relevant and helpful for developer use cases while leveraging the power of integrated MCP tool proxies.
 
 **Section sources**
-- [DevBot.php:17-108](file://app/Ai/Agents/DevBot.php#L17-L108)
+- [DevBot.php:28-106](file://app/Ai/Agents/DevBot.php#L28-L106)
 
 ## MCP Tool Integration
 
 ### Database Query Tool
 
-The DatabaseQueryTool provides secure, read-only SQL query execution against the application database. It enforces strict security policies and provides comprehensive error handling for database operations.
+The DatabaseQueryTool provides secure, read-only SQL query execution against the application database through the MCP protocol. It enforces strict security policies and provides comprehensive error handling for database operations via the Laravel Boost MCP server.
 
 ```mermaid
 flowchart TD
 QueryRequest["SQL Query Request"] --> ValidateQuery["Validate Query Type"]
 ValidateQuery --> CheckReadOnly{"Read-Only Allowed?"}
 CheckReadOnly --> |No| BlockQuery["Block Non-Read-Only Query"]
-CheckReadOnly --> |Yes| ExecuteQuery["Execute Query with Row Limit"]
-ExecuteQuery --> CheckResults{"More Than 100 Rows?"}
-CheckResults --> |Yes| LimitResults["Limit to 100 Rows"]
-CheckResults --> |No| ReturnResults["Return Full Results"]
+CheckReadOnly --> |Yes| PrepareArgs["Prepare MCP Arguments"]
+PrepareArgs --> CallMCP["Call McpClientService.callTool()"]
+CallMCP --> ExecuteQuery["Execute via Laravel Boost Server"]
+ExecuteQuery --> CheckResults{"Results Received?"}
+CheckResults --> |Yes| FormatResults["Format Results"]
+CheckResults --> |No| HandleError["Handle MCP Error"]
 BlockQuery --> LogWarning["Log Security Warning"]
 LogWarning --> ReturnError["Return Error Message"]
-LimitResults --> ReturnLimited["Return Limited Results"]
-ReturnResults --> Success["Success"]
-ReturnLimited --> Success
+FormatResults --> Success["Success"]
+HandleError --> ReturnError
 ReturnError --> End([End])
 Success --> End
 ```
 
 **Diagram sources**
-- [DatabaseQueryTool.php:26-74](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L74)
+- [DatabaseQueryTool.php:26-69](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L69)
 
-The tool restricts queries to SELECT, SHOW, EXPLAIN, and DESCRIBE statements only, preventing destructive database operations. Results are automatically limited to 100 rows to prevent performance issues.
+The tool restricts queries to SELECT, SHOW, EXPLAIN, and DESCRIBE statements only, preventing destructive database operations. Results are automatically handled by the McpClientService and returned to the AI agent for processing.
 
 **Section sources**
-- [DatabaseQueryTool.php:13-89](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L89)
+- [DatabaseQueryTool.php:13-84](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L84)
 
 ### Database Schema Tool
 
-The DatabaseSchemaTool provides comprehensive database schema information including table listings, column details, and index information. It offers both overview and detailed schema inspection capabilities.
+The DatabaseSchemaTool provides comprehensive database schema information including table listings, column details, and index information through the MCP protocol. It offers both overview and detailed schema inspection capabilities via the Laravel Boost MCP server.
 
 ```mermaid
 flowchart TD
 SchemaRequest["Schema Request"] --> CheckTable{"Table Specified?"}
-CheckTable --> |No| ListTables["List All Tables"]
+CheckTable --> |No| ListTables["List All Tables via MCP"]
 CheckTable --> |Yes| CheckExists{"Table Exists?"}
 CheckExists --> |No| TableError["Return Table Not Found Error"]
-CheckExists --> |Yes| GetSchema["Get Table Schema"]
+CheckExists --> |Yes| GetSchema["Get Table Schema via MCP"]
 ListTables --> ReturnTables["Return Table List"]
-GetSchema --> GetColumns["Get Column Information"]
-GetSchema --> GetIndexes["Get Index Information"]
-GetColumns --> CombineResults["Combine Schema Details"]
-GetIndexes --> CombineResults
-CombineResults --> ReturnSchema["Return Complete Schema"]
+GetSchema --> ProcessSchema["Process Schema via McpClientService"]
+ProcessSchema --> ReturnSchema["Return Complete Schema"]
 TableError --> End([End])
 ReturnTables --> End
 ReturnSchema --> End
 ```
 
 **Diagram sources**
-- [DatabaseSchemaTool.php:27-100](file://app/Ai/Tools/DatabaseSchemaTool.php#L27-L100)
+- [DatabaseSchemaTool.php:26-54](file://app/Ai/Tools/DatabaseSchemaTool.php#L26-L54)
 
-The tool filters out internal database system tables and provides detailed information about table structure, column types, and index definitions for comprehensive database understanding.
+The tool filters out internal database system tables and provides detailed information about table structure, column types, and index definitions for comprehensive database understanding through the MCP protocol.
 
 **Section sources**
-- [DatabaseSchemaTool.php:14-115](file://app/Ai/Tools/DatabaseSchemaTool.php#L14-L115)
+- [DatabaseSchemaTool.php:13-69](file://app/Ai/Tools/DatabaseSchemaTool.php#L13-L69)
 
 ### Search Documentation Tool
 
-The SearchDocsTool provides Laravel and package documentation search capabilities with intelligent result deduplication and relevance scoring. It serves as a bridge between the AI agent and external documentation resources.
+The SearchDocsTool provides Laravel and package documentation search capabilities with intelligent result deduplication and relevance scoring through the MCP protocol. It serves as a bridge between the AI agent and external documentation resources via the Laravel Boost MCP server.
 
 ```mermaid
 flowchart TD
 DocRequest["Documentation Request"] --> ValidateQueries["Validate Query Array"]
 ValidateQueries --> CheckValid{"Valid Queries?"}
 CheckValid --> |No| ReturnError["Return Validation Error"]
-CheckValid --> |Yes| ExecuteSearch["Execute Documentation Search"]
+CheckValid --> |Yes| PrepareArgs["Prepare MCP Arguments"]
+PrepareArgs --> CallMCP["Call McpClientService.callTool()"]
+CallMCP --> ExecuteSearch["Execute via Laravel Boost Server"]
 ExecuteSearch --> ProcessResults["Process Search Results"]
 ProcessResults --> Deduplicate["Remove Duplicate Results"]
 Deduplicate --> LimitResults["Limit to Top 10 Results"]
@@ -335,16 +358,16 @@ ReturnResults --> End
 ```
 
 **Diagram sources**
-- [SearchDocsTool.php:25-72](file://app/Ai/Tools/SearchDocsTool.php#L25-L72)
+- [SearchDocsTool.php:32-59](file://app/Ai/Tools/SearchDocsTool.php#L32-L59)
 
-The tool accepts multiple search queries and packages, returning relevant documentation snippets with links to authoritative sources. Results are deduplicated and limited to ensure quality and performance.
+The tool accepts multiple search queries and packages, returning relevant documentation snippets with links to authoritative sources. Results are processed through the McpClientService and returned to the AI agent for formatting.
 
 **Section sources**
-- [SearchDocsTool.php:12-126](file://app/Ai/Tools/SearchDocsTool.php#L12-L126)
+- [SearchDocsTool.php:13-75](file://app/Ai/Tools/SearchDocsTool.php#L13-L75)
 
 ### Tinker Tool
 
-The TinkerTool provides a safe execution environment for PHP code evaluation within the Laravel application context. It offers debugging capabilities and code testing functionality with comprehensive error handling.
+The TinkerTool provides a safe execution environment for PHP code evaluation within the Laravel application context through the MCP protocol. It offers debugging capabilities and code testing functionality with comprehensive error handling via the Laravel Boost MCP server.
 
 ```mermaid
 flowchart TD
@@ -352,8 +375,11 @@ CodeRequest["Code Execution Request"] --> ValidateCode["Validate Code Parameter"
 ValidateCode --> CheckEmpty{"Code Provided?"}
 CheckEmpty --> |No| ReturnError["Return Validation Error"]
 CheckEmpty --> |Yes| CleanCode["Clean Code Input"]
-CleanCode --> SetTimeout["Set Execution Timeout"]
-SetTimeout --> ExecuteCode["Execute Code Safely"]
+CleanCode --> StripTags["Strip PHP Opening Tags"]
+StripTags --> SetTimeout["Set Execution Timeout"]
+SetTimeout --> PrepareArgs["Prepare MCP Arguments"]
+PrepareArgs --> CallMCP["Call McpClientService.callTool()"]
+CallMCP --> ExecuteCode["Execute via Laravel Boost Server"]
 ExecuteCode --> CaptureOutput["Capture Output Buffer"]
 CaptureOutput --> GetResult["Get Execution Result"]
 GetResult --> FormatResult["Format Execution Result"]
@@ -363,12 +389,122 @@ ReturnResult --> End
 ```
 
 **Diagram sources**
-- [TinkerTool.php:25-60](file://app/Ai/Tools/TinkerTool.php#L25-L60)
+- [TinkerTool.php:31-57](file://app/Ai/Tools/TinkerTool.php#L31-L57)
 
-The tool removes PHP opening tags, validates timeout limits (maximum 60 seconds), captures output buffers, and returns both execution output and return values for comprehensive debugging support.
+The tool removes PHP opening tags, validates timeout limits (maximum 60 seconds), captures output buffers, and returns both execution output and return values for comprehensive debugging support through the MCP protocol.
 
 **Section sources**
-- [TinkerTool.php:12-107](file://app/Ai/Tools/TinkerTool.php#L12-L107)
+- [TinkerTool.php:13-89](file://app/Ai/Tools/TinkerTool.php#L13-L89)
+
+## MCP Client Service
+
+### Service Architecture
+
+The McpClientService provides a centralized interface for managing connections to the Laravel Boost MCP server via STDIO transport. It manages connection lifecycle, implements auto-reconnect logic, and provides comprehensive logging for all MCP operations.
+
+```mermaid
+classDiagram
+class McpClientService {
++Client client
++bool initialized
++initialize() void
++callTool(toolName, arguments) string
++disconnect() void
++isConnected() bool
++getClient() Client
++terminate() void
+-extractTextContent(result) string
+}
+class Client {
+<<php-mcp/client>>
++initialize() void
++callTool(toolName, arguments) mixed
++isReady() bool
++disconnect() void
+}
+class ServerConfig {
++string name
++TransportType transport
++float timeout
++string command
++array args
++string workingDir
+}
+McpClientService --> Client
+McpClientService --> ServerConfig
+```
+
+**Diagram sources**
+- [McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
+
+The service creates a new client instance with STDIO transport, configures server parameters, and performs the MCP handshake. It manages connection state to prevent duplicate initialization and provides persistent connections for multiple tool calls.
+
+**Section sources**
+- [McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
+
+### Connection Management
+
+The McpClientService implements sophisticated connection management with automatic initialization, health checks, and graceful shutdown capabilities. It handles connection failures with auto-reconnect logic and exponential backoff.
+
+```mermaid
+sequenceDiagram
+participant App as Application
+participant Service as McpClientService
+participant Client as php-mcp Client
+participant Server as Laravel Boost Server
+App->>Service : callTool()
+Service->>Service : initialize() if not ready
+Service->>Client : initialize()
+Client->>Server : MCP initialize
+Server-->>Client : Handshake success
+Client-->>Service : Ready
+Service->>Client : callTool(tool, args)
+Client->>Server : JSON-RPC 2.0 tools/call
+Server-->>Client : Tool response
+Client-->>Service : Response
+Service->>Service : extractTextContent()
+Service-->>App : Formatted result
+```
+
+**Diagram sources**
+- [McpClientService.php:48-96](file://app/Services/McpClientService.php#L48-L96)
+- [McpClientService.php:110-179](file://app/Services/McpClientService.php#L110-L179)
+
+**Section sources**
+- [McpClientService.php:48-179](file://app/Services/McpClientService.php#L48-L179)
+
+### Configuration and Error Handling
+
+The McpClientService reads configuration from the services.php configuration file and implements comprehensive error handling with logging and retry mechanisms. It validates configuration settings and handles connection failures gracefully.
+
+```mermaid
+flowchart TD
+ConfigLoad["Load Configuration"] --> ValidateTimeout["Validate Timeout Setting"]
+ValidateTimeout --> CheckRetries["Validate Max Retries"]
+CheckRetries --> CheckDelay["Validate Retry Delay"]
+CheckDelay --> InitService["Initialize Service"]
+InitService --> HealthCheck["Health Check"]
+HealthCheck --> ConnectionOK{"Connection OK?"}
+ConnectionOK --> |Yes| Ready["Service Ready"]
+ConnectionOK --> |No| Reconnect["Auto-Reconnect"]
+Reconnect --> RetryAttempt["Retry Attempt"]
+RetryAttempt --> MaxRetries{"Max Retries Reached?"}
+MaxRetries --> |No| Backoff["Exponential Backoff"]
+Backoff --> Reconnect
+MaxRetries --> |Yes| ThrowError["Throw Exception"]
+Ready --> Operation["Perform Operation"]
+Operation --> Success["Operation Success"]
+Success --> End([End])
+ThrowError --> End
+```
+
+**Diagram sources**
+- [services.php:38-43](file://config/services.php#L38-L43)
+- [McpClientService.php:110-179](file://app/Services/McpClientService.php#L110-L179)
+
+**Section sources**
+- [services.php:38-43](file://config/services.php#L38-L43)
+- [McpClientService.php:110-179](file://app/Services/McpClientService.php#L110-L179)
 
 ## Conversation Management
 
@@ -419,7 +555,7 @@ CheckTitle --> TitleExists{"Title Exists?"}
 TitleExists --> |No| GenerateTitle["Generate Title from First Message"]
 TitleExists --> |Yes| ProcessAI["Process AI Response with Tools"]
 GenerateTitle --> ProcessAI
-ProcessAI --> ExecuteTools["Execute MCP Tools if Requested"]
+ProcessAI --> ExecuteTools["Execute MCP Tool Proxies"]
 ExecuteTools --> SaveAssistant["Save Assistant Response"]
 SaveAssistant --> FormatContent["Format Content with Markdown"]
 FormatContent --> ReturnResponse["Return Formatted Response"]
@@ -563,14 +699,14 @@ Activation --> Deactivation
 **Diagram sources**
 - [AGENTS.md:24-31](file://AGENTS.md#L24-L31)
 
-The skills system includes automatic activation based on context, ensuring developers receive relevant assistance for their specific tasks. The MCP tool integration provides comprehensive development assistance including database operations, documentation search, and code execution capabilities.
+The skills system includes automatic activation based on context, ensuring developers receive relevant assistance for their specific tasks. The MCP tool integration provides comprehensive development assistance including database operations, documentation search, and code execution capabilities through secure external service communication.
 
 **Section sources**
 - [AGENTS.md:24-31](file://AGENTS.md#L24-L31)
 
 ### Laravel Boost Integration
 
-The system integrates with Laravel Boost for enhanced development capabilities, providing access to specialized tools and documentation search functionality. The MCP tool integration enhances this capability with direct database and code execution features.
+The system integrates with Laravel Boost for enhanced development capabilities, providing access to specialized tools and documentation search functionality. The MCP tool integration enhances this capability with direct database and code execution features through the Laravel Boost MCP server.
 
 ## Database Schema
 
@@ -627,7 +763,7 @@ Controller-->>Client : Render Chat Interface
 Client->>Routes : POST /chat/message
 Routes->>Controller : sendMessage()
 Controller->>Agent : prompt(message)
-Agent->>Agent : Execute MCP Tools if Requested
+Agent->>Agent : Execute MCP Tool Proxies if Requested
 Agent-->>Controller : AI Response with Tool Results
 Controller-->>Client : JSON Response
 ```
@@ -652,7 +788,7 @@ Request[Incoming Request] --> Validate[Validate Input]
 Validate --> ValidRequest{Valid Request?}
 ValidRequest --> |No| ValidationError[Return Validation Error]
 ValidRequest --> |Yes| ProcessRequest[Process Request]
-ProcessRequest --> ExecuteTools["Execute MCP Tools"]
+ProcessRequest --> ExecuteTools["Execute MCP Tool Proxies"]
 ExecuteTools --> ToolSuccess{Tool Execution Success?}
 ToolSuccess --> |Yes| ProcessAI[Process AI Response]
 ToolSuccess --> |No| ToolError[Handle Tool Error]
@@ -682,7 +818,7 @@ The error handling system includes detailed logging, user-friendly error message
 
 ### MCP Tool Security
 
-The MCP tool integration implements comprehensive security measures to protect the application from malicious tool usage while providing necessary development capabilities.
+The MCP tool integration implements comprehensive security measures to protect the application from malicious tool usage while providing necessary development capabilities. The McpClientService acts as a security boundary between the AI agent and external services.
 
 ```mermaid
 flowchart TD
@@ -690,7 +826,7 @@ ToolRequest[Tool Request] --> ValidateRequest["Validate Tool Request"]
 ValidateRequest --> CheckPermissions["Check Permissions"]
 CheckPermissions --> PermissionGranted{"Permission Granted?"}
 PermissionGranted --> |No| DenyAccess["Deny Access with Error"]
-PermissionGranted --> |Yes| ExecuteTool["Execute Tool Safely"]
+PermissionGranted --> |Yes| ExecuteTool["Execute Tool via McpClientService"]
 ExecuteTool --> ApplySecurity["Apply Security Restrictions"]
 ApplySecurity --> CheckLimits["Check Resource Limits"]
 CheckLimits --> LimitsOK{"Within Limits?"}
@@ -707,12 +843,14 @@ ReturnBlocked --> End
 **Diagram sources**
 - [DatabaseQueryTool.php:31-49](file://app/Ai/Tools/DatabaseQueryTool.php#L31-L49)
 - [TinkerTool.php:35-40](file://app/Ai/Tools/TinkerTool.php#L35-L40)
+- [McpClientService.php:140-179](file://app/Services/McpClientService.php#L140-L179)
 
-The security model includes read-only database access restrictions, code execution timeouts, output capture and sanitization, and comprehensive logging for all tool operations. These measures ensure developer productivity while maintaining application security.
+The security model includes read-only database access restrictions, code execution timeouts, output capture and sanitization, and comprehensive logging for all tool operations. The McpClientService provides a centralized security boundary that validates all tool requests before forwarding them to the Laravel Boost MCP server.
 
 **Section sources**
 - [DatabaseQueryTool.php:31-74](file://app/Ai/Tools/DatabaseQueryTool.php#L31-L74)
 - [TinkerTool.php:35-60](file://app/Ai/Tools/TinkerTool.php#L35-L60)
+- [McpClientService.php:140-179](file://app/Services/McpClientService.php#L140-L179)
 
 ## Performance Considerations
 
@@ -743,6 +881,7 @@ The system incorporates several performance optimization strategies to ensure re
 - Result size limiting for database queries
 - Output buffering for code execution
 - Connection pooling for database operations
+- Persistent MCP client connections to reduce startup overhead
 
 ## Deployment and Setup
 
@@ -756,7 +895,7 @@ The system requires specific PHP and Laravel versions along with supporting pack
 - Laravel AI 0.x
 - Laravel Boost 2.x (for enhanced features)
 - Composer for dependency management
-- MCP client library for tool integration
+- php-mcp/client library for MCP protocol communication
 
 **Installation Process**
 1. Install dependencies via Composer
@@ -773,12 +912,21 @@ The system requires specific PHP and Laravel versions along with supporting pack
 
 The system uses environment variables for flexible deployment across different environments with sensible defaults for local development, including MCP tool configuration and AI provider settings.
 
+**MCP Client Configuration**
+- MCP_CLIENT_COMMAND: Artisan command to run (default: `php artisan boost:mcp`)
+- MCP_CLIENT_TIMEOUT: Maximum seconds to wait for tool response (default: 60)
+- MCP_CLIENT_MAX_RETRIES: Number of reconnect attempts (default: 3)
+- MCP_CLIENT_RETRY_DELAY: Base delay between retries in milliseconds (default: 1000)
+
+**Section sources**
+- [services.php:38-43](file://config/services.php#L38-L43)
+
 ## Conclusion
 
-DevBot represents a comprehensive AI-powered development assistant built on Laravel's robust framework with extensive MCP tool integration. The system successfully combines modern AI capabilities with enterprise-grade architecture, providing developers with an intuitive platform for getting help with Laravel and PHP development challenges while offering powerful tool execution capabilities.
+DevBot represents a comprehensive AI-powered development assistant built on Laravel's robust framework with extensive MCP tool integration. The system successfully combines modern AI capabilities with enterprise-grade architecture, providing developers with an intuitive platform for getting help with Laravel and PHP development challenges while offering powerful tool execution capabilities through secure MCP protocol communication.
 
-Key strengths of the system include its modular architecture with comprehensive MCP tool integration, robust error handling with enhanced tool security, responsive user interface with real-time tool feedback, and flexible AI provider configuration that supports multiple MCP tool implementations. The integration of four specialized tools (DatabaseQueryTool, DatabaseSchemaTool, SearchDocsTool, and TinkerTool) provides comprehensive development assistance capabilities.
+Key strengths of the system include its modular architecture with comprehensive MCP tool proxy integration, robust error handling with enhanced tool security, responsive user interface with real-time tool feedback, and flexible AI provider configuration that supports multiple MCP tool implementations. The integration of four specialized MCP-powered tools (DatabaseQueryTool, DatabaseSchemaTool, SearchDocsTool, and TinkerTool) provides comprehensive development assistance capabilities through secure external service communication.
 
-The system's design emphasizes maintainability, scalability, security, and user experience, making it suitable for both individual developers and development teams. The MCP tool integration ensures that developers can directly interact with their application's database, search documentation, and execute code safely and efficiently.
+The system's design emphasizes maintainability, scalability, security, and user experience, making it suitable for both individual developers and development teams. The MCP tool integration ensures that developers can directly interact with their application's database, search documentation, and execute code safely and efficiently through the Laravel Boost MCP server.
 
 Future enhancements could include additional MCP tools, expanded AI provider support, advanced conversation management features, and enhanced tool execution capabilities. The comprehensive foundation established by the current implementation provides an excellent base for continued evolution and improvement of the DevBot system.
