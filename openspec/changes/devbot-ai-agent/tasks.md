@@ -20,14 +20,14 @@
 
 ## 3. Routes and Controller
 
-- [ ] 3.1 Add GET route `/chat` to display chat interface
-- [ ] 3.2 Add POST route `/chat/message` to handle message submission
-- [ ] 3.3 Create ChatController with show() method for chat page
-- [ ] 3.4 Implement sendMessage() method in ChatController to process messages
-- [ ] 3.5 Add message validation (required, non-empty string)
-- [ ] 3.6 Implement conversation creation logic when no active conversation exists
-- [ ] 3.7 Implement message saving for both user and assistant roles
-- [ ] 3.8 Add error handling for API failures with user-friendly messages
+- [x] 3.1 Add GET route `/chat` to display chat interface
+- [x] 3.2 Add POST route `/chat/message` to handle message submission
+- [x] 3.3 Create ChatController with show() method for chat page
+- [x] 3.4 Implement sendMessage() method in ChatController to process messages
+- [x] 3.5 Add message validation (required, non-empty string)
+- [x] 3.6 Implement conversation creation logic when no active conversation exists
+- [x] 3.7 Implement message saving for both user and assistant roles
+- [x] 3.8 Add error handling for API failures with user-friendly messages
 
 ## 4. Chat Interface View
 
