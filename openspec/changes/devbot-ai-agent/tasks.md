@@ -2,13 +2,13 @@
 
 ## 1. Database Migrations and Models
 
-- [ ] 1.1 Create migration for conversations table with id, user_id (nullable), title, timestamps
-- [ ] 1.2 Create migration for messages table with id, conversation_id (foreign key), role (enum), content (text), timestamps
-- [ ] 1.3 Run migrations to create tables
-- [ ] 1.4 Create Conversation model with hasMany messages relationship and fillable fields
-- [ ] 1.5 Create Message model with belongsTo conversation relationship and fillable fields
-- [ ] 1.6 Add method to Conversation model to generate title from first message
-- [ ] 1.7 Add method to Conversation model to retrieve messages limited to 50 with proper ordering
+- [x] 1.1 Create migration for conversations table with id, user_id (nullable), title, timestamps
+- [x] 1.2 Create migration for messages table with id, conversation_id (foreign key), role (enum), content (text), timestamps
+- [x] 1.3 Run migrations to create tables
+- [x] 1.4 Create Conversation model with hasMany messages relationship and fillable fields
+- [x] 1.5 Create Message model with belongsTo conversation relationship and fillable fields
+- [x] 1.6 Add method to Conversation model to generate title from first message
+- [x] 1.7 Add method to Conversation model to retrieve messages limited to 50 with proper ordering
 
 ## 2. DevBot AI Agent
 
