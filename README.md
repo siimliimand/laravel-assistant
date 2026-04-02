@@ -1,58 +1,307 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# DevBot - Laravel AI Development Assistant
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+DevBot is an AI-powered development assistant built with Laravel. It provides an interactive chat interface for developers to get help with programming questions, code review, debugging, architecture decisions, and best practices.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Interactive Chat Interface** - Modern, responsive UI with real-time messaging
+- **Conversation Management** - Create, switch, and search through conversation history
+- **AI-Powered Responses** - Powered by Laravel AI with support for multiple providers (Anthropic, OpenAI, Gemini, etc.)
+- **MCP Tool Integration** - Connects to Laravel Boost MCP server for enhanced capabilities:
+  - **Database Query Tool** - Execute read-only SQL queries safely
+  - **Database Schema Tool** - Inspect table structure and relationships
+  - **Search Docs Tool** - Search Laravel and package documentation
+  - **Tinker Tool** - Execute PHP code in application context
+- **Markdown Rendering** - Rich formatting for code blocks and technical content
+- **Mobile Responsive** - Works seamlessly on desktop and mobile devices
+- **Conversation Persistence** - All conversations stored in SQLite database
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Category     | Technology                         |
+| ------------ | ---------------------------------- |
+| **Backend**  | Laravel 13, PHP 8.3                |
+| **AI**       | Laravel AI v0.4+, Laravel Boost v2 |
+| **Frontend** | Tailwind CSS v4, Vite 8            |
+| **Database** | SQLite (default), configurable     |
+| **Testing**  | Pest v4                            |
+| **MCP**      | php-mcp/client v1.0                |
 
-## Learning Laravel
+## Requirements
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- PHP 8.3+
+- Composer
+- Node.js 18+ & NPM
+- SQLite (default) or other supported database
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Installation
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### Quick Start
 
 ```bash
-composer require laravel/boost --dev
+# Clone the repository
+git clone <repository-url> laravel-assistant
+cd laravel-assistant
 
-php artisan boost:install
+# Run setup (installs dependencies, generates key, migrates database, builds assets)
+composer run setup
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Manual Installation
+
+```bash
+# Install PHP dependencies
+composer install
+
+# Install Node dependencies
+npm install
+
+# Environment setup
+cp .env.example .env
+php artisan key:generate
+
+# Database setup
+php artisan migrate
+
+# Build frontend assets
+npm run build
+```
+
+## Configuration
+
+### AI Provider
+
+Configure your AI provider in `.env`:
+
+```env
+# Default AI provider (uses Z.ai proxy by default)
+Z_API_KEY=your-api-key
+Z_URL=https://api.z.ai/api/anthropic/v1
+
+# Or use Anthropic directly
+ANTHROPIC_API_KEY=your-api-key
+
+# Or OpenAI
+OPENAI_API_KEY=your-api-key
+```
+
+### DevBot Model
+
+Customize the AI model used by DevBot:
+
+```env
+DEVBOT_MODEL=claude-haiku-4-5-20251001
+```
+
+### MCP Client (Optional)
+
+Override default MCP client settings:
+
+```env
+MCP_CLIENT_COMMAND=php artisan boost:mcp
+MCP_CLIENT_TIMEOUT=60
+MCP_CLIENT_MAX_RETRIES=3
+MCP_CLIENT_RETRY_DELAY=1000
+```
+
+## Usage
+
+### Development Server
+
+Start all development services (server, queue, logs, Vite):
+
+```bash
+composer run dev
+```
+
+Or start services individually:
+
+```bash
+# Laravel development server
+php artisan serve
+
+# Frontend hot reload
+npm run dev
+```
+
+### Accessing the Application
+
+1. Navigate to `http://localhost:8000`
+2. Click "New Chat" to start a conversation
+3. Ask questions about Laravel, PHP, or development topics
+
+### Available Routes
+
+| Route            | Method | Description                          |
+| ---------------- | ------ | ------------------------------------ |
+| `/`              | GET    | Welcome page                         |
+| `/chat`          | GET    | Chat interface (latest conversation) |
+| `/chat/{id}`     | GET    | Specific conversation                |
+| `/chat/new`      | POST   | Create new conversation              |
+| `/chat/message`  | POST   | Send message to DevBot               |
+| `/api/chat/{id}` | GET    | Get conversation JSON                |
+
+## Project Structure
+
+``` plaintext
+app/
+├── Ai/
+│   ├── Agents/
+│   │   └── DevBot.php          # AI agent implementation
+│   └── Tools/
+│       ├── DatabaseQueryTool.php    # Read-only SQL queries
+│       ├── DatabaseSchemaTool.php   # Schema inspection
+│       ├── SearchDocsTool.php       # Documentation search
+│       └── TinkerTool.php           # PHP code execution
+├── Helpers/
+│   └── Markdown.php            # Markdown rendering helper
+├── Http/Controllers/
+│   └── ChatController.php      # Chat endpoints
+├── Models/
+│   ├── Conversation.php        # Conversation model
+│   └── Message.php             # Message model
+└── Services/
+    └── McpClientService.php    # MCP client management
+
+resources/views/
+└── chat.blade.php              # Main chat interface
+
+.agents/skills/
+├── laravel-best-practices/     # Laravel coding standards
+├── pest-testing/               # Pest testing guidelines
+└── tailwindcss-development/    # Tailwind CSS patterns
+```
+
+## Development
+
+### Code Style
+
+Format PHP code using Laravel Pint:
+
+```bash
+vendor/bin/pint --dirty
+```
+
+### Testing
+
+Run the test suite:
+
+```bash
+composer run test
+# or
+php artisan test --compact
+```
+
+Run specific tests:
+
+```bash
+php artisan test --filter=ChatTest
+```
+
+### Artisan Commands
+
+```bash
+# List available commands
+php artisan list
+
+# View routes
+php artisan route:list
+
+# Check configuration
+php artisan config:show ai.providers
+```
+
+## Architecture
+
+### DevBot Agent
+
+The DevBot agent implements Laravel AI's agent contracts:
+
+- **Agent** - Core agent functionality
+- **Conversational** - Maintains conversation context
+- **HasTools** - Provides access to MCP tools
+
+The agent uses a system prompt that focuses on development topics, Laravel best practices, and helpful code examples.
+
+### MCP Integration
+
+The `McpClientService` manages connections to the Laravel Boost MCP server:
+
+- Auto-reconnect with exponential backoff
+- Comprehensive logging
+- Graceful shutdown handling
+
+### Conversation Flow
+
+1. User sends message via `/chat/message`
+2. Message stored in database
+3. DevBot receives conversation history (last 50 messages)
+4. Agent may call MCP tools for database/docs access
+5. Response stored and returned to user
+
+## AI Providers Supported
+
+| Provider      | Driver       | Environment Variable   |
+| ------------- | ------------ | ---------------------- |
+| Anthropic     | `anthropic`  | `ANTHROPIC_API_KEY`    |
+| OpenAI        | `openai`     | `OPENAI_API_KEY`       |
+| Google Gemini | `gemini`     | `GEMINI_API_KEY`       |
+| Azure OpenAI  | `azure`      | `AZURE_OPENAI_API_KEY` |
+| Groq          | `groq`       | `GROQ_API_KEY`         |
+| Mistral       | `mistral`    | `MISTRAL_API_KEY`      |
+| DeepSeek      | `deepseek`   | `DEEPSEEK_API_KEY`     |
+| Ollama        | `ollama`     | `OLLAMA_BASE_URL`      |
+| OpenRouter    | `openrouter` | `OPENROUTER_API_KEY`   |
+| X.AI          | `xai`        | `XAI_API_KEY`          |
+
+## Skills
+
+This project includes pre-configured AI skills for enhanced development:
+
+- **Laravel Best Practices** - Database performance, security, caching, Eloquent patterns, and more
+- **Pest Testing** - Testing patterns, assertions, mocking, and browser testing
+- **Tailwind CSS Development** - Responsive layouts, components, and styling patterns
+
+## Troubleshooting
+
+### Vite Asset Error
+
+If you see "Unable to locate file in Vite manifest":
+
+```bash
+npm run build
+# or start dev server
+npm run dev
+```
+
+### MCP Connection Issues
+
+Check the logs for MCP client errors:
+
+```bash
+php artisan pail
+```
+
+### Database Issues
+
+Reset the database:
+
+```bash
+php artisan migrate:fresh
+```
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Contributions are welcome! Please ensure:
 
-## Code of Conduct
+1. Code follows Laravel Pint formatting
+2. All tests pass
+3. New features include tests
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Security
 
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+If you discover a security vulnerability, please email the maintainers directly rather than opening a public issue.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
