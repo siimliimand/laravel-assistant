@@ -6,43 +6,54 @@
 - [ChatController.php](file://app/Http/Controllers/ChatController.php)
 - [Conversation.php](file://app/Models/Conversation.php)
 - [Message.php](file://app/Models/Message.php)
+- [DatabaseQueryTool.php](file://app/Ai/Tools/DatabaseQueryTool.php)
+- [DatabaseSchemaTool.php](file://app/Ai/Tools/DatabaseSchemaTool.php)
+- [SearchDocsTool.php](file://app/Ai/Tools/SearchDocsTool.php)
+- [TinkerTool.php](file://app/Ai/Tools/TinkerTool.php)
 - [Markdown.php](file://app/Helpers/Markdown.php)
 - [ai.php](file://config/ai.php)
 - [web.php](file://routes/web.php)
 - [chat.blade.php](file://resources/views/chat.blade.php)
 - [2026_04_02_123216_create_conversations_table.php](file://database/migrations/2026_04_02_123216_create_conversations_table.php)
 - [2026_04_02_123238_create_messages_table.php](file://database/migrations/2026_04_02_123238_create_messages_table.php)
-- [AGENTS.md](file://AGENTS.md)
-- [CLAUDE.md](file://CLAUDE.md)
-- [GEMINI.md](file://GEMINI.md)
 - [composer.json](file://composer.json)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive MCP tool integration documentation including DatabaseQueryTool, DatabaseSchemaTool, SearchDocsTool, and TinkerTool
+- Updated agent implementation section to reflect the new tool capabilities
+- Enhanced conversation management section with tool interaction details
+- Added new sections covering MCP tool capabilities and security considerations
+- Updated system architecture diagrams to include MCP tool integration layer
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [System Architecture](#system-architecture)
 3. [Core Components](#core-components)
 4. [Agent Implementation](#agent-implementation)
-5. [Conversation Management](#conversation-management)
-6. [User Interface](#user-interface)
-7. [AI Provider Configuration](#ai-provider-configuration)
-8. [Skills and Capabilities](#skills-and-capabilities)
-9. [Database Schema](#database-schema)
-10. [API Endpoints](#api-endpoints)
-11. [Error Handling](#error-handling)
-12. [Performance Considerations](#performance-considerations)
-13. [Deployment and Setup](#deployment-and-setup)
-14. [Conclusion](#conclusion)
+5. [MCP Tool Integration](#mcp-tool-integration)
+6. [Conversation Management](#conversation-management)
+7. [User Interface](#user-interface)
+8. [AI Provider Configuration](#ai-provider-configuration)
+9. [Skills and Capabilities](#skills-and-capabilities)
+10. [Database Schema](#database-schema)
+11. [API Endpoints](#api-endpoints)
+12. [Error Handling](#error-handling)
+13. [Security Considerations](#security-considerations)
+14. [Performance Considerations](#performance-considerations)
+15. [Deployment and Setup](#deployment-and-setup)
+16. [Conclusion](#conclusion)
 
 ## Introduction
 
-DevBot is an AI-powered development assistant integrated into a Laravel application. This intelligent chat system provides developers with instant access to programming knowledge, code review capabilities, debugging assistance, and architectural guidance. Built with Laravel's AI framework, DevBot serves as a comprehensive development companion that understands Laravel and PHP best practices while offering real-time conversational AI responses.
+DevBot is an AI-powered development assistant integrated into a Laravel application with comprehensive MCP (Model Context Protocol) tool integration. This intelligent chat system provides developers with instant access to programming knowledge, code review capabilities, debugging assistance, architectural guidance, and direct database interaction through specialized tools. Built with Laravel's AI framework and enhanced with MCP tool capabilities, DevBot serves as a comprehensive development companion that understands Laravel and PHP best practices while offering real-time conversational AI responses with powerful tool execution capabilities.
 
-The system combines modern AI technologies with Laravel's robust framework to create an intuitive development environment where developers can ask questions, receive code examples, and get guidance on best practices. DevBot is particularly focused on Laravel ecosystem development, making it an invaluable tool for PHP developers working within the Laravel framework.
+The system combines modern AI technologies with Laravel's robust framework and MCP protocol to create an intuitive development environment where developers can ask questions, receive code examples, get guidance on best practices, and directly interact with their application's database and documentation systems. DevBot is particularly focused on Laravel ecosystem development, making it an invaluable tool for PHP developers working within the Laravel framework.
 
 ## System Architecture
 
-The DevBot system follows a clean, layered architecture that separates concerns between presentation, business logic, data persistence, and AI integration. The architecture is designed around Laravel's MVC pattern while incorporating modern AI agent capabilities.
+The DevBot system follows a clean, layered architecture that separates concerns between presentation, business logic, data persistence, AI integration, and MCP tool execution. The architecture is designed around Laravel's MVC pattern while incorporating modern AI agent capabilities and comprehensive tool integration.
 
 ```mermaid
 graph TB
@@ -53,8 +64,6 @@ end
 subgraph "Application Layer"
 Controller[ChatController]
 Middleware[Request Validation]
-end
-subgraph "Domain Layer"
 Agent[DevBot Agent]
 Conversation[Conversation Management]
 Message[Message Processing]
@@ -63,11 +72,13 @@ subgraph "Infrastructure Layer"
 Models[Eloquent Models]
 Database[(Database)]
 AI_Provider[AI Provider Interface]
+Tools[MCPTools]
 end
 subgraph "External Services"
 Anthropic[Anthropic API]
 Gemini[Gemini API]
 Local[Local Models]
+Docs[Laravel Documentation]
 end
 UI --> Controller
 Blade --> Controller
@@ -75,6 +86,9 @@ Controller --> Agent
 Controller --> Conversation
 Controller --> Message
 Agent --> AI_Provider
+Agent --> Tools
+Tools --> Database
+Tools --> Docs
 Conversation --> Models
 Message --> Models
 Models --> Database
@@ -85,21 +99,21 @@ AI_Provider --> Local
 
 **Diagram sources**
 - [ChatController.php:13-113](file://app/Http/Controllers/ChatController.php#L13-L113)
-- [DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
+- [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
 - [Conversation.php:8-45](file://app/Models/Conversation.php#L8-L45)
 - [Message.php:9-44](file://app/Models/Message.php#L9-L44)
 
-The architecture ensures clear separation of concerns with the controller handling HTTP requests, the agent managing AI interactions, and the models handling data persistence. This design enables easy maintenance, testing, and extension of functionality.
+The architecture ensures clear separation of concerns with the controller handling HTTP requests, the agent managing AI interactions and tool execution, and the models handling data persistence. The MCP tool integration layer provides secure, controlled access to application resources while maintaining system security boundaries.
 
 **Section sources**
 - [ChatController.php:13-113](file://app/Http/Controllers/ChatController.php#L13-L113)
-- [DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
+- [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
 
 ## Core Components
 
 ### AI Agent System
 
-The heart of DevBot is the DevBot AI agent, which implements Laravel's AI agent interface. This agent is configured with specific parameters optimized for development assistance, including temperature settings for balanced creativity and accuracy.
+The heart of DevBot is the DevBot AI agent, which implements Laravel's AI agent interface with comprehensive MCP tool integration. This agent is configured with specific parameters optimized for development assistance and includes four specialized tools for enhanced functionality.
 
 ```mermaid
 classDiagram
@@ -126,34 +140,67 @@ class HasTools {
 <<interface>>
 +tools() iterable
 }
+class DatabaseQueryTool {
++description() string
++handle(request) string
++schema(schema) array
+}
+class DatabaseSchemaTool {
++description() string
++handle(request) string
++schema(schema) array
+}
+class SearchDocsTool {
++description() string
++handle(request) string
++schema(schema) array
+}
+class TinkerTool {
++description() string
++handle(request) string
++schema(schema) array
+}
 DevBot ..|> Agent
 DevBot ..|> Conversational
 DevBot ..|> HasTools
+DevBot --> DatabaseQueryTool
+DevBot --> DatabaseSchemaTool
+DevBot --> SearchDocsTool
+DevBot --> TinkerTool
 ```
 
 **Diagram sources**
-- [DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
+- [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
+- [DatabaseQueryTool.php:13-89](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L89)
+- [DatabaseSchemaTool.php:14-115](file://app/Ai/Tools/DatabaseSchemaTool.php#L14-L115)
+- [SearchDocsTool.php:12-126](file://app/Ai/Tools/SearchDocsTool.php#L12-L126)
+- [TinkerTool.php:12-107](file://app/Ai/Tools/TinkerTool.php#L12-L107)
 
-The agent is configured with a maximum step limit of 10 and a temperature setting of 0.7, providing balanced responses that are both helpful and accurate for development scenarios.
+The agent is configured with a maximum step limit of 10 and a temperature setting of 0.7, providing balanced responses that are both helpful and accurate for development scenarios. The four integrated tools provide comprehensive development assistance capabilities.
 
 **Section sources**
-- [DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
+- [DevBot.php:20-108](file://app/Ai/Agents/DevBot.php#L20-L108)
 
 ### Controller Layer
 
-The ChatController serves as the primary entry point for user interactions, handling both web interface rendering and API requests. It manages conversation lifecycle, validates user input, and coordinates with the AI agent for responses.
+The ChatController serves as the primary entry point for user interactions, handling both web interface rendering and API requests. It manages conversation lifecycle, validates user input, coordinates with the AI agent for responses, and integrates with the MCP tool system for enhanced functionality.
 
 ```mermaid
 sequenceDiagram
 participant User as User Browser
 participant Controller as ChatController
 participant Agent as DevBot Agent
+participant Tools as MCP Tools
 participant DB as Database
 User->>Controller : POST /chat/message
 Controller->>Controller : Validate Request
 Controller->>DB : Create/Load Conversation
 Controller->>DB : Save User Message
 Controller->>Agent : prompt(user_message)
+Agent->>Tools : Execute Tool Requests
+Tools->>DB : Database Operations
+Tools->>Tools : Documentation Search
+Tools-->>Agent : Tool Results
 Agent->>Agent : Generate AI Response
 Agent-->>Controller : Response Text
 Controller->>DB : Save Assistant Message
@@ -171,7 +218,7 @@ Note over Controller,DB : Conversation and Messages stored
 
 ### Configuration and Behavior
 
-The DevBot agent is configured with specific parameters that optimize its behavior for development assistance. The agent uses environment variables for flexible deployment configurations and includes comprehensive instructions for appropriate responses.
+The DevBot agent is configured with specific parameters that optimize its behavior for development assistance and includes comprehensive instructions for appropriate responses. The agent uses environment variables for flexible deployment configurations and includes four specialized tools for enhanced functionality.
 
 ```mermaid
 flowchart TD
@@ -179,12 +226,18 @@ Start([Agent Initialization]) --> LoadConfig["Load Environment Config"]
 LoadConfig --> SetModel["Set Model: claude-haiku-4-5-20251001"]
 SetModel --> SetTemperature["Set Temperature: 0.7"]
 SetTemperature --> SetMaxSteps["Set Max Steps: 10"]
-SetMaxSteps --> Ready([Agent Ready])
+SetMaxSteps --> LoadTools["Load MCP Tools"]
+LoadTools --> Ready([Agent Ready])
 Ready --> ProcessMessage["Process User Message"]
 ProcessMessage --> ValidateInput["Validate Input"]
 ValidateInput --> InputValid{"Valid Input?"}
 InputValid --> |No| ReturnError["Return Error Response"]
-InputValid --> |Yes| GenerateResponse["Generate AI Response"]
+InputValid --> |Yes| CheckTools["Check Tool Requests"]
+CheckTools --> ToolRequested{"Tool Request?"}
+ToolRequested --> |Yes| ExecuteTool["Execute MCP Tool"]
+ToolRequested --> |No| GenerateResponse["Generate AI Response"]
+ExecuteTool --> ToolResult["Process Tool Result"]
+ToolResult --> GenerateResponse
 GenerateResponse --> FormatResponse["Format Response"]
 FormatResponse --> ReturnResponse["Return Response"]
 ReturnError --> End([End])
@@ -194,17 +247,134 @@ ReturnResponse --> End
 **Diagram sources**
 - [DevBot.php:24-34](file://app/Ai/Agents/DevBot.php#L24-L34)
 - [DevBot.php:17-19](file://app/Ai/Agents/DevBot.php#L17-L19)
+- [DevBot.php:98-106](file://app/Ai/Agents/DevBot.php#L98-L106)
 
-The agent's instructions emphasize development-focused assistance, including Laravel and PHP best practices, code review capabilities, and architectural guidance. This ensures responses remain relevant and helpful for developer use cases.
+The agent's instructions emphasize development-focused assistance, including Laravel and PHP best practices, code review capabilities, architectural guidance, and MCP tool usage. This ensures responses remain relevant and helpful for developer use cases while leveraging the power of integrated tools.
 
 **Section sources**
-- [DevBot.php:17-99](file://app/Ai/Agents/DevBot.php#L17-L99)
+- [DevBot.php:17-108](file://app/Ai/Agents/DevBot.php#L17-L108)
+
+## MCP Tool Integration
+
+### Database Query Tool
+
+The DatabaseQueryTool provides secure, read-only SQL query execution against the application database. It enforces strict security policies and provides comprehensive error handling for database operations.
+
+```mermaid
+flowchart TD
+QueryRequest["SQL Query Request"] --> ValidateQuery["Validate Query Type"]
+ValidateQuery --> CheckReadOnly{"Read-Only Allowed?"}
+CheckReadOnly --> |No| BlockQuery["Block Non-Read-Only Query"]
+CheckReadOnly --> |Yes| ExecuteQuery["Execute Query with Row Limit"]
+ExecuteQuery --> CheckResults{"More Than 100 Rows?"}
+CheckResults --> |Yes| LimitResults["Limit to 100 Rows"]
+CheckResults --> |No| ReturnResults["Return Full Results"]
+BlockQuery --> LogWarning["Log Security Warning"]
+LogWarning --> ReturnError["Return Error Message"]
+LimitResults --> ReturnLimited["Return Limited Results"]
+ReturnResults --> Success["Success"]
+ReturnLimited --> Success
+ReturnError --> End([End])
+Success --> End
+```
+
+**Diagram sources**
+- [DatabaseQueryTool.php:26-74](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L74)
+
+The tool restricts queries to SELECT, SHOW, EXPLAIN, and DESCRIBE statements only, preventing destructive database operations. Results are automatically limited to 100 rows to prevent performance issues.
+
+**Section sources**
+- [DatabaseQueryTool.php:13-89](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L89)
+
+### Database Schema Tool
+
+The DatabaseSchemaTool provides comprehensive database schema information including table listings, column details, and index information. It offers both overview and detailed schema inspection capabilities.
+
+```mermaid
+flowchart TD
+SchemaRequest["Schema Request"] --> CheckTable{"Table Specified?"}
+CheckTable --> |No| ListTables["List All Tables"]
+CheckTable --> |Yes| CheckExists{"Table Exists?"}
+CheckExists --> |No| TableError["Return Table Not Found Error"]
+CheckExists --> |Yes| GetSchema["Get Table Schema"]
+ListTables --> ReturnTables["Return Table List"]
+GetSchema --> GetColumns["Get Column Information"]
+GetSchema --> GetIndexes["Get Index Information"]
+GetColumns --> CombineResults["Combine Schema Details"]
+GetIndexes --> CombineResults
+CombineResults --> ReturnSchema["Return Complete Schema"]
+TableError --> End([End])
+ReturnTables --> End
+ReturnSchema --> End
+```
+
+**Diagram sources**
+- [DatabaseSchemaTool.php:27-100](file://app/Ai/Tools/DatabaseSchemaTool.php#L27-L100)
+
+The tool filters out internal database system tables and provides detailed information about table structure, column types, and index definitions for comprehensive database understanding.
+
+**Section sources**
+- [DatabaseSchemaTool.php:14-115](file://app/Ai/Tools/DatabaseSchemaTool.php#L14-L115)
+
+### Search Documentation Tool
+
+The SearchDocsTool provides Laravel and package documentation search capabilities with intelligent result deduplication and relevance scoring. It serves as a bridge between the AI agent and external documentation resources.
+
+```mermaid
+flowchart TD
+DocRequest["Documentation Request"] --> ValidateQueries["Validate Query Array"]
+ValidateQueries --> CheckValid{"Valid Queries?"}
+CheckValid --> |No| ReturnError["Return Validation Error"]
+CheckValid --> |Yes| ExecuteSearch["Execute Documentation Search"]
+ExecuteSearch --> ProcessResults["Process Search Results"]
+ProcessResults --> Deduplicate["Remove Duplicate Results"]
+Deduplicate --> LimitResults["Limit to Top 10 Results"]
+LimitResults --> ReturnResults["Return Structured Results"]
+ReturnError --> End([End])
+ReturnResults --> End
+```
+
+**Diagram sources**
+- [SearchDocsTool.php:25-72](file://app/Ai/Tools/SearchDocsTool.php#L25-L72)
+
+The tool accepts multiple search queries and packages, returning relevant documentation snippets with links to authoritative sources. Results are deduplicated and limited to ensure quality and performance.
+
+**Section sources**
+- [SearchDocsTool.php:12-126](file://app/Ai/Tools/SearchDocsTool.php#L12-L126)
+
+### Tinker Tool
+
+The TinkerTool provides a safe execution environment for PHP code evaluation within the Laravel application context. It offers debugging capabilities and code testing functionality with comprehensive error handling.
+
+```mermaid
+flowchart TD
+CodeRequest["Code Execution Request"] --> ValidateCode["Validate Code Parameter"]
+ValidateCode --> CheckEmpty{"Code Provided?"}
+CheckEmpty --> |No| ReturnError["Return Validation Error"]
+CheckEmpty --> |Yes| CleanCode["Clean Code Input"]
+CleanCode --> SetTimeout["Set Execution Timeout"]
+SetTimeout --> ExecuteCode["Execute Code Safely"]
+ExecuteCode --> CaptureOutput["Capture Output Buffer"]
+CaptureOutput --> GetResult["Get Execution Result"]
+GetResult --> FormatResult["Format Execution Result"]
+FormatResult --> ReturnResult["Return Structured Result"]
+ReturnError --> End([End])
+ReturnResult --> End
+```
+
+**Diagram sources**
+- [TinkerTool.php:25-60](file://app/Ai/Tools/TinkerTool.php#L25-L60)
+
+The tool removes PHP opening tags, validates timeout limits (maximum 60 seconds), captures output buffers, and returns both execution output and return values for comprehensive debugging support.
+
+**Section sources**
+- [TinkerTool.php:12-107](file://app/Ai/Tools/TinkerTool.php#L12-L107)
 
 ## Conversation Management
 
 ### Data Persistence Strategy
 
-The conversation management system uses Laravel's Eloquent ORM to persist chat history with efficient querying and relationship management. The system maintains conversation metadata and message sequences for optimal AI context retrieval.
+The conversation management system uses Laravel's Eloquent ORM to persist chat history with efficient querying and relationship management. The system maintains conversation metadata and message sequences for optimal AI context retrieval, with enhanced support for MCP tool interactions.
 
 ```mermaid
 erDiagram
@@ -230,7 +400,7 @@ CONVERSATIONS ||--o{ MESSAGES : contains
 - [2026_04_02_123216_create_conversations_table.php:14-21](file://database/migrations/2026_04_02_123216_create_conversations_table.php#L14-L21)
 - [2026_04_02_123238_create_messages_table.php:14-22](file://database/migrations/2026_04_02_123238_create_messages_table.php#L14-L22)
 
-The conversation model includes helper methods for generating titles from initial messages and retrieving recent messages for AI context. The message model provides formatting capabilities using Markdown rendering.
+The conversation model includes helper methods for generating titles from initial messages and retrieving recent messages for AI context. The message model provides formatting capabilities using Markdown rendering and supports both user and assistant roles in the conversation history.
 
 **Section sources**
 - [Conversation.php:8-45](file://app/Models/Conversation.php#L8-L45)
@@ -238,18 +408,19 @@ The conversation model includes helper methods for generating titles from initia
 
 ### Message Processing Pipeline
 
-The message processing pipeline handles both user and assistant messages with proper formatting and persistence. The system ensures message ordering and provides formatted content for display.
+The message processing pipeline handles both user and assistant messages with proper formatting and persistence, including enhanced support for MCP tool-generated responses. The system ensures message ordering and provides formatted content for display.
 
 ```mermaid
 flowchart TD
 UserMessage["User Message Input"] --> Validate["Validate Message"]
-Validate --> CreateMessage["Create Message Record"]
+Validate --> CreateMessage["Create User Message Record"]
 CreateMessage --> CheckTitle["Check Conversation Title"]
 CheckTitle --> TitleExists{"Title Exists?"}
 TitleExists --> |No| GenerateTitle["Generate Title from First Message"]
-TitleExists --> |Yes| ProcessAI["Process AI Response"]
+TitleExists --> |Yes| ProcessAI["Process AI Response with Tools"]
 GenerateTitle --> ProcessAI
-ProcessAI --> SaveAssistant["Save Assistant Response"]
+ProcessAI --> ExecuteTools["Execute MCP Tools if Requested"]
+ExecuteTools --> SaveAssistant["Save Assistant Response"]
 SaveAssistant --> FormatContent["Format Content with Markdown"]
 FormatContent --> ReturnResponse["Return Formatted Response"]
 ```
@@ -266,7 +437,7 @@ FormatContent --> ReturnResponse["Return Formatted Response"]
 
 ### Web Interface Design
 
-The user interface provides an intuitive chat experience with responsive design and smooth interactions. The interface supports both traditional page navigation and AJAX-based real-time updates.
+The user interface provides an intuitive chat experience with responsive design and smooth interactions, enhanced with real-time MCP tool feedback and improved conversation management capabilities.
 
 ```mermaid
 graph LR
@@ -276,12 +447,14 @@ Messages[Messages Container]
 Input[Message Input]
 Button[Send Button]
 Loading[Loading Indicator]
+ToolFeedback[Tool Feedback Panel]
 end
 subgraph "JavaScript Features"
 AutoScroll[Auto Scroll to Bottom]
 AutoResize[Auto Resize Textarea]
 AJAX[AJAX Form Submission]
 ErrorHandling[Error Handling]
+ToolIntegration[Tool Integration]
 end
 Header --> Messages
 Messages --> Input
@@ -291,25 +464,26 @@ Messages -.-> AutoScroll
 Input -.-> AutoResize
 Button -.-> AJAX
 AJAX -.-> ErrorHandling
+ToolIntegration -.-> ToolFeedback
 ```
 
 **Diagram sources**
-- [chat.blade.php:10-169](file://resources/views/chat.blade.php#L10-L169)
+- [chat.blade.php:10-391](file://resources/views/chat.blade.php#L10-L391)
 
-The interface includes sophisticated JavaScript for enhanced user experience, including auto-scrolling to new messages, dynamic textarea resizing, and comprehensive error handling. The design follows modern UI/UX principles with clear visual hierarchy and responsive behavior.
+The interface includes sophisticated JavaScript for enhanced user experience, including auto-scrolling to new messages, dynamic textarea resizing, comprehensive error handling, and real-time MCP tool feedback. The design follows modern UI/UX principles with clear visual hierarchy and responsive behavior.
 
 **Section sources**
 - [chat.blade.php:10-391](file://resources/views/chat.blade.php#L10-L391)
 
 ### Responsive Design Implementation
 
-The interface adapts seamlessly to different screen sizes and devices, ensuring accessibility across desktop, tablet, and mobile platforms. The design uses Tailwind CSS utility classes for consistent styling and responsive breakpoints.
+The interface adapts seamlessly to different screen sizes and devices, ensuring accessibility across desktop, tablet, and mobile platforms. The design uses Tailwind CSS utility classes for consistent styling and responsive breakpoints, with enhanced support for MCP tool interaction indicators.
 
 ## AI Provider Configuration
 
 ### Multi-Provider Support
 
-The system supports multiple AI providers through a unified configuration interface. This allows flexibility in choosing different AI services while maintaining consistent behavior across providers.
+The system supports multiple AI providers through a unified configuration interface with enhanced MCP tool integration capabilities. This allows flexibility in choosing different AI services while maintaining consistent behavior across providers.
 
 ```mermaid
 graph TB
@@ -320,6 +494,7 @@ Anthropic[Anthropic]
 Gemini[Gemini]
 Azure[Azure OpenAI]
 Ollama[Ollama]
+MCP[MCP Tool Support]
 end
 subgraph "Environment Variables"
 ZKey[Z_API_KEY]
@@ -332,6 +507,8 @@ Providers --> Anthropic
 Providers --> Gemini
 Providers --> Azure
 Providers --> Ollama
+MCP --> Default
+MCP --> Providers
 ZKey --> Default
 ZURL --> Default
 AnthKey --> Anthropic
@@ -341,20 +518,20 @@ GeminiKey --> Gemini
 **Diagram sources**
 - [ai.php:52-135](file://config/ai.php#L52-L135)
 
-The configuration supports various AI providers including Anthropic, Gemini, Azure OpenAI, and local models through Ollama. This flexibility enables deployment in different environments and cost optimization strategies.
+The configuration supports various AI providers including Anthropic, Gemini, Azure OpenAI, and local models through Ollama. The MCP tool integration works seamlessly across all providers, ensuring consistent tool execution regardless of the underlying AI service.
 
 **Section sources**
 - [ai.php:52-135](file://config/ai.php#L52-L135)
 
 ### Provider Selection Logic
 
-The system uses environment variables for provider configuration, allowing easy switching between different AI services. The default provider is set to 'z' which connects to a custom Anthropic endpoint.
+The system uses environment variables for provider configuration, allowing easy switching between different AI services. The default provider is set to 'z' which connects to a custom Anthropic endpoint, with MCP tool support available across all providers.
 
 ## Skills and Capabilities
 
 ### Domain-Specific Skills
 
-The system includes specialized skills for different development domains, enabling targeted assistance in specific areas of Laravel and PHP development.
+The system includes specialized skills for different development domains, enhanced with comprehensive MCP tool integration for targeted assistance in specific areas of Laravel and PHP development.
 
 ```mermaid
 graph TD
@@ -362,11 +539,13 @@ subgraph "Development Skills"
 LaravelBest[Laravel Best Practices]
 PestTesting[Pest Testing]
 TailwindCSS[Tailwind CSS Development]
+MCPTools[MCP Tool Integration]
 end
 subgraph "Skill Categories"
 Backend[Backend Development]
 Testing[Test Automation]
 Frontend[Frontend Development]
+Tools[Tool Execution]
 end
 subgraph "Skill Activation"
 Trigger[Skill Trigger Conditions]
@@ -376,6 +555,7 @@ end
 LaravelBest --> Backend
 PestTesting --> Testing
 TailwindCSS --> Frontend
+MCPTools --> Tools
 Trigger --> Activation
 Activation --> Deactivation
 ```
@@ -383,20 +563,20 @@ Activation --> Deactivation
 **Diagram sources**
 - [AGENTS.md:24-31](file://AGENTS.md#L24-L31)
 
-The skills system includes automatic activation based on context, ensuring developers receive relevant assistance for their specific tasks. The Laravel best practices skill covers comprehensive development guidance, while the Pest testing skill focuses specifically on testing automation.
+The skills system includes automatic activation based on context, ensuring developers receive relevant assistance for their specific tasks. The MCP tool integration provides comprehensive development assistance including database operations, documentation search, and code execution capabilities.
 
 **Section sources**
 - [AGENTS.md:24-31](file://AGENTS.md#L24-L31)
 
 ### Laravel Boost Integration
 
-The system integrates with Laravel Boost for enhanced development capabilities, providing access to specialized tools and documentation search functionality.
+The system integrates with Laravel Boost for enhanced development capabilities, providing access to specialized tools and documentation search functionality. The MCP tool integration enhances this capability with direct database and code execution features.
 
 ## Database Schema
 
 ### Conversation and Message Storage
 
-The database schema is optimized for efficient conversation and message storage with appropriate indexing for common query patterns.
+The database schema is optimized for efficient conversation and message storage with appropriate indexing for common query patterns and enhanced support for MCP tool interactions.
 
 ```mermaid
 erDiagram
@@ -423,7 +603,7 @@ messages }o--|| conversations : belongs_to
 - [2026_04_02_123216_create_conversations_table.php:14-21](file://database/migrations/2026_04_02_123216_create_conversations_table.php#L14-L21)
 - [2026_04_02_123238_create_messages_table.php:14-22](file://database/migrations/2026_04_02_123238_create_messages_table.php#L14-L22)
 
-The schema includes foreign key constraints for referential integrity and appropriate indexes for performance optimization. The conversation table includes timestamps for efficient sorting and filtering.
+The schema includes foreign key constraints for referential integrity and appropriate indexes for performance optimization. The conversation table includes timestamps for efficient sorting and filtering, supporting the enhanced conversation management capabilities.
 
 **Section sources**
 - [2026_04_02_123216_create_conversations_table.php:14-21](file://database/migrations/2026_04_02_123216_create_conversations_table.php#L14-L21)
@@ -433,7 +613,7 @@ The schema includes foreign key constraints for referential integrity and approp
 
 ### Route Configuration
 
-The system provides RESTful endpoints for chat functionality with clear URL patterns and HTTP method conventions.
+The system provides RESTful endpoints for chat functionality with clear URL patterns and HTTP method conventions, enhanced with MCP tool integration support.
 
 ```mermaid
 sequenceDiagram
@@ -447,14 +627,15 @@ Controller-->>Client : Render Chat Interface
 Client->>Routes : POST /chat/message
 Routes->>Controller : sendMessage()
 Controller->>Agent : prompt(message)
-Agent-->>Controller : AI Response
+Agent->>Agent : Execute MCP Tools if Requested
+Agent-->>Controller : AI Response with Tool Results
 Controller-->>Client : JSON Response
 ```
 
 **Diagram sources**
 - [web.php:10-11](file://routes/web.php#L10-L11)
 
-The routing system includes both web interface routes and API endpoints for programmatic access. The design follows Laravel's conventional routing patterns for maintainability and predictability.
+The routing system includes both web interface routes and API endpoints for programmatic access, with enhanced support for MCP tool interactions. The design follows Laravel's conventional routing patterns for maintainability and predictability.
 
 **Section sources**
 - [web.php:10-11](file://routes/web.php#L10-L11)
@@ -463,7 +644,7 @@ The routing system includes both web interface routes and API endpoints for prog
 
 ### Comprehensive Error Management
 
-The system implements robust error handling across all layers, providing meaningful feedback to users while maintaining system stability.
+The system implements robust error handling across all layers, providing meaningful feedback to users while maintaining system stability, with enhanced error handling for MCP tool operations.
 
 ```mermaid
 flowchart TD
@@ -471,8 +652,14 @@ Request[Incoming Request] --> Validate[Validate Input]
 Validate --> ValidRequest{Valid Request?}
 ValidRequest --> |No| ValidationError[Return Validation Error]
 ValidRequest --> |Yes| ProcessRequest[Process Request]
-ProcessRequest --> Operation[Perform Operation]
-Operation --> Success{Operation Success?}
+ProcessRequest --> ExecuteTools["Execute MCP Tools"]
+ExecuteTools --> ToolSuccess{Tool Execution Success?}
+ToolSuccess --> |Yes| ProcessAI[Process AI Response]
+ToolSuccess --> |No| ToolError[Handle Tool Error]
+ToolError --> LogToolError[Log Tool Error Details]
+LogToolError --> ReturnToolError[Return Tool Error Response]
+ProcessAI --> AIResponse[Generate AI Response]
+AIResponse --> Success{Operation Success?}
 Success --> |Yes| ReturnSuccess[Return Success Response]
 Success --> |No| HandleError[Handle Error]
 HandleError --> LogError[Log Error Details]
@@ -480,52 +667,100 @@ LogError --> ReturnError[Return Error Response]
 ValidationError --> End([End])
 ReturnSuccess --> End
 ReturnError --> End
+ReturnToolError --> End
 ```
 
 **Diagram sources**
 - [ChatController.php:93-110](file://app/Http/Controllers/ChatController.php#L93-L110)
 
-The error handling system includes detailed logging, user-friendly error messages, and graceful degradation when AI services are unavailable. This ensures users receive helpful feedback even when technical issues occur.
+The error handling system includes detailed logging, user-friendly error messages, graceful degradation when AI services are unavailable, and comprehensive error handling for MCP tool operations. This ensures users receive helpful feedback even when technical issues occur.
 
 **Section sources**
 - [ChatController.php:93-110](file://app/Http/Controllers/ChatController.php#L93-L110)
+
+## Security Considerations
+
+### MCP Tool Security
+
+The MCP tool integration implements comprehensive security measures to protect the application from malicious tool usage while providing necessary development capabilities.
+
+```mermaid
+flowchart TD
+ToolRequest[Tool Request] --> ValidateRequest["Validate Tool Request"]
+ValidateRequest --> CheckPermissions["Check Permissions"]
+CheckPermissions --> PermissionGranted{"Permission Granted?"}
+PermissionGranted --> |No| DenyAccess["Deny Access with Error"]
+PermissionGranted --> |Yes| ExecuteTool["Execute Tool Safely"]
+ExecuteTool --> ApplySecurity["Apply Security Restrictions"]
+ApplySecurity --> CheckLimits["Check Resource Limits"]
+CheckLimits --> LimitsOK{"Within Limits?"}
+LimitsOK --> |No| BlockExecution["Block Execution"]
+LimitsOK --> |Yes| LogExecution["Log Tool Execution"]
+LogExecution --> ReturnResult["Return Safe Result"]
+BlockExecution --> LogBlock["Log Security Block"]
+LogBlock --> ReturnBlocked["Return Blocked Response"]
+DenyAccess --> End([End])
+ReturnResult --> End
+ReturnBlocked --> End
+```
+
+**Diagram sources**
+- [DatabaseQueryTool.php:31-49](file://app/Ai/Tools/DatabaseQueryTool.php#L31-L49)
+- [TinkerTool.php:35-40](file://app/Ai/Tools/TinkerTool.php#L35-L40)
+
+The security model includes read-only database access restrictions, code execution timeouts, output capture and sanitization, and comprehensive logging for all tool operations. These measures ensure developer productivity while maintaining application security.
+
+**Section sources**
+- [DatabaseQueryTool.php:31-74](file://app/Ai/Tools/DatabaseQueryTool.php#L31-L74)
+- [TinkerTool.php:35-60](file://app/Ai/Tools/TinkerTool.php#L35-L60)
 
 ## Performance Considerations
 
 ### Optimization Strategies
 
-The system incorporates several performance optimization strategies to ensure responsive interactions and efficient resource utilization.
+The system incorporates several performance optimization strategies to ensure responsive interactions and efficient resource utilization, with enhanced considerations for MCP tool execution.
 
 **Database Performance**
 - Proper indexing on conversation_id and created_at fields
 - Efficient query patterns for message retrieval
 - Limited message history for AI context (50 messages)
+- MCP tool result caching where appropriate
 
 **Memory Management**
 - Lazy loading of conversation messages
 - Efficient model hydration
 - Proper garbage collection
+- Tool execution memory limits
 
 **Network Optimization**
 - Asynchronous AI API calls
 - Response caching where appropriate
 - Efficient JSON serialization
+- MCP tool batch processing
+
+**Tool Execution Optimization**
+- Timeout limits for MCP tool operations
+- Result size limiting for database queries
+- Output buffering for code execution
+- Connection pooling for database operations
 
 ## Deployment and Setup
 
 ### Installation Requirements
 
-The system requires specific PHP and Laravel versions along with supporting packages for full functionality.
+The system requires specific PHP and Laravel versions along with supporting packages for full functionality, including MCP tool integration capabilities.
 
 **System Requirements**
 - PHP 8.3 or higher
 - Laravel Framework 13.x
 - Laravel AI 0.x
+- Laravel Boost 2.x (for enhanced features)
 - Composer for dependency management
+- MCP client library for tool integration
 
 **Installation Process**
 1. Install dependencies via Composer
-2. Configure environment variables
+2. Configure environment variables for AI providers and MCP tools
 3. Run database migrations
 4. Build frontend assets
 5. Start development server
@@ -536,12 +771,14 @@ The system requires specific PHP and Laravel versions along with supporting pack
 
 ### Environment Configuration
 
-The system uses environment variables for flexible deployment across different environments with sensible defaults for local development.
+The system uses environment variables for flexible deployment across different environments with sensible defaults for local development, including MCP tool configuration and AI provider settings.
 
 ## Conclusion
 
-DevBot represents a comprehensive AI-powered development assistant built on Laravel's robust framework. The system successfully combines modern AI capabilities with enterprise-grade architecture, providing developers with an intuitive platform for getting help with Laravel and PHP development challenges.
+DevBot represents a comprehensive AI-powered development assistant built on Laravel's robust framework with extensive MCP tool integration. The system successfully combines modern AI capabilities with enterprise-grade architecture, providing developers with an intuitive platform for getting help with Laravel and PHP development challenges while offering powerful tool execution capabilities.
 
-Key strengths of the system include its modular architecture, comprehensive error handling, responsive user interface, and flexible AI provider configuration. The integration of domain-specific skills and Laravel Boost enhances the development experience by providing targeted assistance for common development scenarios.
+Key strengths of the system include its modular architecture with comprehensive MCP tool integration, robust error handling with enhanced tool security, responsive user interface with real-time tool feedback, and flexible AI provider configuration that supports multiple MCP tool implementations. The integration of four specialized tools (DatabaseQueryTool, DatabaseSchemaTool, SearchDocsTool, and TinkerTool) provides comprehensive development assistance capabilities.
 
-The system's design emphasizes maintainability, scalability, and user experience, making it suitable for both individual developers and development teams. Future enhancements could include additional AI providers, expanded skill sets, and advanced conversation management features.
+The system's design emphasizes maintainability, scalability, security, and user experience, making it suitable for both individual developers and development teams. The MCP tool integration ensures that developers can directly interact with their application's database, search documentation, and execute code safely and efficiently.
+
+Future enhancements could include additional MCP tools, expanded AI provider support, advanced conversation management features, and enhanced tool execution capabilities. The comprehensive foundation established by the current implementation provides an excellent base for continued evolution and improvement of the DevBot system.

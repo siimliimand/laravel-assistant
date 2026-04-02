@@ -9,15 +9,16 @@
 - [.agents/skills/laravel-best-practices/rules/security.md](file://.agents/skills/laravel-best-practices/rules/security.md)
 - [database/migrations/2026_04_02_115916_create_agent_conversations_table.php](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php)
 - [.env.example](file://.env.example)
+- [vendor/prism-php/prism/config/prism.php](file://vendor/prism-php/prism/config/prism.php)
 </cite>
 
 ## Update Summary
 **Changes Made**
 - Updated default provider assignment from 'anthropic' to 'z'
-- Added 'z' driver abstraction layer for Anthropic API
-- Enhanced provider configuration with new 'z' provider entry
-- Updated environment variable management to include Z_API_KEY and Z_URL
-- Revised provider selection strategies to account for the new abstraction layer
+- Introduced new 'z' driver abstraction layer for Anthropic API with enhanced reliability and rate limiting
+- Added comprehensive 'z' provider configuration with dedicated environment variables (Z_API_KEY, Z_URL)
+- Enhanced provider selection strategies to leverage the new abstraction layer
+- Updated environment variable management to include z.driver-specific configuration
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,7 +34,7 @@
 ## Introduction
 This document explains the AI configuration for multi-provider setups and environment management in the Laravel Assistant project. It focuses on the config/ai.php structure, default provider assignments per modality (text, images, audio, transcription, embeddings, reranking), provider configuration arrays, environment variable usage via env(), caching for embeddings, and practical examples for configuring providers such as Anthropic, Gemini, OpenAI, Azure OpenAI, and local providers like Ollama. It also covers provider selection strategies, fallback mechanisms, performance optimization, and security best practices for API key management.
 
-**Updated** The configuration now uses a 'z' driver abstraction layer that provides a unified interface to Anthropic's API through the z.ai service, offering enhanced reliability and rate limiting benefits.
+**Updated** The configuration now uses a 'z' driver abstraction layer that provides a unified interface to Anthropic's API through the z.ai service, offering enhanced reliability and rate limiting benefits. This replaces direct Anthropic API usage with a managed service endpoint.
 
 ## Project Structure
 The AI configuration is primarily defined in config/ai.php, with caching controlled by config/cache.php. The project uses laravel/ai ^0.4.3, which integrates with Laravel's configuration and environment systems. Environment variables are loaded via env() and accessed through config() in application code.
