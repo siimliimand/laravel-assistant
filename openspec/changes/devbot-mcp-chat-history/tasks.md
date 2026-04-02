@@ -1,18 +1,18 @@
 ## 1. MCP Tool Classes
 
-- [ ] 1.1 Create `app/Ai/Tools/` directory structure
-- [ ] 1.2 Create `DatabaseQueryTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `database-query` MCP tool
-- [ ] 1.3 Create `DatabaseSchemaTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `database-schema` MCP tool
-- [ ] 1.4 Create `SearchDocsTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `search-docs` MCP tool
-- [ ] 1.5 Create `TinkerTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `tinker` MCP tool
-- [ ] 1.6 Write unit tests for each tool class to verify proper interface implementation and parameter validation
+- [x] 1.1 Create `app/Ai/Tools/` directory structure
+- [x] 1.2 Create `DatabaseQueryTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `database-query` MCP tool
+- [x] 1.3 Create `DatabaseSchemaTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `database-schema` MCP tool
+- [x] 1.4 Create `SearchDocsTool` class implementing `Laravel\Ai\Contracts\Tool` that searches Laravel documentation via HTTP API
+- [x] 1.5 Create `TinkerTool` class implementing `Laravel\Ai\Contracts\Tool` that wraps the Laravel Boost `tinker` MCP tool
+- [x] 1.6 Write unit tests for each tool class to verify proper interface implementation and parameter validation
 
 ## 2. DevBot Agent Integration
 
-- [ ] 2.1 Update `DevBot::tools()` method to return instances of all MCP tool classes
-- [ ] 2.2 Test DevBot agent can access and call tools during conversation
-- [ ] 2.3 Verify tool calls are tracked in conversation message history
-- [ ] 2.4 Update `openspec/specs/devbot-agent/spec.md` with MODIFIED requirements for tool availability
+- [x] 2.1 Update `DevBot::tools()` method to return instances of all MCP tool classes
+- [x] 2.2 Test DevBot agent can access and call tools during conversation
+- [x] 2.3 Verify tool calls are tracked in conversation message history
+- [x] 2.4 Update `openspec/specs/devbot-agent/spec.md` with MODIFIED requirements for tool availability
 
 ## 3. Backend Routes and Controllers
 

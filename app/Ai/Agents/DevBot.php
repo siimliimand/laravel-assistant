@@ -2,6 +2,10 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\DatabaseQueryTool;
+use App\Ai\Tools\DatabaseSchemaTool;
+use App\Ai\Tools\SearchDocsTool;
+use App\Ai\Tools\TinkerTool;
 use App\Models\Conversation;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
@@ -93,6 +97,11 @@ PROMPT;
      */
     public function tools(): iterable
     {
-        return [];
+        return [
+            new DatabaseQueryTool,
+            new DatabaseSchemaTool,
+            new SearchDocsTool,
+            new TinkerTool,
+        ];
     }
 }

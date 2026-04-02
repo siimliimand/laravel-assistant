@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'mcp_client' => [
+        'command' => env('MCP_CLIENT_COMMAND', 'php artisan boost:mcp'),
+        'timeout' => env('MCP_CLIENT_TIMEOUT', 60),
+        'max_retries' => env('MCP_CLIENT_MAX_RETRIES', 3),
+        'retry_delay' => env('MCP_CLIENT_RETRY_DELAY', 1000), // milliseconds
+    ],
+
 ];

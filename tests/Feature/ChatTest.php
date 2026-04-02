@@ -1,10 +1,16 @@
 <?php
 
 use App\Ai\Agents\DevBot;
+use App\Ai\Tools\DatabaseQueryTool;
+use App\Ai\Tools\DatabaseSchemaTool;
+use App\Ai\Tools\SearchDocsTool;
+use App\Ai\Tools\TinkerTool;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Services\McpClientService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Contracts\Tool;
 
 uses(RefreshDatabase::class);
 
@@ -587,3 +593,196 @@ test('conversation persists across page reloads', function () {
     $pageResponse->assertSee('Persistent message');
     $pageResponse->assertSee('Response');
 });
+
+/**
+ * ==========================================
+ * MCP Tool Integration Tests
+ * ==========================================
+ */
+test('DevBot has MCP tool proxies registered', function () {
+    $devBot = new DevBot;
+    $tools = iterator_to_array($devBot->tools());
+
+    expect($tools)->toHaveCount(4);
+
+    $toolClasses = array_map('get_class', $tools);
+    expect($toolClasses)->toContain(DatabaseQueryTool::class);
+    expect($toolClasses)->toContain(DatabaseSchemaTool::class);
+    expect($toolClasses)->toContain(SearchDocsTool::class);
+    expect($toolClasses)->toContain(TinkerTool::class);
+});
+
+test('DevBot tools implement Laravel AI Tool interface', function () {
+    $devBot = new DevBot;
+    $tools = iterator_to_array($devBot->tools());
+
+    foreach ($tools as $tool) {
+        expect($tool)->toBeInstanceOf(Tool::class);
+    }
+});
+
+test('DevBot conversation with MCP tool call succeeds', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'Tool Test']);
+    Message::create([
+        'conversation_id' => $conversation->id,
+        'role' => 'user',
+        'content' => 'What tables exist in the database?',
+    ]);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('What tables exist in the database?');
+
+    expect($response->text)->toBeString();
+})->skip('Requires real AI API and MCP server connection');
+
+test('tool calls are tracked in conversation message history', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'Tool History Test']);
+
+    $devBot = new DevBot($conversation);
+    $devBot->prompt('Execute SELECT 1');
+
+    // Refresh conversation messages
+    $conversation->load('messages');
+
+    // Should have user message and assistant response
+    expect($conversation->messages->count())->toBeGreaterThanOrEqual(2);
+})->skip('Requires real AI API and MCP server connection');
+
+test('multiple tool calls in single conversation turn', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'Multi-Tool Test']);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('Show me the database schema and then list the users table');
+
+    expect($response->text)->toBeString();
+})->skip('Requires real AI API and MCP server connection');
+
+test('tool call error handling does not crash DevBot conversation', function () {
+    DevBot::fake(['I encountered an error but I am still functioning.']);
+
+    $response = $this->postJson(route('chat.message'), [
+        'message' => 'Execute an invalid query',
+    ]);
+
+    $response->assertSuccessful();
+    expect($response->json('success'))->toBeTrue();
+});
+
+test('MCP client service is available in container', function () {
+    $mcpClient = app(McpClientService::class);
+
+    expect($mcpClient)->toBeInstanceOf(McpClientService::class);
+});
+
+test('MCP client service is registered as singleton', function () {
+    $instance1 = app(McpClientService::class);
+    $instance2 = app(McpClientService::class);
+
+    expect($instance1)->toBe($instance2);
+});
+
+/**
+ * ==========================================
+ * End-to-End Integration Tests (Requires Real MCP/AI)
+ * ==========================================
+ */
+test('e2e: DevBot queries database via MCP tool', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'E2E Database Query']);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('Show me all tables in the database');
+
+    expect($response->text)->toBeString();
+    expect($response->text)->toContain('users');
+})->skip('Requires real AI API and MCP server connection');
+
+test('e2e: DevBot searches docs via MCP tool', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'E2E Docs Search']);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('Search for Eloquent relationship documentation');
+
+    expect($response->text)->toBeString();
+})->skip('Requires real AI API and MCP server connection');
+
+test('e2e: DevBot executes PHP via MCP tinker tool', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'E2E Tinker']);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('Execute: return 2 + 2');
+
+    expect($response->text)->toBeString();
+    expect($response->text)->toContain('4');
+})->skip('Requires real AI API and MCP server connection');
+
+test('e2e: DevBot handles invalid SQL query error', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'E2E Error Handling']);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('Execute this SQL: SELECT * FROM nonexistent_table_xyz');
+
+    // DevBot should handle the error gracefully and respond
+    expect($response->text)->toBeString();
+})->skip('Requires real AI API and MCP server connection');
+
+test('e2e: DevBot handles PHP exception gracefully', function () {
+    // This test requires real AI API and MCP server connection
+    $this->markTestSkipped('Requires real AI API and MCP server connection');
+
+    $conversation = Conversation::create(['title' => 'E2E Exception Handling']);
+
+    $devBot = new DevBot($conversation);
+    $response = $devBot->prompt('Execute this PHP: throw new Exception("Test exception")');
+
+    // DevBot should handle the exception gracefully
+    expect($response->text)->toBeString();
+})->skip('Requires real AI API and MCP server connection');
+
+test('e2e: MCP client reconnects after server crash', function () {
+    // This test requires real MCP server connection
+    $this->markTestSkipped('Requires real MCP server connection');
+
+    $mcpClient = app(McpClientService::class);
+    $mcpClient->initialize();
+
+    // Simulate server crash by disconnecting
+    $mcpClient->disconnect();
+
+    // Next tool call should auto-reconnect
+    $result = $mcpClient->callTool('database-schema', []);
+    expect($result)->toBeString();
+})->skip('Requires real MCP server connection');
+
+test('e2e: MCP client handles timeout correctly', function () {
+    // This test requires real MCP server connection
+    $this->markTestSkipped('Requires real MCP server connection');
+
+    $mcpClient = app(McpClientService::class);
+
+    // Execute a command that might timeout
+    $result = $mcpClient->callTool('tinker', ['code' => 'sleep(120); return 1;']);
+
+    // Should handle timeout gracefully
+    expect($result)->toBeString();
+})->skip('Requires real MCP server connection');
