@@ -8,4 +8,8 @@ Route::get('/', function () {
 });
 
 Route::get('/chat', [ChatController::class, 'show'])->name('chat.show');
+Route::get('/chat/conversations', [ChatController::class, 'listConversations'])->name('chat.conversations');
+Route::post('/chat/new', [ChatController::class, 'createConversation'])->name('chat.new');
+Route::get('/api/chat/{conversation}', [ChatController::class, 'getConversation'])->name('chat.conversation');
+Route::get('/chat/{conversation}', [ChatController::class, 'show'])->name('chat.show.conversation');
 Route::post('/chat/message', [ChatController::class, 'sendMessage'])->name('chat.message');

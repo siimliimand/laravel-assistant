@@ -49,6 +49,7 @@ test('chat page displays conversation when provided', function () {
     $response->assertSuccessful();
     $response->assertViewHas('conversation', $this->conversation);
     $response->assertSee('Test Conversation');
+    $response->assertViewHas('conversations');
 });
 
 test('chat page displays existing messages', function () {
@@ -406,6 +407,150 @@ test('AJAX error returns JSON error', function () {
     $response->assertJsonStructure([
         'success',
         'message',
+    ]);
+});
+
+/**
+ * ==========================================
+ * Conversation Management Tests
+ * ==========================================
+ */
+test('can list conversations via JSON endpoint', function () {
+    // Create additional conversations
+    Conversation::create(['title' => 'Chat 1']);
+    Conversation::create(['title' => 'Chat 2']);
+
+    $response = $this->getJson(route('chat.conversations'));
+
+    $response->assertSuccessful();
+    $response->assertJsonStructure([
+        'conversations' => [
+            '*' => ['id', 'title', 'created_at', 'updated_at'],
+        ],
+    ]);
+
+    $conversations = $response->json('conversations');
+    expect(count($conversations))->toBeGreaterThanOrEqual(3);
+});
+
+test('conversation list is limited to 50', function () {
+    // Create 55 conversations
+    for ($i = 0; $i < 55; $i++) {
+        Conversation::create(['title' => "Chat {$i}"]);
+    }
+
+    $response = $this->getJson(route('chat.conversations'));
+
+    $response->assertSuccessful();
+    $conversations = $response->json('conversations');
+    expect(count($conversations))->toBe(50);
+});
+
+test('conversation list is sorted by created_at desc', function () {
+    $older = Conversation::create(['title' => 'Older Chat']);
+    $newer = Conversation::create(['title' => 'Newer Chat']);
+
+    $response = $this->getJson(route('chat.conversations'));
+
+    $conversations = $response->json('conversations');
+    expect($conversations[0]['id'])->toBe($newer->id);
+    expect($conversations[1]['id'])->toBe($older->id);
+});
+
+test('can create new conversation via POST', function () {
+    $initialCount = Conversation::count();
+
+    $response = $this->postJson(route('chat.new'));
+
+    $response->assertSuccessful();
+    $response->assertJson([
+        'success' => true,
+    ]);
+    $response->assertJsonStructure([
+        'success',
+        'conversation' => ['id', 'title', 'created_at'],
+    ]);
+
+    expect(Conversation::count())->toBe($initialCount + 1);
+
+    $this->assertDatabaseHas('conversations', [
+        'id' => $response->json('conversation.id'),
+        'title' => 'New Chat',
+    ]);
+});
+
+test('can get conversation details and messages via JSON', function () {
+    Message::create([
+        'conversation_id' => $this->conversation->id,
+        'role' => 'user',
+        'content' => 'Hello',
+    ]);
+
+    Message::create([
+        'conversation_id' => $this->conversation->id,
+        'role' => 'assistant',
+        'content' => 'Hi there',
+    ]);
+
+    $response = $this->getJson(route('chat.conversation', $this->conversation));
+
+    $response->assertSuccessful();
+    $response->assertJsonStructure([
+        'conversation' => ['id', 'title', 'created_at'],
+        'messages' => [
+            '*' => ['id', 'role', 'content', 'created_at'],
+        ],
+    ]);
+
+    $response->assertJsonPath('conversation.id', $this->conversation->id);
+    $response->assertJsonPath('conversation.title', $this->conversation->title);
+
+    $messages = $response->json('messages');
+    expect(count($messages))->toBe(2);
+    expect($messages[0]['role'])->toBe('user');
+    expect($messages[1]['role'])->toBe('assistant');
+});
+
+test('conversation messages are ordered by created_at asc', function () {
+    Message::create([
+        'conversation_id' => $this->conversation->id,
+        'role' => 'user',
+        'content' => 'First',
+    ]);
+
+    Message::create([
+        'conversation_id' => $this->conversation->id,
+        'role' => 'user',  // Change to user to avoid HTML formatting
+        'content' => 'Second',
+    ]);
+
+    Message::create([
+        'conversation_id' => $this->conversation->id,
+        'role' => 'user',
+        'content' => 'Third',
+    ]);
+
+    $response = $this->getJson(route('chat.conversation', $this->conversation));
+
+    $messages = $response->json('messages');
+    expect($messages[0]['content'])->toBe('First');
+    expect($messages[1]['content'])->toBe('Second');
+    expect($messages[2]['content'])->toBe('Third');
+});
+
+test('sendMessage returns conversation_title in JSON response', function () {
+    DevBot::fake(['Response']);
+
+    $response = $this->postJson(route('chat.message'), [
+        'message' => 'Test message',
+    ]);
+
+    $response->assertSuccessful();
+    $response->assertJsonStructure([
+        'success',
+        'response',
+        'conversation_id',
+        'conversation_title',
     ]);
 });
 

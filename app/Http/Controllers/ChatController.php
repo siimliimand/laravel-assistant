@@ -27,9 +27,77 @@ class ChatController extends Controller
 
         $messages = $conversation ? $conversation->messages()->orderBy('created_at', 'asc')->get() : collect();
 
+        // Get all conversations for sidebar (limited to 50 most recent)
+        $conversations = Conversation::latest()->limit(50)->get();
+
         return view('chat', [
             'conversation' => $conversation,
             'messages' => $messages,
+            'conversations' => $conversations,
+        ]);
+    }
+
+    /**
+     * Return JSON list of conversations (limited to 50, sorted by created_at desc).
+     */
+    public function listConversations(): JsonResponse
+    {
+        $conversations = Conversation::latest()->limit(50)->get();
+
+        return response()->json([
+            'conversations' => $conversations->map(function ($conversation) {
+                return [
+                    'id' => $conversation->id,
+                    'title' => $conversation->title,
+                    'created_at' => $conversation->created_at->diffForHumans(),
+                    'updated_at' => $conversation->updated_at->diffForHumans(),
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Create a new empty conversation and return JSON response.
+     */
+    public function createConversation(Request $request): JsonResponse
+    {
+        $conversation = Conversation::create([
+            'title' => 'New Chat',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'conversation' => [
+                'id' => $conversation->id,
+                'title' => $conversation->title,
+                'created_at' => $conversation->created_at->diffForHumans(),
+            ],
+        ]);
+    }
+
+    /**
+     * Return conversation details and messages as JSON (for AJAX loading).
+     */
+    public function getConversation(Conversation $conversation): JsonResponse
+    {
+        $conversation->load(['messages' => function ($query) {
+            $query->orderBy('created_at', 'asc');
+        }]);
+
+        return response()->json([
+            'conversation' => [
+                'id' => $conversation->id,
+                'title' => $conversation->title,
+                'created_at' => $conversation->created_at->diffForHumans(),
+            ],
+            'messages' => $conversation->messages->map(function ($message) {
+                return [
+                    'id' => $message->id,
+                    'role' => $message->role,
+                    'content' => $message->role === 'assistant' ? $message->formattedContent() : $message->content,
+                    'created_at' => $message->created_at->format('g:i A'),
+                ];
+            }),
         ]);
     }
 
@@ -86,6 +154,7 @@ class ChatController extends Controller
                     'success' => true,
                     'response' => $assistantMessage->formattedContent(),
                     'conversation_id' => $conversation->id,
+                    'conversation_title' => $conversation->title,
                 ]);
             }
 
