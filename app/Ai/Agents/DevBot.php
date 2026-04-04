@@ -123,10 +123,10 @@ PROMPT;
     public function tools(): iterable
     {
         return [
-            new DatabaseQueryTool,
-            new DatabaseSchemaTool,
-            new SearchDocsTool,
-            new TinkerTool,
+            app(DatabaseQueryTool::class),
+            app(DatabaseSchemaTool::class),
+            app(SearchDocsTool::class),
+            app(TinkerTool::class),
             new FileSystemTool,
             new GitTool,
             new GitHubTool,

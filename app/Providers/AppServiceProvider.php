@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Actions\SendMessageAction;
+use App\Ai\Agents\DevBot;
+use App\Models\Conversation;
 use App\Services\McpClientService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -16,6 +19,13 @@ class AppServiceProvider extends ServiceProvider
         // Register MCP Client Service as singleton
         $this->app->singleton(McpClientService::class, function ($app) {
             return new McpClientService;
+        });
+
+        // Register SendMessageAction with DevBot factory
+        $this->app->bind(SendMessageAction::class, function ($app) {
+            return new SendMessageAction(
+                fn (Conversation $conversation) => new DevBot($conversation)
+            );
         });
     }
 

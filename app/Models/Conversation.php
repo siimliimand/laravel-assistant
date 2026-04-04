@@ -2,14 +2,25 @@
 
 namespace App\Models;
 
+use App\Enums\ConversationStatus;
+use Database\Factories\ConversationFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Conversation extends Model
 {
+    /** @use HasFactory<ConversationFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'title',
+        'status',
+    ];
+
+    protected $casts = [
+        'status' => ConversationStatus::class,
     ];
 
     public function messages(): HasMany
@@ -35,7 +46,7 @@ class Conversation extends Model
             ->get()
             ->map(function ($message) {
                 return new \Laravel\Ai\Messages\Message(
-                    role: $message->role,
+                    role: $message->role->value,
                     content: $message->content
                 );
             })

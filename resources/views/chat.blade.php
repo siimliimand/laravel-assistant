@@ -42,16 +42,16 @@
 
         <!-- Conversation List -->
         <div id="conversation-list" class="flex-1 overflow-y-auto">
-            @forelse($conversations as $conv)
+            @forelse($viewModel->getSidebarConversations() as $conv)
                 <a 
-                    href="{{ route('chat.show', ['conversation' => $conv]) }}" 
-                    class="conversation-item block px-4 py-3 hover:bg-gray-50 transition duration-150 {{ $conversation && $conversation->id === $conv->id ? 'bg-blue-50 border-l-4 border-blue-600' : 'border-l-4 border-transparent' }}"
-                    data-conversation-id="{{ $conv->id }}"
-                    data-conversation-title="{{ $conv->title }}"
+                    href="{{ route('chat.show', ['conversation' => $conv['id']]) }}" 
+                    class="conversation-item block px-4 py-3 hover:bg-gray-50 transition duration-150 {{ $conv['is_active'] ? 'bg-blue-50 border-l-4 border-blue-600' : 'border-l-4 border-transparent' }}"
+                    data-conversation-id="{{ $conv['id'] }}"
+                    data-conversation-title="{{ $conv['title'] }}"
                 >
                     <div class="flex flex-col">
-                        <span class="font-medium text-sm text-gray-900 truncate">{{ $conv->title }}</span>
-                        <span class="text-xs text-gray-500 mt-1">{{ $conv->created_at->diffForHumans() }}</span>
+                        <span class="font-medium text-sm text-gray-900 truncate">{{ $conv['title'] }}</span>
+                        <span class="text-xs text-gray-500 mt-1">{{ $conv['updated_at'] }}</span>
                     </div>
                 </a>
             @empty
@@ -95,7 +95,7 @@
 
         <!-- Messages Area -->
         <div id="messages-container" class="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-4 scroll-smooth">
-            @if($messages->isEmpty())
+            @if($viewModel->getFormattedMessages()->isEmpty())
                 <!-- Welcome Message -->
                 <div class="flex items-start space-x-3">
                     <div class="shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
@@ -122,8 +122,8 @@
                 </div>
             @else
                 <!-- Message History -->
-                @foreach($messages as $message)
-                    @if($message->role === 'user')
+                @foreach($viewModel->getFormattedMessages() as $message)
+                    @if($message['role'] === 'user')
                         <!-- User Message -->
                         <div class="flex items-start space-x-3 flex-row-reverse space-x-reverse">
                             <div class="shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-gray-600 to-gray-700 flex items-center justify-center text-white font-bold text-sm">
@@ -131,11 +131,11 @@
                             </div>
                             <div class="flex-1 bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3 max-w-3xl">
                                 <div class="flex items-baseline space-x-2 mb-1 justify-end">
-                                    <span class="text-xs text-blue-100">{{ $message->created_at->format('g:i A') }}</span>
+                                    <span class="text-xs text-blue-100">{{ $message['created_at'] }}</span>
                                     <span class="font-semibold text-sm text-blue-50">You</span>
                                 </div>
                                 <div class="text-sm leading-relaxed prose prose-invert max-w-none">
-                                    {!! nl2br(e($message->content)) !!}
+                                    {!! nl2br(e($message['content'])) !!}
                                 </div>
                             </div>
                         </div>
@@ -148,10 +148,10 @@
                             <div class="flex-1 bg-gray-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-3xl">
                                 <div class="flex items-baseline space-x-2 mb-1">
                                     <span class="font-semibold text-sm text-gray-900">DevBot</span>
-                                    <span class="text-xs text-gray-500">{{ $message->created_at->format('g:i A') }}</span>
+                                    <span class="text-xs text-gray-500">{{ $message['created_at'] }}</span>
                                 </div>
                                 <div class="text-gray-700 text-sm leading-relaxed markdown-content">
-                                    {!! $message->formattedContent() !!}
+                                    {!! $message['content'] !!}
                                 </div>
                             </div>
                         </div>
@@ -160,7 +160,7 @@
             @endif
 
             <!-- Loading Indicator (hidden by default) -->
-            <div id="loading-indicator" class="hidden flex items-start space-x-3">
+            <div id="loading-indicator" class="hidden items-start space-x-3">
                 <div class="shrink-0 w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
                     AI
                 </div>
@@ -181,8 +181,8 @@
         <div class="shrink-0 border-t border-gray-200 bg-white px-4 md:px-6 py-4 sticky bottom-0 z-10">
             <form id="chat-form" action="{{ route('chat.message') }}" method="POST" class="space-y-3">
                 @csrf
-                @if($conversation)
-                <input type="hidden" name="conversation_id" value="{{ $conversation->id }}">
+                @if($viewModel->getCurrentConversationId())
+                <input type="hidden" name="conversation_id" value="{{ $viewModel->getCurrentConversationId() }}">
                 @endif
                 
                 <div class="flex items-end space-x-3">
@@ -264,6 +264,7 @@
                 messageInput.disabled = false;
                 messageInput.focus();
                 loadingIndicator.classList.add('hidden');
+                loadingIndicator.classList.remove('flex');
             }
 
             // Scroll to bottom function
@@ -335,6 +336,7 @@
                 
                 // Show loading indicator
                 loadingIndicator.classList.remove('hidden');
+                loadingIndicator.classList.add('flex');
                 
                 // Auto-scroll to bottom to show loading indicator
                 scrollToBottom();
@@ -443,7 +445,7 @@
             const newChatBtn = document.getElementById('new-chat-btn');
             const conversationSearch = document.getElementById('conversation-search');
             const conversationList = document.getElementById('conversation-list');
-            let currentConversationId = {{ $conversation ? $conversation->id : 'null' }};
+            let currentConversationId = {{ $viewModel->getCurrentConversationId() ?? 'null' }};
 
             // Toggle sidebar on mobile
             function openSidebar() {
@@ -489,6 +491,7 @@
 
                 // Show loading indicator
                 loadingIndicator.classList.remove('hidden');
+                loadingIndicator.classList.add('flex');
                 messagesContainer.innerHTML = '';
                 messagesContainer.appendChild(loadingIndicator);
 
@@ -568,6 +571,7 @@
 
                     // Hide loading indicator
                     loadingIndicator.classList.add('hidden');
+                    loadingIndicator.classList.remove('flex');
 
                     // Scroll to bottom
                     scrollToBottom();
@@ -580,6 +584,7 @@
                     console.error('Error loading conversation:', error);
                     showError('Failed to load conversation');
                     loadingIndicator.classList.add('hidden');
+                    loadingIndicator.classList.remove('flex');
                     resetFormState();
                 }
             }
@@ -637,6 +642,7 @@
 
                     // Hide loading indicator
                     loadingIndicator.classList.add('hidden');
+                    loadingIndicator.classList.remove('flex');
 
                     // Update current conversation ID
                     currentConversationId = newConversationId;

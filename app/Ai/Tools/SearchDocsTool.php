@@ -12,6 +12,10 @@ use Stringable;
 
 class SearchDocsTool implements Tool
 {
+    public function __construct(
+        protected McpClientService $mcpClient
+    ) {}
+
     /**
      * Get the description of the tool's purpose.
      */
@@ -36,7 +40,6 @@ class SearchDocsTool implements Tool
 
         try {
             // Call MCP server via McpClientService
-            $mcpClient = app(McpClientService::class);
             $arguments = [
                 'queries' => $queries,
                 'token_limit' => (int) $tokenLimit,
@@ -46,7 +49,7 @@ class SearchDocsTool implements Tool
                 $arguments['packages'] = $packages;
             }
 
-            return $mcpClient->callTool('search-docs', $arguments);
+            return $this->mcpClient->callTool('search-docs', $arguments);
         } catch (\Exception $e) {
             $errorMessage = "Documentation search error: {$e->getMessage()}";
             Log::error('SearchDocsTool: Search failed', [

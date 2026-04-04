@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @property Conversation $conversation
+ */
+
 use App\Ai\Agents\DevBot;
 use App\Ai\Tools\DatabaseQueryTool;
 use App\Ai\Tools\DatabaseSchemaTool;
@@ -9,18 +13,26 @@ use App\Ai\Tools\GitTool;
 use App\Ai\Tools\OpenSpecTool;
 use App\Ai\Tools\SearchDocsTool;
 use App\Ai\Tools\TinkerTool;
+use App\Enums\MessageRole;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\McpClientService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\TestCase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Contracts\Tool;
+use Pest\PendingCalls\UsesCall;
 
+/**
+ * @mixin UsesCall
+ * @mixin TestCase
+ */
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     // Create a test conversation for reuse
-    $this->conversation = Conversation::create([
+    $this->conversation = Conversation::factory()->create([
         'title' => 'Test Conversation',
     ]);
 });
@@ -48,43 +60,51 @@ test('chat page shows welcome message when no messages exist', function () {
 });
 
 test('chat page displays conversation when provided', function () {
-    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
-    $response->assertViewHas('conversation', $this->conversation);
+    $response->assertViewHas('conversation');
     $response->assertSee('Test Conversation');
     $response->assertViewHas('conversations');
+
+    // Verify the conversation ID matches
+    $viewConversation = $response->viewData('conversation');
+    expect($viewConversation->id)->toBe($this->conversation->id);
 });
 
 test('chat page displays existing messages', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'Hello, DevBot!',
-    ]);
+    Message::factory()->userMessage('Hello, DevBot!')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => 'Hello! How can I help you today?',
-    ]);
+    Message::factory()->assistantMessage('Hello! How can I help you today?')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
-    $response->assertSee('Hello, DevBot!');
-    $response->assertSee('Hello! How can I help you today?');
+    $response->assertSee('Hello, DevBot!', false);
+    $response->assertSee('Hello! How can I help you today?', false);
 });
 
 test('chat page loads most recent conversation when no conversation specified', function () {
-    $recentConversation = Conversation::create([
+    // Delete the conversation from beforeEach to isolate this test
+    $this->conversation->delete();
+
+    $recentConversation = Conversation::factory()->create([
         'title' => 'Recent Chat',
     ]);
 
     $response = $this->get(route('chat.show'));
 
     $response->assertSuccessful();
-    $response->assertViewHas('conversation', $recentConversation);
+    $response->assertViewHas('conversation');
+
+    // Verify the most recent conversation is loaded
+    $viewConversation = $response->viewData('conversation');
+    expect($viewConversation)->not->toBeNull();
+    expect($viewConversation)->toBeInstanceOf(Conversation::class);
+    expect($viewConversation->id)->not->toBeNull();
+    expect($viewConversation->id)->toBe($recentConversation->id);
 });
 
 /**
@@ -130,7 +150,7 @@ test('can send message and receive AI response via AJAX', function () {
 
     // Verify messages were saved
     $this->assertDatabaseHas('messages', [
-        'role' => 'user',
+        'role' => MessageRole::User->value,
         'content' => 'What is Laravel?',
     ]);
 });
@@ -158,7 +178,7 @@ test('can send message to existing conversation', function () {
     // Verify message was added to existing conversation
     $this->assertDatabaseHas('messages', [
         'conversation_id' => $this->conversation->id,
-        'role' => 'user',
+        'role' => MessageRole::User->value,
         'content' => 'Follow-up question',
     ]);
 });
@@ -171,12 +191,12 @@ test('user message is saved before AI response', function () {
     ]);
 
     // User message should exist
-    $userMessage = Message::where('role', 'user')->first();
+    $userMessage = Message::where('role', MessageRole::User)->first();
     expect($userMessage)->not->toBeNull();
     expect($userMessage->content)->toBe('Test message order');
 
     // Assistant message should also exist
-    $assistantMessage = Message::where('role', 'assistant')->first();
+    $assistantMessage = Message::where('role', MessageRole::Assistant)->first();
     expect($assistantMessage)->not->toBeNull();
     expect($assistantMessage->content)->toBe('AI response');
 });
@@ -339,7 +359,7 @@ test('handles AI API failure gracefully', function () {
 
     // User message should still be saved
     $this->assertDatabaseHas('messages', [
-        'role' => 'user',
+        'role' => MessageRole::User->value,
         'content' => 'Test message',
     ]);
 });
@@ -397,7 +417,7 @@ test('regular POST request redirects', function () {
     ]);
 
     $conversation = Conversation::latest()->first();
-    $response->assertRedirect(route('chat.show', ['conversation' => $conversation]));
+    $response->assertRedirect(route('chat.show.conversation', ['conversation' => $conversation]));
 });
 
 test('AJAX error returns JSON error', function () {
@@ -421,8 +441,8 @@ test('AJAX error returns JSON error', function () {
  */
 test('can list conversations via JSON endpoint', function () {
     // Create additional conversations
-    Conversation::create(['title' => 'Chat 1']);
-    Conversation::create(['title' => 'Chat 2']);
+    Conversation::factory()->create(['title' => 'Chat 1']);
+    Conversation::factory()->create(['title' => 'Chat 2']);
 
     $response = $this->getJson(route('chat.conversations'));
 
@@ -440,7 +460,7 @@ test('can list conversations via JSON endpoint', function () {
 test('conversation list is limited to 50', function () {
     // Create 55 conversations
     for ($i = 0; $i < 55; $i++) {
-        Conversation::create(['title' => "Chat {$i}"]);
+        Conversation::factory()->create(['title' => "Chat {$i}"]);
     }
 
     $response = $this->getJson(route('chat.conversations'));
@@ -451,8 +471,8 @@ test('conversation list is limited to 50', function () {
 });
 
 test('conversation list is sorted by created_at desc', function () {
-    $older = Conversation::create(['title' => 'Older Chat']);
-    $newer = Conversation::create(['title' => 'Newer Chat']);
+    $older = Conversation::factory()->create(['title' => 'Older Chat']);
+    $newer = Conversation::factory()->create(['title' => 'Newer Chat']);
 
     $response = $this->getJson(route('chat.conversations'));
 
@@ -484,17 +504,11 @@ test('can create new conversation via POST', function () {
 });
 
 test('can get conversation details and messages via JSON', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'Hello',
-    ]);
+    Message::factory()->userMessage('Hello')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => 'Hi there',
-    ]);
+    Message::factory()->assistantMessage('Hi there')
+        ->create(['conversation_id' => $this->conversation->id]);
 
     $response = $this->getJson(route('chat.conversation', $this->conversation));
 
@@ -511,28 +525,19 @@ test('can get conversation details and messages via JSON', function () {
 
     $messages = $response->json('messages');
     expect(count($messages))->toBe(2);
-    expect($messages[0]['role'])->toBe('user');
-    expect($messages[1]['role'])->toBe('assistant');
+    expect($messages[0]['role'])->toBe(MessageRole::User->value);
+    expect($messages[1]['role'])->toBe(MessageRole::Assistant->value);
 });
 
 test('conversation messages are ordered by created_at asc', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'First',
-    ]);
+    Message::factory()->userMessage('First')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',  // Change to user to avoid HTML formatting
-        'content' => 'Second',
-    ]);
+    Message::factory()->userMessage('Second')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'Third',
-    ]);
+    Message::factory()->userMessage('Third')
+        ->create(['conversation_id' => $this->conversation->id]);
 
     $response = $this->getJson(route('chat.conversation', $this->conversation));
 
@@ -564,25 +569,16 @@ test('sendMessage returns conversation_title in JSON response', function () {
  * ==========================================
  */
 test('messages are ordered by creation time ascending', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'First message',
-    ]);
+    Message::factory()->userMessage('First message')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => 'Second message',
-    ]);
+    Message::factory()->assistantMessage('Second message')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'Third message',
-    ]);
+    Message::factory()->userMessage('Third message')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
 
@@ -597,13 +593,10 @@ test('messages are ordered by creation time ascending', function () {
 });
 
 test('user messages are displayed with correct role', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'User message',
-    ]);
+    Message::factory()->userMessage('User message')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
     $response->assertSee('User message');
@@ -611,13 +604,10 @@ test('user messages are displayed with correct role', function () {
 });
 
 test('assistant messages are displayed with correct role', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => 'Assistant message',
-    ]);
+    Message::factory()->assistantMessage('Assistant message')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
     $response->assertSee('Assistant message');
@@ -630,7 +620,7 @@ test('assistant messages are displayed with correct role', function () {
  * ==========================================
  */
 test('conversation generates title from first message', function () {
-    $conversation = Conversation::create([
+    $conversation = Conversation::factory()->create([
         'title' => 'New Chat',
     ]);
 
@@ -643,7 +633,7 @@ test('conversation generates title from first message', function () {
 });
 
 test('conversation title is truncated when too long', function () {
-    $conversation = Conversation::create([
+    $conversation = Conversation::factory()->create([
         'title' => 'New Chat',
     ]);
 
@@ -659,9 +649,9 @@ test('conversation title is truncated when too long', function () {
 test('conversation retrieves recent messages with limit', function () {
     // Create 60 messages
     for ($i = 0; $i < 60; $i++) {
-        Message::create([
+        Message::factory()->create([
             'conversation_id' => $this->conversation->id,
-            'role' => $i % 2 === 0 ? 'user' : 'assistant',
+            'role' => $i % 2 === 0 ? MessageRole::User : MessageRole::Assistant,
             'content' => "Message {$i}",
         ]);
     }
@@ -673,17 +663,11 @@ test('conversation retrieves recent messages with limit', function () {
 });
 
 test('conversation has many messages', function () {
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'user',
-        'content' => 'Test message 1',
-    ]);
+    Message::factory()->userMessage('Test message 1')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => 'Test message 2',
-    ]);
+    Message::factory()->assistantMessage('Test message 2')
+        ->create(['conversation_id' => $this->conversation->id]);
 
     expect($this->conversation->messages->count())->toBe(2);
 });
@@ -736,7 +720,7 @@ test('conversation persists across page reloads', function () {
     $conversationId = $response->json('conversation_id');
 
     // Reload the chat page with this conversation
-    $pageResponse = $this->get(route('chat.show', ['conversation' => $conversationId]));
+    $pageResponse = $this->get(route('chat.show.conversation', ['conversation' => $conversationId]));
 
     $pageResponse->assertSuccessful();
     $pageResponse->assertSee('Persistent message');
@@ -778,12 +762,9 @@ test('DevBot conversation with MCP tool call succeeds', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'Tool Test']);
-    Message::create([
-        'conversation_id' => $conversation->id,
-        'role' => 'user',
-        'content' => 'What tables exist in the database?',
-    ]);
+    $conversation = Conversation::factory()->create(['title' => 'Tool Test']);
+    Message::factory()->userMessage('What tables exist in the database?')
+        ->create(['conversation_id' => $conversation->id]);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('What tables exist in the database?');
@@ -795,7 +776,7 @@ test('tool calls are tracked in conversation message history', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'Tool History Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Tool History Test']);
 
     $devBot = new DevBot($conversation);
     $devBot->prompt('Execute SELECT 1');
@@ -811,7 +792,7 @@ test('multiple tool calls in single conversation turn', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'Multi-Tool Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Multi-Tool Test']);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('Show me the database schema and then list the users table');
@@ -852,7 +833,7 @@ test('e2e: DevBot queries database via MCP tool', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'E2E Database Query']);
+    $conversation = Conversation::factory()->create(['title' => 'E2E Database Query']);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('Show me all tables in the database');
@@ -865,7 +846,7 @@ test('e2e: DevBot searches docs via MCP tool', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'E2E Docs Search']);
+    $conversation = Conversation::factory()->create(['title' => 'E2E Docs Search']);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('Search for Eloquent relationship documentation');
@@ -877,7 +858,7 @@ test('e2e: DevBot executes PHP via MCP tinker tool', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'E2E Tinker']);
+    $conversation = Conversation::factory()->create(['title' => 'E2E Tinker']);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('Execute: return 2 + 2');
@@ -890,7 +871,7 @@ test('e2e: DevBot handles invalid SQL query error', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'E2E Error Handling']);
+    $conversation = Conversation::factory()->create(['title' => 'E2E Error Handling']);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('Execute this SQL: SELECT * FROM nonexistent_table_xyz');
@@ -903,7 +884,7 @@ test('e2e: DevBot handles PHP exception gracefully', function () {
     // This test requires real AI API and MCP server connection
     $this->markTestSkipped('Requires real AI API and MCP server connection');
 
-    $conversation = Conversation::create(['title' => 'E2E Exception Handling']);
+    $conversation = Conversation::factory()->create(['title' => 'E2E Exception Handling']);
 
     $devBot = new DevBot($conversation);
     $response = $devBot->prompt('Execute this PHP: throw new Exception("Test exception")');

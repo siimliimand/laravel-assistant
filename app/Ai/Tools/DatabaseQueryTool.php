@@ -12,6 +12,10 @@ use Stringable;
 
 class DatabaseQueryTool implements Tool
 {
+    public function __construct(
+        protected McpClientService $mcpClient
+    ) {}
+
     /**
      * Get the description of the tool's purpose.
      */
@@ -49,14 +53,13 @@ class DatabaseQueryTool implements Tool
             }
 
             // Call MCP server via McpClientService
-            $mcpClient = app(McpClientService::class);
             $arguments = ['query' => $query];
 
             if ($connection) {
                 $arguments['database'] = $connection;
             }
 
-            return $mcpClient->callTool('database-query', $arguments);
+            return $this->mcpClient->callTool('database-query', $arguments);
         } catch (\Exception $e) {
             $errorMessage = "Database query error: {$e->getMessage()}";
             Log::error('DatabaseQueryTool: Query execution failed', [

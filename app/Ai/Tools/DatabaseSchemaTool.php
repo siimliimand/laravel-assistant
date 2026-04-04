@@ -12,6 +12,10 @@ use Stringable;
 
 class DatabaseSchemaTool implements Tool
 {
+    public function __construct(
+        protected McpClientService $mcpClient
+    ) {}
+
     /**
      * Get the description of the tool's purpose.
      */
@@ -30,7 +34,6 @@ class DatabaseSchemaTool implements Tool
 
         try {
             // Call MCP server via McpClientService
-            $mcpClient = app(McpClientService::class);
             $arguments = [];
 
             if ($tableName) {
@@ -41,7 +44,7 @@ class DatabaseSchemaTool implements Tool
                 $arguments['database'] = $connection;
             }
 
-            return $mcpClient->callTool('database-schema', $arguments);
+            return $this->mcpClient->callTool('database-schema', $arguments);
         } catch (\Exception $e) {
             $errorMessage = "Database schema error: {$e->getMessage()}";
             Log::error('DatabaseSchemaTool: Schema retrieval failed', [

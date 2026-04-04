@@ -24,7 +24,7 @@ test('DatabaseQueryTool calls MCP client with correct arguments', function () {
         ->with('database-query', ['query' => 'SELECT * FROM users'])
         ->andReturn(json_encode(['users' => []]));
 
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $request = new Request(['query' => 'SELECT * FROM users']);
     $result = $tool->handle($request);
 
@@ -32,7 +32,7 @@ test('DatabaseQueryTool calls MCP client with correct arguments', function () {
 });
 
 test('DatabaseQueryTool validates read-only queries', function () {
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $request = new Request(['query' => 'DELETE FROM users']);
     $result = $tool->handle($request);
 
@@ -44,7 +44,7 @@ test('DatabaseQueryTool allows SELECT queries', function () {
     $this->mockMcpClient->shouldReceive('callTool')
         ->andReturn('results');
 
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $request = new Request(['query' => 'SELECT * FROM users']);
     $result = $tool->handle($request);
 
@@ -55,7 +55,7 @@ test('DatabaseQueryTool allows SHOW queries', function () {
     $this->mockMcpClient->shouldReceive('callTool')
         ->andReturn('results');
 
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $request = new Request(['query' => 'SHOW TABLES']);
     $result = $tool->handle($request);
 
@@ -67,7 +67,7 @@ test('DatabaseQueryTool passes database connection parameter', function () {
         ->with('database-query', ['query' => 'SELECT 1', 'database' => 'testing'])
         ->andReturn('results');
 
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $request = new Request(['query' => 'SELECT 1', 'database' => 'testing']);
     $result = $tool->handle($request);
 
@@ -75,7 +75,7 @@ test('DatabaseQueryTool passes database connection parameter', function () {
 });
 
 test('DatabaseQueryTool has correct schema', function () {
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $schema = $tool->schema(new JsonSchemaTypeFactory);
 
     expect($schema)->toHaveKey('query');
@@ -90,7 +90,7 @@ test('DatabaseSchemaTool calls MCP client with no table', function () {
         ->with('database-schema', [])
         ->andReturn(json_encode(['tables' => ['users']]));
 
-    $tool = new DatabaseSchemaTool;
+    $tool = app(DatabaseSchemaTool::class);
     $request = new Request([]);
     $result = $tool->handle($request);
 
@@ -103,7 +103,7 @@ test('DatabaseSchemaTool calls MCP client with table name', function () {
         ->with('database-schema', ['table' => 'users'])
         ->andReturn(json_encode(['table' => 'users']));
 
-    $tool = new DatabaseSchemaTool;
+    $tool = app(DatabaseSchemaTool::class);
     $request = new Request(['table' => 'users']);
     $result = $tool->handle($request);
 
@@ -115,7 +115,7 @@ test('DatabaseSchemaTool passes database connection parameter', function () {
         ->with('database-schema', ['table' => 'users', 'database' => 'testing'])
         ->andReturn('schema');
 
-    $tool = new DatabaseSchemaTool;
+    $tool = app(DatabaseSchemaTool::class);
     $request = new Request(['table' => 'users', 'database' => 'testing']);
     $result = $tool->handle($request);
 
@@ -123,7 +123,7 @@ test('DatabaseSchemaTool passes database connection parameter', function () {
 });
 
 test('DatabaseSchemaTool has correct schema', function () {
-    $tool = new DatabaseSchemaTool;
+    $tool = app(DatabaseSchemaTool::class);
     $schema = $tool->schema(new JsonSchemaTypeFactory);
 
     expect($schema)->toHaveKey('table');
@@ -141,7 +141,7 @@ test('SearchDocsTool calls MCP client with correct arguments', function () {
         ])
         ->andReturn(json_encode(['results' => []]));
 
-    $tool = new SearchDocsTool;
+    $tool = app(SearchDocsTool::class);
     $request = new Request(['queries' => ['routing']]);
     $result = $tool->handle($request);
 
@@ -149,7 +149,7 @@ test('SearchDocsTool calls MCP client with correct arguments', function () {
 });
 
 test('SearchDocsTool validates queries parameter', function () {
-    $tool = new SearchDocsTool;
+    $tool = app(SearchDocsTool::class);
     $request = new Request(['queries' => []]);
     $result = $tool->handle($request);
 
@@ -166,7 +166,7 @@ test('SearchDocsTool passes packages parameter', function () {
         ])
         ->andReturn('docs');
 
-    $tool = new SearchDocsTool;
+    $tool = app(SearchDocsTool::class);
     $request = new Request([
         'queries' => ['eloquent'],
         'packages' => ['laravel/framework'],
@@ -177,7 +177,7 @@ test('SearchDocsTool passes packages parameter', function () {
 });
 
 test('SearchDocsTool has correct schema', function () {
-    $tool = new SearchDocsTool;
+    $tool = app(SearchDocsTool::class);
     $schema = $tool->schema(new JsonSchemaTypeFactory);
 
     expect($schema)->toHaveKey('queries');
@@ -196,7 +196,7 @@ test('TinkerTool calls MCP client with correct arguments', function () {
         ])
         ->andReturn(json_encode(['output' => '', 'return' => 10]));
 
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => 'return User::count();']);
     $result = $tool->handle($request);
 
@@ -204,7 +204,7 @@ test('TinkerTool calls MCP client with correct arguments', function () {
 });
 
 test('TinkerTool validates code parameter', function () {
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => '']);
     $result = $tool->handle($request);
 
@@ -217,7 +217,7 @@ test('TinkerTool respects timeout parameter', function () {
         ->with('tinker', ['code' => 'sleep(1);', 'timeout' => 10])
         ->andReturn('result');
 
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => 'sleep(1);', 'timeout' => 10]);
     $result = $tool->handle($request);
 
@@ -229,7 +229,7 @@ test('TinkerTool caps timeout to 60 seconds', function () {
         ->with('tinker', ['code' => 'test', 'timeout' => 60])
         ->andReturn('result');
 
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => 'test', 'timeout' => 120]);
     $result = $tool->handle($request);
 
@@ -237,7 +237,7 @@ test('TinkerTool caps timeout to 60 seconds', function () {
 });
 
 test('TinkerTool has correct schema', function () {
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $schema = $tool->schema(new JsonSchemaTypeFactory);
 
     expect($schema)->toHaveKey('code');
@@ -253,7 +253,7 @@ test('TinkerTool strips PHP opening tags', function () {
         ])
         ->andReturn('4');
 
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => '<?php return 2 + 2;']);
     $result = $tool->handle($request);
 
@@ -269,7 +269,7 @@ test('TinkerTool strips short PHP opening tags', function () {
         ])
         ->andReturn('hello');
 
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => '<? echo "hello";']);
     $result = $tool->handle($request);
 
@@ -282,7 +282,7 @@ test('DatabaseQueryTool handles MCP client exceptions', function () {
     $this->mockMcpClient->shouldReceive('callTool')
         ->andThrow(new Exception('Connection failed'));
 
-    $tool = new DatabaseQueryTool;
+    $tool = app(DatabaseQueryTool::class);
     $request = new Request(['query' => 'SELECT 1']);
     $result = $tool->handle($request);
 
@@ -293,7 +293,7 @@ test('SearchDocsTool handles MCP client exceptions', function () {
     $this->mockMcpClient->shouldReceive('callTool')
         ->andThrow(new Exception('Search failed'));
 
-    $tool = new SearchDocsTool;
+    $tool = app(SearchDocsTool::class);
     $request = new Request(['queries' => ['test']]);
     $result = $tool->handle($request);
 
@@ -304,7 +304,7 @@ test('TinkerTool handles MCP client exceptions', function () {
     $this->mockMcpClient->shouldReceive('callTool')
         ->andThrow(new Exception('Execution failed'));
 
-    $tool = new TinkerTool;
+    $tool = app(TinkerTool::class);
     $request = new Request(['code' => 'invalid code']);
     $result = $tool->handle($request);
 

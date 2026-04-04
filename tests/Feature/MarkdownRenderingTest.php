@@ -8,7 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->conversation = Conversation::create([
+    $this->conversation = Conversation::factory()->create([
         'title' => 'Test Conversation',
     ]);
 });
@@ -73,11 +73,8 @@ test('markdown helper escapes unsafe html', function () {
 });
 
 test('message model formats content with markdown', function () {
-    $message = Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => '**Bold** and `code`',
-    ]);
+    $message = Message::factory()->assistantMessage('**Bold** and `code`')
+        ->create(['conversation_id' => $this->conversation->id]);
 
     $formatted = $message->formattedContent();
 
@@ -86,11 +83,8 @@ test('message model formats content with markdown', function () {
 });
 
 test('message model renders code blocks correctly', function () {
-    $message = Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => "Here's an example:\n\n```php\nreturn 'hello';\n```",
-    ]);
+    $message = Message::factory()->assistantMessage("Here's an example:\n\n```php\nreturn 'hello';\n```")
+        ->create(['conversation_id' => $this->conversation->id]);
 
     $formatted = $message->formattedContent();
 
@@ -100,13 +94,10 @@ test('message model renders code blocks correctly', function () {
 });
 
 test('chat interface displays formatted markdown', function () {
-    $message = Message::create([
-        'conversation_id' => $this->conversation->id,
-        'role' => 'assistant',
-        'content' => '**Hello** with `code`',
-    ]);
+    $message = Message::factory()->assistantMessage('**Hello** with `code`')
+        ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show', ['conversation' => $this->conversation->id]));
+    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation->id]));
 
     $response->assertStatus(200);
     $response->assertSee('<strong>Hello</strong>', false);

@@ -12,6 +12,7 @@
         "php": "^8.3",
         "laravel/ai": "^0.4.3",
         "laravel/framework": "^13.0",
+        "laravel/telescope": "^5.19",
         "laravel/tinker": "^3.0",
         "league/commonmark": "^2.8",
         "php-mcp/client": "^1.0"

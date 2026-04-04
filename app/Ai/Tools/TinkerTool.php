@@ -12,6 +12,10 @@ use Stringable;
 
 class TinkerTool implements Tool
 {
+    public function __construct(
+        protected McpClientService $mcpClient
+    ) {}
+
     /**
      * Get the description of the tool's purpose.
      */
@@ -38,13 +42,12 @@ class TinkerTool implements Tool
             $code = $this->stripPhpTags($code);
 
             // Call MCP server via McpClientService
-            $mcpClient = app(McpClientService::class);
             $arguments = [
                 'code' => $code,
                 'timeout' => min((int) $timeout, 60),
             ];
 
-            return $mcpClient->callTool('tinker', $arguments);
+            return $this->mcpClient->callTool('tinker', $arguments);
         } catch (\Throwable $e) {
             $errorMessage = "Tinker execution error: {$e->getMessage()}";
             Log::error('TinkerTool: Code execution failed', [
