@@ -15,7 +15,27 @@
 - [laravel-best-practices/rules/validation.md](file://.agents/skills/laravel-best-practices/rules/validation.md)
 - [pest-testing/SKILL.md](file://.agents/skills/pest-testing/SKILL.md)
 - [tailwindcss-development/SKILL.md](file://.agents/skills/tailwindcss-development/SKILL.md)
+- [project-creation/SKILL.md](file://.agents/skills/project-creation/SKILL.md)
+- [config/ai.php](file://config/ai.php)
+- [app/Ai/Tools/FileSystemTool.php](file://app/Ai/Tools/FileSystemTool.php)
+- [app/Ai/Tools/GitTool.php](file://app/Ai/Tools/GitTool.php)
+- [app/Ai/Tools/GitHubTool.php](file://app/Ai/Tools/GitHubTool.php)
+- [app/Ai/Tools/OpenSpecTool.php](file://app/Ai/Tools/OpenSpecTool.php)
+- [app/Ai/Agents/DevBot.php](file://app/Ai/Agents/DevBot.php)
+- [openspec/changes/devbot-project-creation/proposal.md](file://openspec/changes/devbot-project-creation/proposal.md)
+- [openspec/changes/devbot-project-creation/design.md](file://openspec/changes/devbot-project-creation/design.md)
+- [openspec/changes/devbot-project-creation/tasks.md](file://openspec/changes/devbot-project-creation/tasks.md)
+- [openspec/changes/devbot-project-creation/specs/project-creation/spec.md](file://openspec/changes/devbot-project-creation/specs/project-creation/spec.md)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive documentation for the new Project Creation skill
+- Enhanced skill system with detailed step-by-step instructions for micro-SaaS project creation
+- Expanded skill activation patterns to include project creation scenarios
+- Documented new AI tools: FileSystemTool, GitTool, GitHubTool, and OpenSpecTool
+- Added security considerations and error recovery procedures
+- Updated architecture diagrams to reflect the new project creation workflow
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -30,10 +50,12 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document describes the Skill System that powers domain-specific AI assistance within the Laravel Boost framework. It focuses on three core skills: Laravel Best Practices, Pest Testing, and Tailwind CSS Development. Each skill encapsulates a rule-based guidance system that provides context-aware recommendations and code generation tailored to specific development domains. The document explains activation triggers, configuration options, integration patterns, and practical usage scenarios. It also covers best practices, common use cases, troubleshooting approaches, customization, and how to extend or add new skills following established patterns.
+This document describes the Skill System that powers domain-specific AI assistance within the Laravel Boost framework. It focuses on four core skills: Laravel Best Practices, Pest Testing, Tailwind CSS Development, and Project Creation. Each skill encapsulates a rule-based guidance system that provides context-aware recommendations and code generation tailored to specific development domains. The document explains activation triggers, configuration options, integration patterns, and practical usage scenarios. It also covers best practices, common use cases, troubleshooting approaches, customization, and how to extend or add new skills following established patterns.
+
+**Updated** Added comprehensive coverage of the new Project Creation skill for micro-SaaS project orchestration.
 
 ## Project Structure
-The Skill System is organized around three primary skill directories under the agents skills path, each containing a skill definition and a set of rule documents. The skills are enabled and orchestrated by the Laravel Boost configuration and MCP server settings.
+The Skill System is organized around four primary skill directories under the agents skills path, each containing a skill definition and a set of rule documents. The skills are enabled and orchestrated by the Laravel Boost configuration and MCP server settings. The new Project Creation skill adds a complete workflow for transforming ideas into structured projects.
 
 ```mermaid
 graph TB
@@ -41,6 +63,13 @@ subgraph "Skills"
 LBP[".agents/skills/laravel-best-practices"]
 PT[".agents/skills/pest-testing"]
 TW ".agents/skills/tailwindcss-development"
+PC ".agents/skills/project-creation"
+end
+subgraph "AI Tools"
+FT["FileSystemTool"]
+GT["GitTool"]
+GHT["GitHubTool"]
+OST["OpenSpecTool"]
 end
 subgraph "Guidelines"
 AG["AGENTS.md"]
@@ -51,13 +80,24 @@ subgraph "Boost Configuration"
 BJ["boost.json"]
 CT[".codex/config.toml"]
 CS[".claude/settings.local.json"]
+CFG["config/ai.php"]
 end
 LBP --> AG
 PT --> AG
 TW --> AG
+PC --> AG
+PC --> FT
+PC --> GT
+PC --> GHT
+PC --> OST
+FT --> CFG
+GT --> CFG
+GHT --> CFG
+OST --> CFG
 BJ --> LBP
 BJ --> PT
 BJ --> TW
+BJ --> PC
 CT --> BJ
 CS --> BJ
 ```
@@ -67,49 +107,62 @@ CS --> BJ
 - [boost.json:11-15](file://boost.json#L11-L15)
 - [.codex/config.toml:1-5](file://.codex/config.toml#L1-L5)
 - [.claude/settings.local.json:1-7](file://.claude/settings.local.json#L1-L7)
+- [config/ai.php:52-56](file://config/ai.php#L52-L56)
 
 **Section sources**
 - [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
 - [boost.json:11-15](file://boost.json#L11-L15)
 - [.codex/config.toml:1-5](file://.codex/config.toml#L1-L5)
 - [.claude/settings.local.json:1-7](file://.claude/settings.local.json#L1-L7)
+- [config/ai.php:52-56](file://config/ai.php#L52-L56)
 
 ## Core Components
 - Laravel Best Practices skill: Provides comprehensive guidance for Laravel backend development, covering database performance, security, Eloquent patterns, validation, routing, queues, scheduling, architecture, migrations, collections, Blade, and conventions. It organizes advice by rule categories and emphasizes consistency with existing codebases.
 - Pest Testing skill: Guides creation, organization, and execution of Pest tests in Laravel projects, including basic usage, assertions, mocking, datasets, browser testing, smoke testing, visual regression, sharding, and architecture testing.
 - Tailwind CSS Development skill: Focuses on styling HTML templates with Tailwind CSS v4, including CSS-first configuration, import syntax, replaced utilities, spacing, dark mode, layout patterns, and common pitfalls.
+- **Project Creation skill**: Orchestrates complete micro-SaaS project creation from idea to GitHub repository, including requirement gathering, project directory creation, OpenSpec specification generation, Git initialization, GitHub repository creation, and project deployment.
 
 Each skill is activated based on explicit triggers described in the guidelines and integrates with the Laravel Boost MCP server for tooling and documentation search.
+
+**Updated** Added comprehensive coverage of the Project Creation skill with its complete workflow orchestration capabilities.
 
 **Section sources**
 - [laravel-best-practices/SKILL.md:1-190](file://.agents/skills/laravel-best-practices/SKILL.md#L1-L190)
 - [pest-testing/SKILL.md:1-157](file://.agents/skills/pest-testing/SKILL.md#L1-L157)
 - [tailwindcss-development/SKILL.md:1-119](file://.agents/skills/tailwindcss-development/SKILL.md#L1-L119)
+- [project-creation/SKILL.md:1-286](file://.agents/skills/project-creation/SKILL.md#L1-L286)
 - [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
 
 ## Architecture Overview
-The Skill System operates within the Laravel Boost ecosystem. Agents (Claude, Gemini, Codex) consult the guidelines to determine when to activate a skill. The skill’s rule documents provide context-aware recommendations. Tooling and documentation retrieval are performed via the Boost MCP server, which is configured through project settings.
+The Skill System operates within the Laravel Boost ecosystem. Agents (Claude, Gemini, Codex) consult the guidelines to determine when to activate a skill. The skill's rule documents provide context-aware recommendations. Tooling and documentation retrieval are performed via the Boost MCP server, which is configured through project settings. The new Project Creation skill orchestrates multiple AI tools for comprehensive project management.
 
 ```mermaid
 sequenceDiagram
 participant User as "User"
 participant Agent as "Agent (Claude/Gemini/Codex)"
 participant Guid as "Guidelines (AGENTS.md)"
-participant Skill as "Skill (Laravel Best Practices/Pest/Tailwind)"
+participant Skill as "Skill (Laravel Best Practices/Pest/Tailwind/Project Creation)"
+participant Tools as "AI Tools (FileSystem/Git/GitHub/OpenSpec)"
 participant MCP as "Laravel Boost MCP Server"
-User->>Agent : "Write a Laravel controller"
+User->>Agent : "Create a micro-SaaS project"
 Agent->>Guid : "Evaluate activation triggers"
-Guid-->>Agent : "Activate 'laravel-best-practices'"
-Agent->>Skill : "Read rule categories and guidance"
-Agent->>MCP : "search-docs for Laravel version-specific docs"
-MCP-->>Agent : "Relevant documentation"
-Agent-->>User : "Code with best practices and references"
+Guid-->>Agent : "Activate 'project-creation'"
+Agent->>Skill : "Follow step-by-step workflow"
+Agent->>Tools : "Execute FileSystemTool.createProject()"
+Tools-->>Agent : "Project directory created"
+Agent->>Tools : "Execute OpenSpecTool.getStatus()"
+Tools-->>Agent : "OpenSpec artifacts verified"
+Agent->>Tools : "Execute GitTool.init()"
+Tools-->>Agent : "Git repository initialized"
+Agent->>Tools : "Execute GitHubTool.createRepo()"
+Tools-->>Agent : "GitHub repository created"
+Agent-->>User : "Complete project with GitHub URL"
 ```
 
 **Diagram sources**
 - [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
-- [laravel-best-practices/SKILL.md:184-190](file://.agents/skills/laravel-best-practices/SKILL.md#L184-L190)
-- [.codex/config.toml:1-5](file://.codex/config.toml#L1-L5)
+- [project-creation/SKILL.md:13-218](file://.agents/skills/project-creation/SKILL.md#L13-L218)
+- [app/Ai/Agents/DevBot.php:63-81](file://app/Ai/Agents/DevBot.php#L63-L81)
 
 ## Detailed Component Analysis
 
@@ -151,8 +204,8 @@ Troubleshooting approaches:
 - If UI shows inconsistent dark mode or spacing, align with project conventions and use gap utilities and dark variants consistently.
 
 Customization and extension:
-- Extend by adding new rule categories under the skill’s rules directory and linking them in the skill definition.
-- Follow the established structure: category-focused markdown files with examples and anti-patterns, linked from the skill’s quick reference.
+- Extend by adding new rule categories under the skill's rules directory and linking them in the skill definition.
+- Follow the established structure: category-focused markdown files with examples and anti-patterns, linked from the skill's quick reference.
 
 **Section sources**
 - [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
@@ -229,7 +282,7 @@ Troubleshooting approaches:
 Purpose: Provide guidance for styling HTML templates with Tailwind CSS v4, focusing on CSS-first configuration, import syntax, replaced utilities, spacing, dark mode, and layout patterns.
 
 Activation triggers:
-- When the user’s message includes “tailwind”.
+- When the user's message includes "tailwind".
 - Building responsive grid layouts, flex/grid page structures, styling UI components, adding dark mode variants, fixing spacing or typography, and working with Tailwind v3/v4.
 
 Rule-based guidance system:
@@ -271,37 +324,129 @@ Troubleshooting approaches:
 - [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
 - [tailwindcss-development/SKILL.md:1-119](file://.agents/skills/tailwindcss-development/SKILL.md#L1-L119)
 
+### Project Creation Skill
+Purpose: Guide DevBot through creating a complete micro-SaaS project from idea to GitHub repository, orchestrating requirement gathering, project setup, specification generation, and deployment.
+
+**Updated** Comprehensive documentation of the new Project Creation skill with detailed workflow steps and tool integration.
+
+Activation triggers:
+- User describes a micro-SaaS idea they want to build
+- User explicitly requests project creation
+- User wants to transform an idea into a structured project
+
+Workflow Steps:
+1. **Gather Requirements**: Ask clarifying questions about the project, suggest project names, and confirm requirements
+2. **Create Project Directory**: Use FileSystemTool to create secure project directory
+3. **Generate OpenSpec Artifacts**: Use openspec-propose skill to create proposal, design, specs, and tasks
+4. **Initialize Git Repository**: Use GitTool to initialize repository and make initial commit
+5. **Create GitHub Repository**: Use GitHubTool to create remote repository
+6. **Push to GitHub**: Use GitTool to add remote and push changes
+7. **Provide Summary**: Give complete overview and next steps
+
+Integration patterns:
+- Orchestrates multiple AI tools: FileSystemTool, GitTool, GitHubTool, OpenSpecTool
+- Uses DevBot agent with enhanced instructions for project creation
+- Integrates with Laravel Boost configuration for secure project storage
+
+Practical usage scenarios:
+- Transforming a simple idea into a structured micro-SaaS project
+- Creating complete project scaffolding with proper specifications
+- Automating the entire development workflow from concept to deployment
+- Managing project lifecycle with proper version control and documentation
+
+Best practices:
+- Use kebab-case naming for project names
+- Ensure GitHub token is properly configured
+- Verify all OpenSpec artifacts are complete before proceeding
+- Follow security best practices for file system operations
+
+Common use cases:
+- Rapid prototyping of micro-SaaS applications
+- Automated project setup for development teams
+- Standardized project creation workflow for consistent development practices
+- Integration with CI/CD pipelines for automated deployment
+
+Troubleshooting approaches:
+- If GitHub token is invalid, regenerate token with proper scopes
+- If directory creation fails, check file permissions and path validation
+- If Git operations fail, ensure Git is installed and properly configured
+- If OpenSpec artifacts are missing, use openspec-propose skill to regenerate
+
+**Section sources**
+- [project-creation/SKILL.md:1-286](file://.agents/skills/project-creation/SKILL.md#L1-L286)
+- [app/Ai/Agents/DevBot.php:63-81](file://app/Ai/Agents/DevBot.php#L63-L81)
+- [config/ai.php:52-56](file://config/ai.php#L52-L56)
+
+#### Project Creation Workflow Flow
+```mermaid
+flowchart TD
+Start(["User: Describe micro-SaaS idea"]) --> Gather["Gather Requirements"]
+Gather --> Name["Suggest project name"]
+Name --> Confirm["Confirm requirements"]
+Confirm --> CreateDir["FileSystemTool.createProject()"]
+CreateDir --> OpenSpec["OpenSpecTool.getStatus()"]
+OpenSpec --> GitInit["GitTool.init()"]
+GitInit --> GitHub["GitHubTool.createRepo()"]
+GitHub --> GitPush["GitTool.push()"]
+GitPush --> Summary["Provide completion summary"]
+Summary --> End(["Project ready on GitHub"])
+```
+
+**Diagram sources**
+- [project-creation/SKILL.md:13-218](file://.agents/skills/project-creation/SKILL.md#L13-L218)
+
 ## Dependency Analysis
-The Skill System relies on the Laravel Boost configuration and MCP server settings to enable skills and provide tooling. The configuration files define which skills are active and how the MCP server is launched.
+The Skill System relies on the Laravel Boost configuration and MCP server settings to enable skills and provide tooling. The configuration files define which skills are active and how the MCP server is launched. The new Project Creation skill introduces four new AI tools that extend the system's capabilities.
 
 ```mermaid
 graph TB
 BJ["boost.json"]
 CS[".claude/settings.local.json"]
 CT[".codex/config.toml"]
-BJ --> |"skills"| LBP["laravel-best-practices"]
-BJ --> PT["pest-testing"]
-BJ --> TW["tailwindcss-development"]
+CFG["config/ai.php"]
+FT["FileSystemTool"]
+GT["GitTool"]
+GHT["GitHubTool"]
+OST["OpenSpecTool"]
+LBP["laravel-best-practices"]
+PT["pest-testing"]
+TW["tailwindcss-development"]
+PC["project-creation"]
+BJ --> LBP
+BJ --> PT
+BJ --> TW
+BJ --> PC
 CT --> |"laravel-boost"| MCP["Laravel Boost MCP Server"]
 CS --> |"enabledMcpjsonServers"| MCP
+CFG --> FT
+CFG --> GT
+CFG --> GHT
+CFG --> OST
+PC --> FT
+PC --> GT
+PC --> GHT
+PC --> OST
 ```
 
 **Diagram sources**
 - [boost.json:11-15](file://boost.json#L11-L15)
 - [.codex/config.toml:1-5](file://.codex/config.toml#L1-L5)
 - [.claude/settings.local.json:1-7](file://.claude/settings.local.json#L1-L7)
+- [config/ai.php:52-56](file://config/ai.php#L52-L56)
 
 **Section sources**
 - [boost.json:11-15](file://boost.json#L11-L15)
 - [.codex/config.toml:1-5](file://.codex/config.toml#L1-L5)
 - [.claude/settings.local.json:1-7](file://.claude/settings.local.json#L1-L7)
+- [config/ai.php:52-56](file://config/ai.php#L52-L56)
 
 ## Performance Considerations
 - Database performance: Eager load relations, select only needed columns, chunk large datasets, add appropriate indexes, use withCount() for relation counts, and iterate with cursor() for read-only operations. Avoid queries in Blade templates.
 - Testing performance: Use LazilyRefreshDatabase over RefreshDatabase for speed, leverage datasets for repetitive validations, and employ test sharding for parallel CI runs.
 - Frontend bundling: If UI changes are not reflected, run the appropriate build commands as indicated in the guidelines.
+- **Project Creation performance**: Use appropriate timeouts for Git operations, implement retry logic for GitHub API calls, and optimize file system operations for large projects.
 
-[No sources needed since this section provides general guidance]
+**Updated** Added performance considerations for the new Project Creation skill and its tool dependencies.
 
 ## Troubleshooting Guide
 - Laravel Best Practices:
@@ -313,6 +458,13 @@ CS --> |"enabledMcpjsonServers"| MCP
   - Common pitfalls include missing mock imports, generic status assertions, missing datasets, deleting tests without approval, and forgetting assertNoJavaScriptErrors() in browser tests.
 - Tailwind CSS Development:
   - Common pitfalls include using deprecated v3 utilities, @tailwind directives instead of @import, tailwind.config.js instead of @theme, margins for spacing instead of gap utilities, and missing dark mode variants.
+- **Project Creation**:
+  - **GitHub Token Issues**: If GitHubTool returns "token not configured", create token at https://github.com/settings/tokens with `repo` scope and add to `.env` as `GITHUB_TOKEN`.
+  - **Directory Creation Failures**: If FileSystemTool fails, check file permissions and ensure project name is kebab-case format.
+  - **Git Installation Problems**: If GitTool returns "Git not installed", install Git using `sudo apt install git` (Ubuntu) or `brew install git` (macOS).
+  - **OpenSpec Artifacts Missing**: If OpenSpecTool shows artifacts missing, run `/opsx:propose` with detailed project description.
+
+**Updated** Added comprehensive troubleshooting guidance for the new Project Creation skill and its associated tools.
 
 **Section sources**
 - [laravel-best-practices/rules/db-performance.md:34-45](file://.agents/skills/laravel-best-practices/rules/db-performance.md#L34-L45)
@@ -320,18 +472,26 @@ CS --> |"enabledMcpjsonServers"| MCP
 - [laravel-best-practices/rules/validation.md:38-75](file://.agents/skills/laravel-best-practices/rules/validation.md#L38-L75)
 - [pest-testing/SKILL.md:151-157](file://.agents/skills/pest-testing/SKILL.md#L151-L157)
 - [tailwindcss-development/SKILL.md:113-119](file://.agents/skills/tailwindcss-development/SKILL.md#L113-L119)
+- [project-creation/SKILL.md:252-286](file://.agents/skills/project-creation/SKILL.md#L252-L286)
 
 ## Conclusion
-The Skill System delivers domain-specific AI assistance through three focused skills: Laravel Best Practices, Pest Testing, and Tailwind CSS Development. Each skill provides a rule-based guidance system that promotes best practices, improves performance, and ensures consistency with existing codebases. By activating the appropriate skill based on explicit triggers and integrating with the Laravel Boost MCP server, developers can receive context-aware recommendations and code generation tailored to their development needs. The system is extensible, allowing teams to customize and expand skills following the established patterns.
+The Skill System delivers domain-specific AI assistance through four focused skills: Laravel Best Practices, Pest Testing, Tailwind CSS Development, and Project Creation. Each skill provides a rule-based guidance system that promotes best practices, improves performance, and ensures consistency with existing codebases. The new Project Creation skill significantly enhances the system by orchestrating complete micro-SaaS project workflows from idea to deployment. By activating the appropriate skill based on explicit triggers and integrating with the Laravel Boost MCP server, developers can receive context-aware recommendations and code generation tailored to their development needs. The system is extensible, allowing teams to customize and expand skills following the established patterns.
 
-[No sources needed since this section summarizes without analyzing specific files]
+**Updated** Enhanced conclusion to reflect the addition of the comprehensive Project Creation skill and its impact on the overall skill system.
 
 ## Appendices
 - Activation commands and triggers are defined in the guidelines and mirrored across agent documentation files.
 - Configuration options for enabling skills and launching the MCP server are defined in boost.json and MCP server configuration files.
+- **Project Creation tools**: FileSystemTool, GitTool, GitHubTool, and OpenSpecTool provide comprehensive project management capabilities.
+- **Security considerations**: All file operations are scoped to `storage/projects/` with path traversal protection and logging.
+- **Configuration requirements**: Add `projects` section to `config/ai.php` with base_path, github_token, and default_branch settings.
+
+**Updated** Added comprehensive appendices covering the new Project Creation skill tools, security considerations, and configuration requirements.
 
 **Section sources**
 - [AGENTS.md:24-30](file://AGENTS.md#L24-L30)
 - [boost.json:11-15](file://boost.json#L11-L15)
 - [.codex/config.toml:1-5](file://.codex/config.toml#L1-L5)
 - [.claude/settings.local.json:1-7](file://.claude/settings.local.json#L1-L7)
+- [config/ai.php:52-56](file://config/ai.php#L52-L56)
+- [project-creation/SKILL.md:220-286](file://.agents/skills/project-creation/SKILL.md#L220-L286)

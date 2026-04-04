@@ -1271,7 +1271,7 @@ The system requires specific PHP and Laravel versions along with supporting pack
 
 ### Environment Configuration
 
-The system uses environment variables for flexible deployment across different environments with sensible defaults for local development, including MCP tool configuration, AI provider settings, and project creation configuration.
+The system uses environment variables for flexible deployment across different environments with sensible defaults for local development, including MCP client configuration, AI provider settings, and project creation configuration.
 
 **MCP Client Configuration**
 - MCP_CLIENT_COMMAND: Artisan command to run (default: `php artisan boost:mcp`)
