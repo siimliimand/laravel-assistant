@@ -101,7 +101,7 @@ subgraph "External Services"
 Database[(Database)]
 Docs[Laravel Documentation]
 GitHub[(GitHub API)]
-end
+</subgraph>
 UI --> Controller
 Blade --> Controller
 Controller --> Agent
@@ -961,7 +961,7 @@ ZURL[Z_URL]
 AnthKey[ANTHROPIC_API_KEY]
 GeminiKey[GEMINI_API_KEY]
 GitHubToken[GITHUB_TOKEN]
-end
+</subgraph>
 Default --> Providers
 Providers --> Anthropic
 Providers --> Gemini
@@ -1015,7 +1015,7 @@ subgraph "Skill Activation"
 Trigger[Skill Trigger Conditions]
 Activation[Automatic Skill Activation]
 Deactivation[Skill Deactivation]
-end
+</subgraph>
 LaravelBest --> Backend
 PestTesting --> Testing
 TailwindCSS --> Frontend

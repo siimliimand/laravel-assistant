@@ -5,6 +5,8 @@
 - [README.md](file://README.md)
 - [AGENTS.md](file://AGENTS.md)
 - [SKILL.md](file://.agents/skills/project-creation/SKILL.md)
+- [spec.md](file://openspec/specs/project-creation/spec.md)
+- [tasks.md](file://openspec/changes/archive/2026-04-04-devbot-project-creation/tasks.md)
 - [DevBot.php](file://app/Ai/Agents/DevBot.php)
 - [FileSystemTool.php](file://app/Ai/Tools/FileSystemTool.php)
 - [GitTool.php](file://app/Ai/Tools/GitTool.php)
@@ -23,12 +25,13 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced MCP client integration documentation with comprehensive service architecture
-- Updated security measures section to include MCP client security protocols
-- Added detailed MCP configuration management documentation
-- Expanded troubleshooting guide with MCP-specific error handling
-- Updated system architecture diagrams to reflect MCP integration
-- Enhanced error handling and recovery section with MCP client resilience features
+- Enhanced project creation workflow documentation with comprehensive seven-step process
+- Updated to reflect new GitTool, GitHubTool, and FileSystemTool integrations
+- Added detailed workflow analysis from requirements gathering to GitHub repository creation
+- Expanded tool documentation with specific implementation details
+- Updated system architecture to show complete MCP client integration
+- Enhanced security and validation sections with path traversal prevention
+- Added comprehensive troubleshooting guide for all workflow components
 
 ## Table of Contents
 1. [Introduction](#introduction)

@@ -12,25 +12,20 @@
 - [GitHubTool.php](file://app/Ai/Tools/GitHubTool.php)
 - [OpenSpecTool.php](file://app/Ai/Tools/OpenSpecTool.php)
 - [DevBot.php](file://app/Ai/Agents/DevBot.php)
-- [SKILL.md](file://.agents/skills/project-creation/SKILL.md)
 - [ai.php](file://config/ai.php)
-- [FileSystemToolTest.php](file://tests/Unit/FileSystemToolTest.php)
-- [mcp-client-service/spec.md](file://openspec/specs/mcp-client-service/spec.md)
-- [mcp-tool-integration/spec.md](file://openspec/specs/mcp-tool-integration/spec.md)
-- [mcp-tool-proxy/spec.md](file://openspec/specs/mcp-tool-proxy/spec.md)
 - [McpClientServiceTest.php](file://tests/Unit/McpClientServiceTest.php)
 - [McpToolsTest.php](file://tests/Unit/McpToolsTest.php)
 - [ToolProxyTest.php](file://tests/Unit/ToolProxyTest.php)
+- [FileSystemToolTest.php](file://tests/Unit/FileSystemToolTest.php)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive documentation for new project creation tools (FileSystemTool, GitTool, GitHubTool, OpenSpecTool)
-- Enhanced DevBot agent documentation to include project creation capabilities
-- Updated tool proxy implementation section with new project management tools
-- Added project creation workflow documentation and skill reference
-- Expanded configuration management to include project creation settings
-- Updated testing framework to cover new project creation tools
+- Enhanced MCP Client Service documentation with comprehensive auto-reconnect logic and persistent connection management
+- Updated tool proxy implementation section to reflect current McpClientService.php implementation
+- Added detailed configuration management documentation for project creation tools
+- Expanded testing framework documentation to cover new project creation tools
+- Updated troubleshooting guide with project creation tool specific issues
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -228,7 +223,6 @@ The system implements a sophisticated connection management strategy that balanc
 
 **Section sources**
 - [McpClientService.php:20-279](file://app/Services/McpClientService.php#L20-L279)
-- [mcp-client-service/spec.md:15-28](file://openspec/specs/mcp-client-service/spec.md#L15-L28)
 
 ## MCP Client Service
 
@@ -262,7 +256,6 @@ Note over Client,Server : Connection ready for tool calls
 
 **Diagram sources**
 - [McpClientService.php:48-96](file://app/Services/McpClientService.php#L48-L96)
-- [mcp-client-service/spec.md:7-20](file://openspec/specs/mcp-client-service/spec.md#L7-L20)
 
 ### Tool Invocation Mechanism
 
@@ -291,7 +284,6 @@ ThrowError --> End
 
 **Diagram sources**
 - [McpClientService.php:110-179](file://app/Services/McpClientService.php#L110-L179)
-- [mcp-tool-integration/spec.md:14-29](file://openspec/specs/mcp-tool-integration/spec.md#L14-L29)
 
 ### Response Processing and Content Extraction
 
@@ -299,7 +291,6 @@ The service implements sophisticated content extraction logic to handle various 
 
 **Section sources**
 - [McpClientService.php:110-279](file://app/Services/McpClientService.php#L110-L279)
-- [mcp-tool-integration/spec.md:30-47](file://openspec/specs/mcp-tool-integration/spec.md#L30-L47)
 
 ## Tool Proxy Implementation
 
@@ -378,7 +369,6 @@ DevBot-->>User : Response with tool insights
 
 **Diagram sources**
 - [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
-- [mcp-tool-proxy/spec.md:121-139](file://openspec/specs/mcp-tool-proxy/spec.md#L121-L139)
 
 ### Tool Registration and Management
 
@@ -386,7 +376,6 @@ The agent maintains a registry of available tools, each implementing the Laravel
 
 **Section sources**
 - [DevBot.php:24-135](file://app/Ai/Agents/DevBot.php#L24-L135)
-- [mcp-tool-proxy/spec.md:121-139](file://openspec/specs/mcp-tool-proxy/spec.md#L121-L139)
 
 ## Project Creation Tools
 
@@ -466,7 +455,6 @@ Configuration values are loaded from environment variables, enabling deployment 
 
 **Section sources**
 - [ai.php:52-56](file://config/ai.php#L52-L56)
-- [mcp-client-service/spec.md:89-105](file://openspec/specs/mcp-client-service/spec.md#L89-L105)
 
 ## Error Handling and Resilience
 
@@ -493,7 +481,6 @@ ThrowException --> CallComplete
 
 **Diagram sources**
 - [McpClientService.php:110-179](file://app/Services/McpClientService.php#L110-L179)
-- [mcp-tool-integration/spec.md:70-77](file://openspec/specs/mcp-tool-integration/spec.md#L70-L77)
 
 ### Connection Health Monitoring
 
@@ -501,7 +488,6 @@ The system implements continuous connection health monitoring that detects subpr
 
 **Section sources**
 - [McpClientService.php:110-279](file://app/Services/McpClientService.php#L110-L279)
-- [mcp-client-service/spec.md:78-84](file://openspec/specs/mcp-client-service/spec.md#L78-L84)
 
 ## Testing Framework
 
@@ -527,6 +513,9 @@ ToolTests[Tool Proxy Tests]
 ProjectToolTests[Project Creation Tool Tests]
 AgentTests[Agent Integration Tests]
 SecurityTests[Path Validation Tests]
+GitOperations[Git Operation Tests]
+GitHubAPI[GitHub API Tests]
+OpenSpecWorkflow[OpenSpec Workflow Tests]
 end
 subgraph "Validation Scenarios"
 ConnectionValidation[Connection Validation]
@@ -630,7 +619,6 @@ Common issues and their resolution strategies for the MCP Client Integration Sys
 **Section sources**
 - [McpClientService.php:141-179](file://app/Services/McpClientService.php#L141-L179)
 - [ai.php:52-56](file://config/ai.php#L52-L56)
-- [SKILL.md:252-286](file://.agents/skills/project-creation/SKILL.md#L252-L286)
 
 ## Conclusion
 
