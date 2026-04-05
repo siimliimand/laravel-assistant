@@ -57,6 +57,26 @@ test('users cannot authenticate with invalid email', function () {
     $response->assertSessionHasErrors('email');
 });
 
+test('remember me creates persistent cookie', function () {
+    $user = User::factory()->create([
+        'email' => 'test@example.com',
+        'password' => bcrypt('password123'),
+    ]);
+
+    $response = $this->post(route('login'), [
+        'email' => 'test@example.com',
+        'password' => 'password123',
+        'remember' => true,
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('chat.show'));
+
+    // Verify the remember token was set on the user
+    $user->refresh();
+    expect($user->remember_token)->not->toBeNull();
+});
+
 test('email is required to login', function () {
     $response = $this->post(route('login'), [
         'email' => '',
