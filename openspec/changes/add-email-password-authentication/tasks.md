@@ -32,12 +32,12 @@
 
 ## 5. Protect Routes with Authentication Middleware
 
-- [ ] 5.1 Wrap all chat routes in `auth` middleware group in routes/web.php
-- [ ] 5.2 Verify guest routes (login, register) are NOT protected
-- [ ] 5.3 Test unauthenticated access redirects to login: visit `/chat` without auth
-- [ ] 5.4 Test authenticated access works: `actingAs($user)->get('/chat')`
-- [ ] 5.5 Update welcome page to show Login/Register links for guests
-- [ ] 5.6 Update welcome page to show user menu for authenticated users
+- [x] 5.1 Wrap all chat routes in `auth` middleware group in routes/web.php
+- [x] 5.2 Verify guest routes (login, register) are NOT protected
+- [x] 5.3 Test unauthenticated access redirects to login: visit `/chat` without auth
+- [x] 5.4 Test authenticated access works: `actingAs($user)->get('/chat')`
+- [x] 5.5 Update welcome page to show Login/Register links for guests
+- [x] 5.6 Update welcome page to show user menu for authenticated users
 
 ## 6. Configure Post-Login Redirect
 

@@ -16,6 +16,7 @@ use App\Ai\Tools\TinkerTool;
 use App\Enums\MessageRole;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use App\Services\McpClientService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase;
@@ -31,10 +32,53 @@ use Pest\PendingCalls\UsesCall;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // Create a test user and authenticate
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+
     // Create a test conversation for reuse
     $this->conversation = Conversation::factory()->create([
         'title' => 'Test Conversation',
+        'user_id' => $this->user->id,
     ]);
+});
+
+/**
+ * ==========================================
+ * Authentication Tests
+ * ==========================================
+ */
+test('unauthenticated access to chat redirects to login', function () {
+    auth()->logout();
+
+    $response = $this->get(route('chat.show'));
+
+    $response->assertRedirect(route('login'));
+});
+
+test('unauthenticated access to chat API redirects to login', function () {
+    auth()->logout();
+
+    $response = $this->getJson(route('chat.conversations.list'));
+    $response->assertStatus(401);
+
+    $response = $this->getJson(route('chat.conversations.get', $this->conversation));
+    $response->assertStatus(401);
+});
+
+test('authenticated user can access chat', function () {
+    $response = $this->get(route('chat.show'));
+
+    $response->assertSuccessful();
+    $response->assertViewIs('chat');
+});
+
+test('authenticated user can access chat API endpoints', function () {
+    $response = $this->getJson(route('chat.conversations.list'));
+    $response->assertSuccessful();
+
+    $response = $this->getJson(route('chat.conversations.get', $this->conversation));
+    $response->assertSuccessful();
 });
 
 /**
@@ -60,7 +104,7 @@ test('chat page shows welcome message when no messages exist', function () {
 });
 
 test('chat page displays conversation when provided', function () {
-    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
     $response->assertViewHas('conversation');
@@ -79,7 +123,7 @@ test('chat page displays existing messages', function () {
     Message::factory()->assistantMessage('Hello! How can I help you today?')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
     $response->assertSee('Hello, DevBot!', false);
@@ -128,7 +172,7 @@ test('can send message and receive AI response via AJAX', function () {
         ], 200),
     ]);
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'What is Laravel?',
     ]);
 
@@ -166,7 +210,7 @@ test('can send message to existing conversation', function () {
         ], 200),
     ]);
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Follow-up question',
         'conversation_id' => $this->conversation->id,
     ]);
@@ -186,7 +230,7 @@ test('can send message to existing conversation', function () {
 test('user message is saved before AI response', function () {
     DevBot::fake(['AI response']);
 
-    $this->postJson(route('chat.message'), [
+    $this->postJson(route('chat.messages.send'), [
         'message' => 'Test message order',
     ]);
 
@@ -207,7 +251,7 @@ test('user message is saved before AI response', function () {
  * ==========================================
  */
 test('message is required', function () {
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => '',
     ]);
 
@@ -216,7 +260,7 @@ test('message is required', function () {
 });
 
 test('message must be a string', function () {
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 123,
     ]);
 
@@ -226,7 +270,7 @@ test('message must be a string', function () {
 });
 
 test('message has minimum length of 1', function () {
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => '   ',
     ]);
 
@@ -237,7 +281,7 @@ test('message has minimum length of 1', function () {
 test('message has maximum length of 5000', function () {
     $longMessage = str_repeat('a', 5001);
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => $longMessage,
     ]);
 
@@ -246,7 +290,7 @@ test('message has maximum length of 5000', function () {
 });
 
 test('conversation_id must exist if provided', function () {
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Test message',
         'conversation_id' => 99999,
     ]);
@@ -259,7 +303,7 @@ test('conversation_id is optional', function () {
     DevBot::fake(['Response']);
 
     // Should work without conversation_id
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'New conversation',
     ]);
 
@@ -276,7 +320,7 @@ test('new conversation is created when conversation_id not provided', function (
 
     $initialCount = Conversation::count();
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Start new chat',
     ]);
 
@@ -287,7 +331,7 @@ test('new conversation is created when conversation_id not provided', function (
 test('conversation title is generated from first message', function () {
     DevBot::fake(['Response']);
 
-    $this->postJson(route('chat.message'), [
+    $this->postJson(route('chat.messages.send'), [
         'message' => 'How do I create a Laravel controller?',
     ]);
 
@@ -301,7 +345,7 @@ test('conversation title is truncated to 50 characters', function () {
 
     $longMessage = 'What is the best way to implement authentication in a Laravel application with multiple guards?';
 
-    $this->postJson(route('chat.message'), [
+    $this->postJson(route('chat.messages.send'), [
         'message' => $longMessage,
     ]);
 
@@ -314,7 +358,7 @@ test('existing conversation is reused when conversation_id provided', function (
 
     $initialCount = Conversation::count();
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Second message',
         'conversation_id' => $this->conversation->id,
     ]);
@@ -328,7 +372,7 @@ test('conversation has default title before first message title generation', fun
     // before the title is generated from the first message
     DevBot::fake(['Response']);
 
-    $this->postJson(route('chat.message'), [
+    $this->postJson(route('chat.messages.send'), [
         'message' => 'First message',
     ]);
 
@@ -347,7 +391,7 @@ test('handles AI API failure gracefully', function () {
     // Mock API failure by throwing an exception from the fake
     DevBot::fake(fn () => throw new Exception('API Error'));
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Test message',
     ]);
 
@@ -367,7 +411,7 @@ test('handles AI API failure gracefully', function () {
 test('handles network timeout', function () {
     DevBot::fake(fn () => throw new Exception('Network timeout'));
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Test timeout',
     ]);
 
@@ -384,7 +428,7 @@ test('error is logged when API fails', function () {
 
     DevBot::fake(fn () => throw new Exception('Service Unavailable'));
 
-    $this->postJson(route('chat.message'), [
+    $this->postJson(route('chat.messages.send'), [
         'message' => 'Test logging',
     ]);
 });
@@ -397,7 +441,7 @@ test('error is logged when API fails', function () {
 test('AJAX request returns JSON response', function () {
     DevBot::fake(['JSON response']);
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Test JSON',
     ]);
 
@@ -412,7 +456,7 @@ test('AJAX request returns JSON response', function () {
 test('regular POST request redirects', function () {
     DevBot::fake(['Redirect response']);
 
-    $response = $this->post(route('chat.message'), [
+    $response = $this->post(route('chat.messages.send'), [
         'message' => 'Test redirect',
     ]);
 
@@ -423,7 +467,7 @@ test('regular POST request redirects', function () {
 test('AJAX error returns JSON error', function () {
     DevBot::fake(fn () => throw new Exception('API Error'));
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Test error',
     ]);
 
@@ -444,7 +488,7 @@ test('can list conversations via JSON endpoint', function () {
     Conversation::factory()->create(['title' => 'Chat 1']);
     Conversation::factory()->create(['title' => 'Chat 2']);
 
-    $response = $this->getJson(route('chat.conversations'));
+    $response = $this->getJson(route('chat.conversations.list'));
 
     $response->assertSuccessful();
     $response->assertJsonStructure([
@@ -463,7 +507,7 @@ test('conversation list is limited to 50', function () {
         Conversation::factory()->create(['title' => "Chat {$i}"]);
     }
 
-    $response = $this->getJson(route('chat.conversations'));
+    $response = $this->getJson(route('chat.conversations.list'));
 
     $response->assertSuccessful();
     $conversations = $response->json('conversations');
@@ -474,7 +518,7 @@ test('conversation list is sorted by created_at desc', function () {
     $older = Conversation::factory()->create(['title' => 'Older Chat']);
     $newer = Conversation::factory()->create(['title' => 'Newer Chat']);
 
-    $response = $this->getJson(route('chat.conversations'));
+    $response = $this->getJson(route('chat.conversations.list'));
 
     $conversations = $response->json('conversations');
     expect($conversations[0]['id'])->toBe($newer->id);
@@ -484,7 +528,7 @@ test('conversation list is sorted by created_at desc', function () {
 test('can create new conversation via POST', function () {
     $initialCount = Conversation::count();
 
-    $response = $this->postJson(route('chat.new'));
+    $response = $this->postJson(route('chat.conversations.create'));
 
     $response->assertSuccessful();
     $response->assertJson([
@@ -510,7 +554,7 @@ test('can get conversation details and messages via JSON', function () {
     Message::factory()->assistantMessage('Hi there')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->getJson(route('chat.conversation', $this->conversation));
+    $response = $this->getJson(route('chat.conversations.get', $this->conversation));
 
     $response->assertSuccessful();
     $response->assertJsonStructure([
@@ -539,7 +583,7 @@ test('conversation messages are ordered by created_at asc', function () {
     Message::factory()->userMessage('Third')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->getJson(route('chat.conversation', $this->conversation));
+    $response = $this->getJson(route('chat.conversations.get', $this->conversation));
 
     $messages = $response->json('messages');
     expect($messages[0]['content'])->toBe('First');
@@ -550,7 +594,7 @@ test('conversation messages are ordered by created_at asc', function () {
 test('sendMessage returns conversation_title in JSON response', function () {
     DevBot::fake(['Response']);
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Test message',
     ]);
 
@@ -578,7 +622,7 @@ test('messages are ordered by creation time ascending', function () {
     Message::factory()->userMessage('Third message')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
 
@@ -596,7 +640,7 @@ test('user messages are displayed with correct role', function () {
     Message::factory()->userMessage('User message')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
     $response->assertSee('User message');
@@ -607,7 +651,7 @@ test('assistant messages are displayed with correct role', function () {
     Message::factory()->assistantMessage('Assistant message')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation]));
+    $response = $this->get(route('chat.show', ['conversation' => $this->conversation]));
 
     $response->assertSuccessful();
     $response->assertSee('Assistant message');
@@ -681,7 +725,7 @@ test('full conversation flow: send multiple messages', function () {
     DevBot::fake(['Response 1', 'Response 2', 'Response 3']);
 
     // First message
-    $response1 = $this->postJson(route('chat.message'), [
+    $response1 = $this->postJson(route('chat.messages.send'), [
         'message' => 'Hello',
     ]);
 
@@ -689,7 +733,7 @@ test('full conversation flow: send multiple messages', function () {
     $conversationId = $response1->json('conversation_id');
 
     // Second message
-    $response2 = $this->postJson(route('chat.message'), [
+    $response2 = $this->postJson(route('chat.messages.send'), [
         'message' => 'How are you?',
         'conversation_id' => $conversationId,
     ]);
@@ -697,7 +741,7 @@ test('full conversation flow: send multiple messages', function () {
     $response2->assertSuccessful();
 
     // Third message
-    $response3 = $this->postJson(route('chat.message'), [
+    $response3 = $this->postJson(route('chat.messages.send'), [
         'message' => 'Tell me more',
         'conversation_id' => $conversationId,
     ]);
@@ -713,7 +757,7 @@ test('conversation persists across page reloads', function () {
     DevBot::fake(['Response']);
 
     // Send a message
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Persistent message',
     ]);
 
@@ -803,7 +847,7 @@ test('multiple tool calls in single conversation turn', function () {
 test('tool call error handling does not crash DevBot conversation', function () {
     DevBot::fake(['I encountered an error but I am still functioning.']);
 
-    $response = $this->postJson(route('chat.message'), [
+    $response = $this->postJson(route('chat.messages.send'), [
         'message' => 'Execute an invalid query',
     ]);
 

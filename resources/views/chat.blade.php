@@ -179,7 +179,7 @@
 
         <!-- Message Input Form -->
         <div class="shrink-0 border-t border-gray-200 bg-white px-4 md:px-6 py-4 sticky bottom-0 z-10">
-            <form id="chat-form" action="{{ route('chat.message') }}" method="POST" class="space-y-3">
+            <form id="chat-form" action="{{ route('chat.messages.send') }}" method="POST" class="space-y-3">
                 @csrf
                 @if($viewModel->getCurrentConversationId())
                 <input type="hidden" name="conversation_id" value="{{ $viewModel->getCurrentConversationId() }}">
