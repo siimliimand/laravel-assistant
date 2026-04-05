@@ -1,10 +1,10 @@
 ## 1. Install Laravel Breeze
 
-- [ ] 1.1 Install Laravel Breeze package via Composer: `composer require laravel/breeze --dev`
-- [ ] 1.2 Run Breeze installation with Blade stack: `php artisan breeze:install blade --no-interaction`
-- [ ] 1.3 Install npm dependencies: `npm install`
-- [ ] 1.4 Build frontend assets: `npm run build`
-- [ ] 1.5 Verify auth routes exist: `php artisan route:list --path=login`
+- [x] 1.1 Install Laravel Breeze package via Composer: `composer require laravel/breeze --dev`
+- [x] 1.2 Run Breeze installation with Blade stack: `php artisan breeze:install blade --no-interaction`
+- [x] 1.3 Install npm dependencies: `npm install`
+- [x] 1.4 Build frontend assets: `npm run build`
+- [x] 1.5 Verify auth routes exist: `php artisan route:list --path=login`
 
 ## 2. Database Migration for User Ownership
 
