@@ -61,16 +61,16 @@
 
 ## 8. Integration Testing and Verification
 
-- [ ] 8.1 Create test user via `/register` page
-- [ ] 8.2 Test login flow: verify redirect to `/chat`
-- [ ] 8.3 Test creating new conversation as authenticated user
-- [ ] 8.4 Test conversation list shows only user's conversations
-- [ ] 8.5 Test switching between conversations
-- [ ] 8.6 Test sending messages to conversation
-- [ ] 8.7 Test logout redirects to home page
-- [ ] 8.8 Test accessing `/chat` after logout redirects to login
-- [ ] 8.9 Create second user and verify conversation isolation
-- [ ] 8.10 Run Pint formatter: `vendor/bin/pint --format agent`
+- [x] 8.1 Create test user via `/register` page
+- [x] 8.2 Test login flow: verify redirect to `/chat`
+- [x] 8.3 Test creating new conversation as authenticated user
+- [x] 8.4 Test conversation list shows only user's conversations
+- [x] 8.5 Test switching between conversations
+- [x] 8.6 Test sending messages to conversation
+- [x] 8.7 Test logout redirects to home page
+- [x] 8.8 Test accessing `/chat` after logout redirects to login
+- [x] 8.9 Create second user and verify conversation isolation
+- [x] 8.10 Run Pint formatter: `vendor/bin/pint --format agent`
 
 ## 9. Documentation and Cleanup
 
