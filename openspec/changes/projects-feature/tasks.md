@@ -22,15 +22,15 @@
 
 ## 3. Routes and Navigation
 
-- [ ] 3.1 Register projects resource routes in routes/web.php under auth middleware
-- [ ] 3.2 Add Projects link to navigation menu in resources/views/layouts/navigation.blade.php
+- [x] 3.1 Register projects resource routes in routes/web.php under auth middleware
+- [x] 3.2 Add Projects link to navigation menu in resources/views/layouts/navigation.blade.php
 
 ## 4. Views
 
-- [ ] 4.1 Create projects/index.blade.php with project list, status badges, and create button
-- [ ] 4.2 Create projects/create.blade.php with form for name, description, and status
-- [ ] 4.3 Create projects/show.blade.php displaying project details with edit and delete buttons
-- [ ] 4.4 Create projects/edit.blade.php with pre-filled form for updating project
+- [x] 4.1 Create projects/index.blade.php with project list, status badges, and create button
+- [x] 4.2 Create projects/create.blade.php with form for name, description, and status
+- [x] 4.3 Create projects/show.blade.php displaying project details with edit and delete buttons
+- [x] 4.4 Create projects/edit.blade.php with pre-filled form for updating project
 
 ## 5. Testing
 
