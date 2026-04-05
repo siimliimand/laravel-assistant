@@ -38,6 +38,7 @@ class User extends Authenticatable
     {
         static::deleting(function (User $user) {
             $user->conversations()->delete();
+            $user->projects()->delete();
         });
     }
 
@@ -47,5 +48,13 @@ class User extends Authenticatable
     public function conversations(): HasMany
     {
         return $this->hasMany(Conversation::class);
+    }
+
+    /**
+     * Get all projects for the user.
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
     }
 }

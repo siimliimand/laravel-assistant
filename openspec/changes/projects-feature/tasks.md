@@ -1,11 +1,11 @@
 ## 1. Database and Models
 
-- [ ] 1.1 Create projects table migration with user_id foreign key, name, description, status, and timestamps
-- [ ] 1.2 Run migration to create projects table
-- [ ] 1.3 Create ProjectStatus enum with Draft, Active, Completed, Archived cases and metadata methods
-- [ ] 1.4 Create Project model with fillable attributes, enum casting, and user relationship
-- [ ] 1.5 Add projects() relationship to User model
-- [ ] 1.6 Create ProjectFactory with user_id, name, description, and status defaults
+- [x] 1.1 Create projects table migration with user_id foreign key, name, description, status, and timestamps
+- [x] 1.2 Run migration to create projects table
+- [x] 1.3 Create ProjectStatus enum with Draft, Active, Completed, Archived cases and metadata methods
+- [x] 1.4 Create Project model with fillable attributes, enum casting, and user relationship
+- [x] 1.5 Add projects() relationship to User model
+- [x] 1.6 Create ProjectFactory with user_id, name, description, and status defaults
 
 ## 2. Validation and Controllers
 
