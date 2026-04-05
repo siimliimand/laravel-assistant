@@ -3,9 +3,15 @@
 use App\Actions\GetConversationAction;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('get conversation action returns conversation with messages', function () {
     $conversation = Conversation::factory()->create(['title' => 'Test Chat']);
@@ -74,4 +80,31 @@ test('get conversation action handles conversation with no messages', function (
 
     expect($result)->not->toBeNull();
     expect($result->messages)->toHaveCount(0);
+});
+
+test('get conversation action returns null for conversation owned by another user', function () {
+    $otherUser = User::factory()->create();
+    $conversation = Conversation::factory()->create([
+        'title' => 'Other User Chat',
+        'user_id' => $otherUser->id,
+    ]);
+
+    $action = app(GetConversationAction::class);
+    $result = $action->execute($conversation->id);
+
+    expect($result)->toBeNull();
+});
+
+test('get conversation action only returns conversations owned by authenticated user', function () {
+    $conversation = Conversation::factory()->create([
+        'title' => 'My Chat',
+        'user_id' => $this->user->id,
+    ]);
+
+    $action = app(GetConversationAction::class);
+    $result = $action->execute($conversation->id);
+
+    expect($result)->not->toBeNull();
+    expect($result->id)->toBe($conversation->id);
+    expect($result->user_id)->toBe($this->user->id);
 });

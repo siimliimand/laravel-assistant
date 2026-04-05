@@ -80,12 +80,14 @@ class SendMessageAction extends BaseAction
             $aiException = new AiApiException(
                 'Failed to get AI response: '.$e->getMessage(),
                 conversationId: $conversation->id,
+                userId: auth()->id(),
                 previous: $e
             );
 
             // Log the error with full context
             Log::error('DevBot API error: '.$e->getMessage(), [
                 'conversation_id' => $conversation->id,
+                'user_id' => auth()->id(),
                 'exception' => $aiException,
             ]);
 

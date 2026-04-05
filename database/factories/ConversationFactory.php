@@ -21,7 +21,7 @@ class ConversationFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'user_id' => auth()->id() ?? User::factory(),
             'title' => fake()->sentence(3),
             'status' => ConversationStatus::Active,
         ];

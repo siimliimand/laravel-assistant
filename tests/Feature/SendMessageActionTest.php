@@ -7,12 +7,17 @@ use App\DTOs\SendMessageResponse;
 use App\Exceptions\AiApiException;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // Create a test user and authenticate
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+
     // Create action with DevBot factory for testing
     $this->action = new SendMessageAction(
         fn ($conversation) => new DevBot($conversation)
@@ -20,7 +25,7 @@ beforeEach(function () {
 });
 
 test('send message action sends message and returns response', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test Chat']);
+    $conversation = Conversation::factory()->create(['title' => 'Test Chat', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'Hello, AI!',
         conversationId: $conversation->id,
@@ -55,13 +60,14 @@ test('send message action creates new conversation when id is null', function ()
     expect($result->isSuccessful())->toBeTrue();
     expect($result->conversation->id)->not->toBeNull();
     expect($result->conversation->title)->not->toBe('New Chat');
+    expect($result->conversation->user_id)->toBe($this->user->id);
 
     $this->assertDatabaseCount('conversations', 1);
     $this->assertDatabaseCount('messages', 2); // user + assistant
 });
 
 test('send message action saves both user and assistant messages', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Test', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'User message',
         conversationId: $conversation->id,
@@ -83,7 +89,7 @@ test('send message action saves both user and assistant messages', function () {
 });
 
 test('send message action wraps AI API exception with context', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test Chat']);
+    $conversation = Conversation::factory()->create(['title' => 'Test Chat', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'This will fail',
         conversationId: $conversation->id,
@@ -109,7 +115,7 @@ test('send message action wraps AI API exception with context', function () {
 });
 
 test('send message action exception includes conversation ID context', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Test', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'Test message',
         conversationId: $conversation->id,
@@ -127,7 +133,7 @@ test('send message action exception includes conversation ID context', function 
 });
 
 test('send message action exception provides context array', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Test', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'Test',
         conversationId: $conversation->id,
@@ -141,7 +147,7 @@ test('send message action exception provides context array', function () {
         $context = $e->context();
 
         expect($context)->toHaveKey('conversation_id', $conversation->id);
-        expect($context)->toHaveKey('user_id', null);
+        expect($context)->toHaveKey('user_id', $this->user->id);
         expect($context['original_exception'])->toBe('Exception');
         expect($context['original_message'])->toBe('Original error');
     }
@@ -155,7 +161,7 @@ test('send message action logs error when AI API fails', function () {
                    $context['exception'] instanceof AiApiException;
         }));
 
-    $conversation = Conversation::factory()->create(['title' => 'Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Test', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'Test',
         conversationId: $conversation->id,
@@ -171,7 +177,7 @@ test('send message action logs error when AI API fails', function () {
 });
 
 test('send message action preserves original exception chain', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Test', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'Test',
         conversationId: $conversation->id,
@@ -190,7 +196,7 @@ test('send message action preserves original exception chain', function () {
 });
 
 test('send message action handles nested exceptions correctly', function () {
-    $conversation = Conversation::factory()->create(['title' => 'Test']);
+    $conversation = Conversation::factory()->create(['title' => 'Test', 'user_id' => $this->user->id]);
     $data = new MessageData(
         content: 'Test',
         conversationId: $conversation->id,

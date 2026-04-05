@@ -48,16 +48,16 @@
 
 ## 7. Update Tests for Authentication
 
-- [ ] 7.1 Update `ChatTest.php` to use `actingAs($user)` in all tests
-- [ ] 7.2 Update `CreateConversationActionTest.php` to authenticate user
-- [ ] 7.3 Update `GetConversationActionTest.php` to authenticate user
-- [ ] 7.4 Update `ListConversationsActionTest.php` to authenticate user
-- [ ] 7.5 Update `SendMessageActionTest.php` to authenticate user
-- [ ] 7.6 Update `ChatViewModelTest.php` to authenticate user
-- [ ] 7.7 Add test for unauthenticated access returns redirect
-- [ ] 7.8 Add test for user cannot access another user's conversation
-- [ ] 7.9 Add authentication feature tests (login, register, logout)
-- [ ] 7.10 Run full test suite: `php artisan test --compact`
+- [x] 7.1 Update `ChatTest.php` to use `actingAs($user)` in all tests
+- [x] 7.2 Update `CreateConversationActionTest.php` to authenticate user
+- [x] 7.3 Update `GetConversationActionTest.php` to authenticate user
+- [x] 7.4 Update `ListConversationsActionTest.php` to authenticate user
+- [x] 7.5 Update `SendMessageActionTest.php` to authenticate user
+- [x] 7.6 Update `ChatViewModelTest.php` to authenticate user
+- [x] 7.7 Add test for unauthenticated access returns redirect
+- [x] 7.8 Add test for user cannot access another user's conversation
+- [x] 7.9 Add authentication feature tests (login, register, logout)
+- [x] 7.10 Run full test suite: `php artisan test --compact`
 
 ## 8. Integration Testing and Verification
 

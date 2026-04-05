@@ -2,11 +2,17 @@
 
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use App\ViewModels\ChatViewModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('chat view model returns null when no conversation', function () {
     $viewModel = new ChatViewModel;

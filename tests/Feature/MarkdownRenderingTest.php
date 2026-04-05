@@ -3,13 +3,18 @@
 use App\Helpers\Markdown;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+
     $this->conversation = Conversation::factory()->create([
         'title' => 'Test Conversation',
+        'user_id' => $this->user->id,
     ]);
 });
 
@@ -97,7 +102,7 @@ test('chat interface displays formatted markdown', function () {
     $message = Message::factory()->assistantMessage('**Hello** with `code`')
         ->create(['conversation_id' => $this->conversation->id]);
 
-    $response = $this->get(route('chat.show.conversation', ['conversation' => $this->conversation->id]));
+    $response = $this->get(route('chat.show', ['conversation' => $this->conversation->id]));
 
     $response->assertStatus(200);
     $response->assertSee('<strong>Hello</strong>', false);

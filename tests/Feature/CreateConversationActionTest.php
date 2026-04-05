@@ -3,9 +3,15 @@
 use App\Actions\CreateConversationAction;
 use App\DTOs\ConversationData;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('create conversation action creates conversation with title', function () {
     $action = app(CreateConversationAction::class);
@@ -59,5 +65,19 @@ test('create conversation action persists conversation to database', function ()
     $this->assertDatabaseHas('conversations', [
         'id' => $conversation->id,
         'title' => 'Test Conversation',
+    ]);
+});
+
+test('create conversation action associates conversation with authenticated user', function () {
+    $action = app(CreateConversationAction::class);
+    $data = new ConversationData(title: 'User Conversation');
+
+    $conversation = $action->execute($data);
+
+    expect($conversation->user_id)->toBe($this->user->id);
+
+    $this->assertDatabaseHas('conversations', [
+        'id' => $conversation->id,
+        'user_id' => $this->user->id,
     ]);
 });

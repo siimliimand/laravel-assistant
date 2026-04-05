@@ -2,9 +2,15 @@
 
 use App\Actions\ListConversationsAction;
 use App\Models\Conversation;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('list conversations action returns recent conversations', function () {
     Conversation::factory()->create(['title' => 'Old Chat', 'created_at' => now()->subDays(10)]);
@@ -57,4 +63,22 @@ test('list conversations action uses default limit of 50', function () {
     $result = $action->execute();
 
     expect($result)->toHaveCount(50);
+});
+
+test('list conversations action only returns conversations for authenticated user', function () {
+    // Create conversations for current user
+    Conversation::factory()->create(['title' => 'My Chat 1', 'user_id' => $this->user->id]);
+    Conversation::factory()->create(['title' => 'My Chat 2', 'user_id' => $this->user->id]);
+
+    // Create conversations for another user
+    $otherUser = User::factory()->create();
+    Conversation::factory()->create(['title' => 'Other Chat 1', 'user_id' => $otherUser->id]);
+    Conversation::factory()->create(['title' => 'Other Chat 2', 'user_id' => $otherUser->id]);
+
+    $action = app(ListConversationsAction::class);
+    $result = $action->execute();
+
+    expect($result)->toHaveCount(2);
+    expect($result->pluck('title')->toArray())->toContain('My Chat 1', 'My Chat 2');
+    expect($result->pluck('title')->toArray())->not->toContain('Other Chat 1', 'Other Chat 2');
 });

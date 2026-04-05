@@ -136,6 +136,7 @@ test('chat page loads most recent conversation when no conversation specified', 
 
     $recentConversation = Conversation::factory()->create([
         'title' => 'Recent Chat',
+        'user_id' => $this->user->id,
     ]);
 
     $response = $this->get(route('chat.show'));
@@ -461,7 +462,7 @@ test('regular POST request redirects', function () {
     ]);
 
     $conversation = Conversation::latest()->first();
-    $response->assertRedirect(route('chat.show.conversation', ['conversation' => $conversation]));
+    $response->assertRedirect(route('chat.show', ['conversation' => $conversation]));
 });
 
 test('AJAX error returns JSON error', function () {
@@ -484,9 +485,9 @@ test('AJAX error returns JSON error', function () {
  * ==========================================
  */
 test('can list conversations via JSON endpoint', function () {
-    // Create additional conversations
-    Conversation::factory()->create(['title' => 'Chat 1']);
-    Conversation::factory()->create(['title' => 'Chat 2']);
+    // Create additional conversations for the authenticated user
+    Conversation::factory()->create(['title' => 'Chat 1', 'user_id' => $this->user->id]);
+    Conversation::factory()->create(['title' => 'Chat 2', 'user_id' => $this->user->id]);
 
     $response = $this->getJson(route('chat.conversations.list'));
 
@@ -502,9 +503,9 @@ test('can list conversations via JSON endpoint', function () {
 });
 
 test('conversation list is limited to 50', function () {
-    // Create 55 conversations
+    // Create 55 conversations for the authenticated user
     for ($i = 0; $i < 55; $i++) {
-        Conversation::factory()->create(['title' => "Chat {$i}"]);
+        Conversation::factory()->create(['title' => "Chat {$i}", 'user_id' => $this->user->id]);
     }
 
     $response = $this->getJson(route('chat.conversations.list'));
@@ -515,8 +516,8 @@ test('conversation list is limited to 50', function () {
 });
 
 test('conversation list is sorted by created_at desc', function () {
-    $older = Conversation::factory()->create(['title' => 'Older Chat']);
-    $newer = Conversation::factory()->create(['title' => 'Newer Chat']);
+    $older = Conversation::factory()->create(['title' => 'Older Chat', 'user_id' => $this->user->id]);
+    $newer = Conversation::factory()->create(['title' => 'Newer Chat', 'user_id' => $this->user->id]);
 
     $response = $this->getJson(route('chat.conversations.list'));
 
@@ -764,7 +765,7 @@ test('conversation persists across page reloads', function () {
     $conversationId = $response->json('conversation_id');
 
     // Reload the chat page with this conversation
-    $pageResponse = $this->get(route('chat.show.conversation', ['conversation' => $conversationId]));
+    $pageResponse = $this->get(route('chat.show', ['conversation' => $conversationId]));
 
     $pageResponse->assertSuccessful();
     $pageResponse->assertSee('Persistent message');

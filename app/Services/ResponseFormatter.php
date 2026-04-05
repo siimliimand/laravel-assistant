@@ -91,7 +91,7 @@ class ResponseFormatter
             return response()->json($response->toJsonData());
         }
 
-        return redirect()->route('chat.show.conversation', ['conversation' => $response->conversation]);
+        return redirect()->route('chat.show', ['conversation' => $response->conversation]);
     }
 
     /**
