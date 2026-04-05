@@ -23,12 +23,12 @@
 
 ## 4. Update Actions to Scope by Authenticated User
 
-- [ ] 4.1 Update `ListConversationsAction` to filter by `auth()->id()`
-- [ ] 4.2 Update `GetConversationAction` to verify conversation ownership
-- [ ] 4.3 Update `CreateConversationAction` to set `user_id` from authenticated user
-- [ ] 4.4 Update `SendMessageAction` to validate conversation belongs to user
-- [ ] 4.5 Update `PrepareChatViewAction` to scope conversations to user
-- [ ] 4.6 Test each action with `php artisan test --filter=ActionTest`
+- [x] 4.1 Update `ListConversationsAction` to filter by `auth()->id()`
+- [x] 4.2 Update `GetConversationAction` to verify conversation ownership
+- [x] 4.3 Update `CreateConversationAction` to set `user_id` from authenticated user
+- [x] 4.4 Update `SendMessageAction` to validate conversation belongs to user
+- [x] 4.5 Update `PrepareChatViewAction` to scope conversations to user
+- [x] 4.6 Test each action with `php artisan test --filter=ActionTest`
 
 ## 5. Protect Routes with Authentication Middleware
 

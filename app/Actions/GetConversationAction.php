@@ -27,12 +27,13 @@ class GetConversationAction extends BaseAction
      * Execute the conversation retrieval.
      *
      * @param  int  $conversationId  The conversation ID
-     * @return Conversation|null The conversation with messages, or null if not found
+     * @return Conversation|null The conversation with messages, or null if not found or not owned by user
      */
     public function execute(int $conversationId): ?Conversation
     {
-        return Conversation::with(['messages' => function ($query) {
-            $query->orderBy('created_at', 'asc');
-        }])->find($conversationId);
+        return Conversation::where('user_id', auth()->id())
+            ->with(['messages' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            }])->find($conversationId);
     }
 }

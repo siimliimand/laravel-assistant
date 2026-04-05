@@ -27,11 +27,12 @@ class ListConversationsAction extends BaseAction
      * Execute the conversation listing.
      *
      * @param  int  $limit  Maximum number of conversations to return (default: 50)
-     * @return Collection<int, Conversation> Collection of conversations
+     * @return Collection<int, Conversation> Collection of conversations for the authenticated user
      */
     public function execute(int $limit = 50): Collection
     {
-        return Conversation::latest()
+        return Conversation::where('user_id', auth()->id())
+            ->latest()
             ->limit($limit)
             ->get();
     }

@@ -99,7 +99,7 @@ class SendMessageAction extends BaseAction
     protected function getOrCreateConversation(?int $conversationId, string $initialMessage): Conversation
     {
         if ($conversationId) {
-            $conversation = Conversation::find($conversationId);
+            $conversation = Conversation::where('user_id', auth()->id())->find($conversationId);
 
             if ($conversation) {
                 return $conversation;
@@ -109,6 +109,7 @@ class SendMessageAction extends BaseAction
         // Create new conversation with title from first message
         $conversation = Conversation::create([
             'title' => 'New Chat',
+            'user_id' => auth()->id(),
         ]);
 
         // Generate title from the initial message

@@ -39,11 +39,20 @@ class PrepareChatViewAction extends BaseAction
      *
      * Falls back to the most recent conversation if none is specified.
      * Ensures messages are eager loaded to prevent N+1 queries.
+     * Scopes queries to the authenticated user.
      */
     protected function resolveConversation(?Conversation $conversation): ?Conversation
     {
         if (! $conversation || ! $conversation->exists) {
-            return Conversation::with('messages')->latest()->first();
+            return Conversation::where('user_id', auth()->id())
+                ->with('messages')
+                ->latest()
+                ->first();
+        }
+
+        // Verify conversation belongs to user
+        if ($conversation->user_id !== auth()->id()) {
+            return null;
         }
 
         $conversation->load('messages');

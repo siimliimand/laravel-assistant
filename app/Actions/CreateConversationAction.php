@@ -40,6 +40,7 @@ class CreateConversationAction extends BaseAction
 
         $conversation = Conversation::create([
             'title' => $title,
+            'user_id' => auth()->id(),
         ]);
 
         // Generate title from first message if provided and using default title
