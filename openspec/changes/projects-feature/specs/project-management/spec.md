@@ -115,21 +115,21 @@ All project operations SHALL be strictly scoped to the authenticated user.
 - **WHEN** an authenticated user requests a specific project by ID
 - **THEN** the system SHALL verify the project belongs to the user
 - **AND** if the project belongs to the user, it SHALL be displayed
-- **AND** if the project belongs to another user, the system SHALL return a 404 error
+- **AND** if the project belongs to another user, the system SHALL return a 403 Forbidden error
 
 #### Scenario: Update project ownership check
 
 - **WHEN** an authenticated user attempts to update a project
 - **THEN** the system SHALL verify the project belongs to the user
 - **AND** if ownership is confirmed, the project SHALL be updated
-- **AND** if the project belongs to another user, the system SHALL return a 404 error
+- **AND** if the project belongs to another user, the system SHALL return a 403 Forbidden error
 
 #### Scenario: Delete project ownership check
 
 - **WHEN** an authenticated user attempts to delete a project
 - **THEN** the system SHALL verify the project belongs to the user
 - **AND** if ownership is confirmed, the project SHALL be deleted
-- **AND** if the project belongs to another user, the system SHALL return a 404 error
+- **AND** if the project belongs to another user, the system SHALL return a 403 Forbidden error
 
 ### Requirement: Project User Relationship
 

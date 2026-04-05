@@ -16,6 +16,16 @@ class StoreProjectRequest extends FormRequest
      */
     public function rules(): array
     {
+        return self::projectRules();
+    }
+
+    /**
+     * Get the common validation rules for project requests.
+     *
+     * @return array<string, ValidationRule|array<mixed>|string>
+     */
+    public static function projectRules(): array
+    {
         return [
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:5000'],
