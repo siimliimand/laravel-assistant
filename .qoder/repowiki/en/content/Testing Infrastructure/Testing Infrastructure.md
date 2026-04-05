@@ -11,6 +11,7 @@
 - [tests/Feature/MarkdownRenderingTest.php](file://tests/Feature/MarkdownRenderingTest.php)
 - [tests/Feature/Auth/AuthenticationTest.php](file://tests/Feature/Auth/AuthenticationTest.php)
 - [tests/Feature/Auth/EmailVerificationTest.php](file://tests/Feature/Auth/EmailVerificationTest.php)
+- [tests/Feature/Auth/IntegrationTest.php](file://tests/Feature/Auth/IntegrationTest.php)
 - [tests/Feature/Auth/PasswordConfirmationTest.php](file://tests/Feature/Auth/PasswordConfirmationTest.php)
 - [tests/Feature/Auth/PasswordResetTest.php](file://tests/Feature/Auth/PasswordResetTest.php)
 - [tests/Feature/Auth/PasswordUpdateTest.php](file://tests/Feature/Auth/PasswordUpdateTest.php)
@@ -32,6 +33,10 @@
 - [tests/Unit/ConversationStatusTest.php](file://tests/Unit/ConversationStatusTest.php)
 - [tests/Unit/MessageRoleTest.php](file://tests/Unit/MessageRoleTest.php)
 - [app/Http/Controllers/ChatController.php](file://app/Http/Controllers/ChatController.php)
+- [app/Http/Controllers/Auth/AuthenticatedSessionController.php](file://app/Http/Controllers/Auth/AuthenticatedSessionController.php)
+- [app/Http/Controllers/Auth/RegisteredUserController.php](file://app/Http/Controllers/Auth/RegisteredUserController.php)
+- [app/Http/Controllers/Auth/ConfirmablePasswordController.php](file://app/Http/Controllers/Auth/ConfirmablePasswordController.php)
+- [app/Http/Requests/Auth/LoginRequest.php](file://app/Http/Requests/Auth/LoginRequest.php)
 - [app/Ai/Agents/DevBot.php](file://app/Ai/Agents/DevBot.php)
 - [app/Services/McpClientService.php](file://app/Services/McpClientService.php)
 - [app/Ai/Tools/DatabaseQueryTool.php](file://app/Ai/Tools/DatabaseQueryTool.php)
@@ -53,6 +58,7 @@
 - [app/Enums/MessageRole.php](file://app/Enums/MessageRole.php)
 - [resources/views/chat.blade.php](file://resources/views/chat.blade.php)
 - [routes/web.php](file://routes/web.php)
+- [routes/auth.php](file://routes/auth.php)
 - [config/services.php](file://config/services.php)
 - [database/factories/UserFactory.php](file://database/factories/UserFactory.php)
 - [database/migrations/0001_01_01_000000_create_users_table.php](file://database/migrations/0001_01_01_000000_create_users_table.php)
@@ -65,17 +71,13 @@
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive authentication test suites covering login, registration, password reset, email verification, and password confirmation flows
-- Integrated action class testing for conversation management operations (Create, Get, List, Send Message actions)
-- Implemented DTO validation tests for ConversationData, MessageData, ApiResponseData, and SendMessageResponse
-- Added enum functionality testing for ConversationStatus and MessageRole enums
-- Included ViewModel testing for ChatViewModel operations and data formatting
-- Enhanced test coverage for pagination limits (50 conversations), message ordering validation, and JSON response structure testing
-- Expanded MCP client integration testing with sophisticated mocking strategies
-- **Updated**: Added new PostLoginRedirectTest.php for authentication flow validation with login and registration redirect tests
-- **Updated**: Enhanced ChatTest.php with comprehensive authentication coverage, API endpoint security testing, and user-scoped conversation testing
-- **Updated**: Enhanced AuthenticationTest.php with redirect tests for authenticated users
-- **Updated**: Enhanced GetConversationActionTest.php with user-scoped conversation ownership validation
+- Significantly expanded authentication testing infrastructure with comprehensive integration tests covering login/logout flows, conversation isolation, and complete user workflow testing
+- Added over 350 lines of authentication integration tests in IntegrationTest.php
+- Enhanced authentication coverage with complete user lifecycle testing from registration to messaging
+- Added sophisticated conversation isolation testing between users
+- Expanded post-login redirect testing with comprehensive redirect validation
+- Enhanced authentication flow testing with rate limiting and security validation
+- Added complete integration testing for chat functionality with authenticated users
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -84,21 +86,22 @@
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
 6. [Authentication Testing](#authentication-testing)
-7. [Action Class Testing](#action-class-testing)
-8. [DTO Validation Testing](#dto-validation-testing)
-9. [Enum Functionality Testing](#enum-functionality-testing)
-10. [ViewModel Operations Testing](#viewmodel-operations-testing)
-11. [MCP Client Integration Testing](#mcp-client-integration-testing)
-12. [MCP Tool Testing](#mcp-tool-testing)
-13. [Conversation Management Testing](#conversation-management-testing)
-14. [Dependency Analysis](#dependency-analysis)
-15. [Performance Considerations](#performance-considerations)
-16. [Troubleshooting Guide](#troubleshooting-guide)
-17. [Conclusion](#conclusion)
-18. [Appendices](#appendices)
+7. [Authentication Integration Testing](#authentication-integration-testing)
+8. [Action Class Testing](#action-class-testing)
+9. [DTO Validation Testing](#dto-validation-testing)
+10. [Enum Functionality Testing](#enum-functionality-testing)
+11. [ViewModel Operations Testing](#viewmodel-operations-testing)
+12. [MCP Client Integration Testing](#mcp-client-integration-testing)
+13. [MCP Tool Testing](#mcp-tool-testing)
+14. [Conversation Management Testing](#conversation-management-testing)
+15. [Dependency Analysis](#dependency-analysis)
+16. [Performance Considerations](#performance-considerations)
+17. [Troubleshooting Guide](#troubleshooting-guide)
+18. [Conclusion](#conclusion)
+19. [Appendices](#appendices)
 
 ## Introduction
-This document explains the Testing Infrastructure for the project, focusing on Pest PHP integration and Laravel-specific testing patterns. It covers test organization, feature and unit test patterns, assertion syntax, mocking strategies, configuration, database testing, and practical examples drawn from the repository. The infrastructure now includes comprehensive authentication testing, action class testing, DTO validation, enum functionality testing, ViewModel operations, and enhanced conversation management testing with pagination limits, message ordering validation, and sophisticated MCP client integration testing with over 500 lines of chat functionality tests covering chat interface, message processing, validation, error handling, and AI agent integration.
+This document explains the Testing Infrastructure for the project, focusing on Pest PHP integration and Laravel-specific testing patterns. It covers test organization, feature and unit test patterns, assertion syntax, mocking strategies, configuration, database testing, and practical examples drawn from the repository. The infrastructure now includes comprehensive authentication testing with over 350 lines of integration tests covering complete user workflows, conversation isolation, login/logout flows, and sophisticated security validation patterns.
 
 ## Project Structure
 The testing setup is organized around Pest and Laravel's testing facilities with comprehensive coverage of authentication flows, action classes, DTO validation, enum functionality, ViewModel operations, and enhanced chat functionality testing:
@@ -111,6 +114,7 @@ The testing setup is organized around Pest and Laravel's testing facilities with
 - DTO validation testing for data transfer objects
 - Enum functionality testing for status and role management
 - ViewModel testing for presentation layer operations
+- **Updated**: Comprehensive authentication integration testing with complete user workflow validation
 
 ```mermaid
 graph TB
@@ -120,6 +124,7 @@ TC["Base TestCase<br/>tests/TestCase.php"]
 U["Unit Tests<br/>tests/Unit/*"]
 F["Feature Tests<br/>tests/Feature/*"]
 AT["Auth Tests<br/>tests/Feature/Auth/*"]
+AIT["Auth Integration Tests<br/>tests/Feature/Auth/IntegrationTest.php"]
 ACT["Action Tests<br/>tests/Feature/* (Action Classes)"]
 DTOT["DTO Tests<br/>tests/Unit/* (Data Transfer Objects)"]
 ENUM["Enum Tests<br/>tests/Unit/* (Enums)"]
@@ -138,6 +143,8 @@ FCT["Model Factories<br/>database/factories/*"]
 CFG["Service Configuration<br/>config/services.php"]
 end
 subgraph "Application Layer"
+ASC["Auth Controllers<br/>app/Http/Controllers/Auth/*"]
+LR["Login Request<br/>app/Http/Requests/Auth/LoginRequest.php"]
 AC["Action Classes<br/>app/Actions/*"]
 DTO["DTOs<br/>app/DTOs/*"]
 EN["Enums<br/>app/Enums/*"]
@@ -156,11 +163,13 @@ CV["Chat View<br/>resources/views/chat.blade.php"]
 end
 subgraph "Routes"
 R["Web Routes<br/>routes/web.php"]
+RA["Auth Routes<br/>routes/auth.php"]
 end
 Pest --> TC
 TC --> U
 TC --> F
 TC --> AT
+TC --> AIT
 TC --> ACT
 TC --> DTOT
 TC --> ENUM
@@ -175,6 +184,8 @@ PU --> TC
 DB --> TC
 FCT --> TC
 CFG --> MCS
+ASC --> AIT
+LR --> ASC
 AC --> ACT
 DTO --> DTOT
 EN --> ENUM
@@ -192,49 +203,21 @@ TT --> TP
 CM --> CT
 CV --> CT
 R --> DC
+RA --> ASC
 ```
 
 **Diagram sources**
 - [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
 - [tests/TestCase.php:1-11](file://tests/TestCase.php#L1-L11)
 - [tests/Feature/ChatTest.php:1-968](file://tests/Feature/ChatTest.php#L1-L968)
-- [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
-- [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
-- [tests/Feature/GetConversationActionTest.php:1-111](file://tests/Feature/GetConversationActionTest.php#L1-L111)
-- [tests/Feature/ListConversationsActionTest.php:1-61](file://tests/Feature/ListConversationsActionTest.php#L1-L61)
-- [tests/Feature/SendMessageActionTest.php:1-213](file://tests/Feature/SendMessageActionTest.php#L1-L213)
-- [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
-- [tests/Unit/MessageDataTest.php:1-61](file://tests/Unit/MessageDataTest.php#L1-L61)
-- [tests/Unit/ApiResponseDataTest.php:1-109](file://tests/Unit/ApiResponseDataTest.php#L1-L109)
-- [tests/Unit/SendMessageResponseTest.php:1-171](file://tests/Unit/SendMessageResponseTest.php#L1-L171)
-- [tests/Unit/ConversationStatusTest.php:1-57](file://tests/Unit/ConversationStatusTest.php#L1-L57)
-- [tests/Unit/MessageRoleTest.php:1-44](file://tests/Unit/MessageRoleTest.php#L1-L44)
+- [tests/Feature/Auth/IntegrationTest.php:1-354](file://tests/Feature/Auth/IntegrationTest.php#L1-L354)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
-- [phpunit.xml:1-37](file://phpunit.xml#L1-L37)
-- [config/services.php:38-43](file://config/services.php#L38-L43)
-- [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
-- [database/factories/UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
-- [app/Http/Controllers/ChatController.php:1-182](file://app/Http/Controllers/ChatController.php#L1-L182)
-- [app/Ai/Agents/DevBot.php:1-99](file://app/Ai/Agents/DevBot.php#L1-L99)
-- [app/Services/McpClientService.php:1-279](file://app/Services/McpClientService.php#L1-L279)
-- [app/Ai/Tools/DatabaseQueryTool.php:1-84](file://app/Ai/Tools/DatabaseQueryTool.php#L1-L84)
-- [app/Ai/Tools/DatabaseSchemaTool.php:1-84](file://app/Ai/Tools/DatabaseSchemaTool.php#L1-L84)
-- [app/Ai/Tools/SearchDocsTool.php:1-84](file://app/Ai/Tools/SearchDocsTool.php#L1-L84)
-- [app/Ai/Tools/TinkerTool.php:1-84](file://app/Ai/Tools/TinkerTool.php#L1-L84)
-- [app/Models/Conversation.php:1-45](file://app/Models/Conversation.php#L1-L45)
-- [app/ViewModels/ChatViewModel.php](file://app/ViewModels/ChatViewModel.php)
-- [app/Actions/CreateConversationAction.php](file://app/Actions/CreateConversationAction.php)
-- [app/Actions/GetConversationAction.php](file://app/Actions/GetConversationAction.php)
-- [app/Actions/ListConversationsAction.php](file://app/Actions/ListConversationsAction.php)
-- [app/Actions/SendMessageAction.php](file://app/Actions/SendMessageAction.php)
-- [app/DTOs/ConversationData.php](file://app/DTOs/ConversationData.php)
-- [app/DTOs/MessageData.php](file://app/DTOs/MessageData.php)
-- [app/DTOs/ApiResponseData.php](file://app/DTOs/ApiResponseData.php)
-- [app/DTOs/SendMessageResponse.php](file://app/DTOs/SendMessageResponse.php)
-- [app/Enums/ConversationStatus.php](file://app/Enums/ConversationStatus.php)
-- [app/Enums/MessageRole.php](file://app/Enums/MessageRole.php)
-- [resources/views/chat.blade.php:1-731](file://resources/views/chat.blade.php#L1-L731)
-- [routes/web.php:1-16](file://routes/web.php#L1-L16)
+- [routes/web.php:1-29](file://routes/web.php#L1-L29)
+- [routes/auth.php:1-60](file://routes/auth.php#L1-L60)
+- [app/Http/Controllers/Auth/AuthenticatedSessionController.php:1-48](file://app/Http/Controllers/Auth/AuthenticatedSessionController.php#L1-L48)
+- [app/Http/Controllers/Auth/RegisteredUserController.php:1-52](file://app/Http/Controllers/Auth/RegisteredUserController.php#L1-L52)
+- [app/Http/Controllers/Auth/ConfirmablePasswordController.php:1-41](file://app/Http/Controllers/Auth/ConfirmablePasswordController.php#L1-L41)
+- [app/Http/Requests/Auth/LoginRequest.php:1-87](file://app/Http/Requests/Auth/LoginRequest.php#L1-L87)
 
 **Section sources**
 - [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
@@ -253,6 +236,7 @@ R --> DC
   - Unit tests focus on isolated logic and assertions using Pest's expect syntax
   - Feature tests exercise HTTP requests, middleware, and database interactions using Laravel's HTTP test helpers
   - **Updated**: Comprehensive authentication test suites covering login, registration, password reset, email verification, and password confirmation flows
+  - **Updated**: Authentication integration tests with complete user workflow validation spanning registration, login, conversation creation, messaging, and logout
   - **Updated**: Action class testing for conversation management operations (Create, Get, List, Send Message actions)
   - **Updated**: DTO validation testing for ConversationData, MessageData, ApiResponseData, and SendMessageResponse
   - **Updated**: Enum functionality testing for ConversationStatus and MessageRole enums
@@ -285,12 +269,14 @@ participant Pest as "Pest Runner"
 participant Boot as "tests/Pest.php"
 participant BaseTC as "tests/TestCase.php"
 participant AuthTest as "Authentication Tests"
+participant AuthIntTest as "Authentication Integration Tests"
 participant PostLoginTest as "Post-Login Redirect Tests"
 participant ActionTest as "Action Class Tests"
 participant DTO as "DTO Validation Tests"
 participant EnumTest as "Enum Functionality Tests"
 participant ViewModelTest as "ViewModel Tests"
-participant Controller as "ChatController"
+participant Controller as "Auth Controllers"
+participant ChatController as "ChatController"
 participant DevBot as "DevBot Agent"
 participant MCPClient as "McpClientService"
 participant Tools as "MCP Tools"
@@ -300,36 +286,34 @@ Dev->>Pest : "Run comprehensive test suites"
 Pest->>Boot : "Load bootstrap"
 Boot->>BaseTC : "Extend TestCase for all test suites"
 Pest->>AuthTest : "Execute authentication tests"
+Pest->>AuthIntTest : "Execute authentication integration tests"
 Pest->>PostLoginTest : "Execute post-login redirect tests"
 Pest->>ActionTest : "Execute action class tests"
 Pest->>DTO : "Execute DTO validation tests"
 Pest->>EnumTest : "Execute enum functionality tests"
 Pest->>ViewModelTest : "Execute ViewModel tests"
 AuthTest->>Controller : "Test authentication flows"
+AuthIntTest->>Controller : "Test complete user workflow"
+AuthIntTest->>ChatController : "Test conversation isolation"
 PostLoginTest->>Controller : "Test login/registration redirects"
-ActionTest->>Controller : "Test action class operations"
-DTO->>Controller : "Test DTO validation"
-EnumTest->>Controller : "Test enum functionality"
-ViewModelTest->>Controller : "Test ViewModel operations"
-Controller->>Controller : "Apply pagination limits (50)"
-Controller->>Controller : "Order messages by created_at asc"
-Controller->>DevBot : "Process AI responses"
+ActionTest->>ChatController : "Test action class operations"
+DTO->>ChatController : "Test DTO validation"
+EnumTest->>ChatController : "Test enum functionality"
+ViewModelTest->>ChatController : "Test ViewModel operations"
+Controller->>Controller : "Apply rate limiting & security"
+Controller->>ChatController : "Apply conversation isolation"
+ChatController->>DevBot : "Process AI responses"
 DevBot->>MCPClient : "Call MCP tools"
 MCPClient->>Tools : "Execute tool commands"
 Tools-->>MCPClient : "Tool results"
 MCPClient-->>DevBot : "Formatted results"
-DevBot-->>Controller : "Mocked AI responses"
-Controller->>HTTP : "Issue HTTP request/response"
-HTTP-->>Controller : "Response"
-Controller->>DB : "Run assertions / factories"
-DB-->>Controller : "State snapshot"
-Controller-->>AuthTest : "Authentication responses"
-Controller-->>PostLoginTest : "Redirect validation"
-Controller-->>ActionTest : "Action results"
-Controller-->>DTO : "Validation results"
-Controller-->>EnumTest : "Enum operations"
-Controller-->>ViewModelTest : "ViewModel data"
+DevBot-->>ChatController : "Mocked AI responses"
+ChatController->>HTTP : "Issue HTTP request/response"
+HTTP-->>ChatController : "Response"
+ChatController->>DB : "Run assertions / factories"
+DB-->>ChatController : "State snapshot"
 AuthTest-->>Pest : "Auth test results"
+AuthIntTest-->>Pest : "Auth integration test results"
 PostLoginTest-->>Pest : "Post-login redirect test results"
 ActionTest-->>Pest : "Action test results"
 DTO-->>Pest : "DTO test results"
@@ -341,12 +325,17 @@ Pest-->>Dev : "All test results"
 **Diagram sources**
 - [tests/Pest.php:16-18](file://tests/Pest.php#L16-L18)
 - [tests/TestCase.php:7-10](file://tests/TestCase.php#L7-L10)
-- [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/AuthenticationTest.php:1-238](file://tests/Feature/Auth/AuthenticationTest.php#L1-L238)
+- [tests/Feature/Auth/IntegrationTest.php:1-354](file://tests/Feature/Auth/IntegrationTest.php#L1-L354)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
 - [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
 - [tests/Unit/ConversationStatusTest.php:1-57](file://tests/Unit/ConversationStatusTest.php#L1-L57)
+- [app/Http/Controllers/Auth/AuthenticatedSessionController.php:25-46](file://app/Http/Controllers/Auth/AuthenticatedSessionController.php#L25-L46)
+- [app/Http/Controllers/Auth/RegisteredUserController.php:31-49](file://app/Http/Controllers/Auth/RegisteredUserController.php#L31-L49)
+- [app/Http/Controllers/Auth/ConfirmablePasswordController.php:25-38](file://app/Http/Controllers/Auth/ConfirmablePasswordController.php#L25-L38)
+- [app/Http/Requests/Auth/LoginRequest.php:41-76](file://app/Http/Requests/Auth/LoginRequest.php#L41-L76)
 - [app/Http/Controllers/ChatController.php:39-182](file://app/Http/Controllers/ChatController.php#L39-L182)
 - [app/Ai/Agents/DevBot.php:20-99](file://app/Ai/Agents/DevBot.php#L20-L99)
 - [app/Services/McpClientService.php:48-96](file://app/Services/McpClientService.php#L48-L96)
@@ -400,6 +389,7 @@ Practical implications:
   - Password confirmation and update processes
   - Logout functionality and session management
   - **Updated**: Post-login redirect validation for login and registration flows
+  - **Updated**: Authentication integration tests with complete user workflow validation
 - **Updated**: Action class testing patterns:
   - Conversation creation with title generation and persistence
   - Conversation retrieval with eager loading and message ordering
@@ -429,7 +419,8 @@ Practical implications:
 **Section sources**
 - [tests/Feature/ExampleTest.php:3-7](file://tests/Feature/ExampleTest.php#L3-L7)
 - [tests/Feature/ChatTest.php:18-77](file://tests/Feature/ChatTest.php#L18-L77)
-- [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/AuthenticationTest.php:1-238](file://tests/Feature/Auth/AuthenticationTest.php#L1-L238)
+- [tests/Feature/Auth/IntegrationTest.php:1-354](file://tests/Feature/Auth/IntegrationTest.php#L1-L354)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - [tests/Feature/GetConversationActionTest.php:1-111](file://tests/Feature/GetConversationActionTest.php#L1-L111)
@@ -445,12 +436,16 @@ The authentication test suite provides comprehensive coverage of Laravel's authe
   - Tests successful authentication with valid credentials
   - Tests authentication failure with invalid passwords
   - Validates redirect behavior after successful login
+  - **Updated**: Tests rate limiting with throttle validation
+  - **Updated**: Tests remember me functionality with persistent cookies
 - **Logout Testing**
   - Tests user logout functionality
   - Validates session destruction and redirect behavior
+  - **Updated**: Tests logout behavior for unauthenticated users
 - **Registration Testing**
   - Tests user registration flow with validation
   - Validates account creation and user data persistence
+  - **Updated**: Tests registration validation (name, email format, uniqueness, password confirmation)
 - **Password Reset Testing**
   - Tests password reset request functionality
   - Validates reset email delivery and token handling
@@ -463,6 +458,9 @@ The authentication test suite provides comprehensive coverage of Laravel's authe
 - **Post-Login Redirect Testing**
   - **Updated**: Validates that successful login redirects to chat route
   - **Updated**: Validates that successful registration redirects to chat route and authenticates user
+- **Authenticated User Redirect Testing**
+  - **Updated**: Validates that authenticated users are redirected from login/register pages
+  - **Updated**: Tests dashboard redirection for authenticated users
 
 ```mermaid
 flowchart TD
@@ -470,41 +468,129 @@ AuthTests["Authentication Tests"] --> Login["Login Tests"]
 Login --> Screen["Login Screen Rendering"]
 Login --> Success["Successful Authentication"]
 Login --> Failure["Invalid Credentials"]
+Login --> RateLimit["Rate Limiting"]
+Login --> Remember["Remember Me"]
 AuthTests --> Logout["Logout Tests"]
 AuthTests --> Register["Registration Tests"]
+Register --> Validation["Registration Validation"]
 AuthTests --> Reset["Password Reset Tests"]
 AuthTests --> Email["Email Verification Tests"]
 AuthTests --> Confirm["Password Confirmation Tests"]
 AuthTests --> PostLogin["Post-Login Redirect Tests"]
+AuthTests --> AuthRedirect["Authenticated Redirect Tests"]
 PostLogin --> LoginRedirect["Login Redirect to Chat"]
 PostLogin --> RegisterRedirect["Registration Redirect to Chat"]
+AuthRedirect --> LoginRedirect2["Login Redirect to Dashboard"]
+AuthRedirect --> RegisterRedirect2["Register Redirect to Dashboard"]
 Screen --> Redirect["Dashboard Redirect"]
 Success --> Session["Authenticated Session"]
 Failure --> Guest["Guest State"]
+RateLimit --> Throttle["Throttle Validation"]
+Remember --> Cookie["Persistent Cookie"]
 Logout --> Guest
 Register --> Account["Account Creation"]
+Validation --> Name["Name Validation"]
+Validation --> Email["Email Validation"]
+Validation --> Password["Password Validation"]
 Reset --> EmailFlow["Email Flow"]
 Email --> Activate["User Activation"]
 Confirm --> SecureAccess["Secure Access"]
 LoginRedirect --> ChatRoute["route('chat.show')"]
 RegisterRedirect --> ChatRoute
+LoginRedirect2 --> DashboardRoute["route('dashboard')"]
+RegisterRedirect2 --> DashboardRoute
 ```
 
 **Diagram sources**
-- [tests/Feature/Auth/AuthenticationTest.php:5-41](file://tests/Feature/Auth/AuthenticationTest.php#L5-L41)
-- [tests/Feature/Auth/RegistrationTest.php](file://tests/Feature/Auth/RegistrationTest.php)
-- [tests/Feature/Auth/PasswordResetTest.php](file://tests/Feature/Auth/PasswordResetTest.php)
-- [tests/Feature/Auth/EmailVerificationTest.php](file://tests/Feature/Auth/EmailVerificationTest.php)
-- [tests/Feature/Auth/PasswordConfirmationTest.php](file://tests/Feature/Auth/PasswordConfirmationTest.php)
+- [tests/Feature/Auth/AuthenticationTest.php:13-78](file://tests/Feature/Auth/AuthenticationTest.php#L13-L78)
+- [tests/Feature/Auth/AuthenticationTest.php:202-216](file://tests/Feature/Auth/AuthenticationTest.php#L202-L216)
+- [tests/Feature/Auth/AuthenticationTest.php:223-237](file://tests/Feature/Auth/AuthenticationTest.php#L223-L237)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
+- [tests/Feature/Auth/RegistrationTest.php:3-19](file://tests/Feature/Auth/RegistrationTest.php#L3-L19)
+- [tests/Feature/Auth/EmailVerificationTest.php:8-32](file://tests/Feature/Auth/EmailVerificationTest.php#L8-L32)
+- [tests/Feature/Auth/PasswordConfirmationTest.php:5-32](file://tests/Feature/Auth/PasswordConfirmationTest.php#L5-L32)
 
 **Section sources**
-- [tests/Feature/Auth/AuthenticationTest.php:5-41](file://tests/Feature/Auth/AuthenticationTest.php#L5-L41)
-- [tests/Feature/Auth/RegistrationTest.php](file://tests/Feature/Auth/RegistrationTest.php)
-- [tests/Feature/Auth/PasswordResetTest.php](file://tests/Feature/Auth/PasswordResetTest.php)
-- [tests/Feature/Auth/EmailVerificationTest.php](file://tests/Feature/Auth/EmailVerificationTest.php)
-- [tests/Feature/Auth/PasswordConfirmationTest.php](file://tests/Feature/Auth/PasswordConfirmationTest.php)
+- [tests/Feature/Auth/AuthenticationTest.php:13-78](file://tests/Feature/Auth/AuthenticationTest.php#L13-L78)
+- [tests/Feature/Auth/AuthenticationTest.php:202-216](file://tests/Feature/Auth/AuthenticationTest.php#L202-L216)
+- [tests/Feature/Auth/AuthenticationTest.php:223-237](file://tests/Feature/Auth/AuthenticationTest.php#L223-L237)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
+- [tests/Feature/Auth/RegistrationTest.php:3-19](file://tests/Feature/Auth/RegistrationTest.php#L3-L19)
+- [tests/Feature/Auth/EmailVerificationTest.php:8-32](file://tests/Feature/Auth/EmailVerificationTest.php#L8-L32)
+- [tests/Feature/Auth/PasswordConfirmationTest.php:5-32](file://tests/Feature/Auth/PasswordConfirmationTest.php#L5-L32)
+
+### Authentication Integration Testing
+The authentication integration test suite provides comprehensive end-to-end testing of user workflows with over 350 lines of validation:
+
+- **Complete User Registration and Login Flow**
+  - Tests registration with validation and automatic login
+  - Tests login redirect to chat interface
+  - Tests logout and subsequent login flow
+- **Conversation Isolation Testing**
+  - Tests conversation creation for authenticated users
+  - Validates conversation list shows only user's conversations
+  - Tests conversation switching between multiple conversations
+  - **Updated**: Tests conversation isolation between different users
+- **Message Sending and Validation**
+  - Tests message sending to authenticated user's conversations
+  - Validates message persistence and role assignment
+  - **Updated**: Tests unauthorized message attempts are blocked
+- **Security and Access Control**
+  - Tests logout redirect to home page
+  - Tests access to chat after logout redirects to login
+  - **Updated**: Tests 404 status for unauthorized conversation access
+- **Complete User Workflow Testing**
+  - Tests full workflow from registration to messaging
+  - Validates conversation title generation from first message
+  - Tests logout and subsequent access restrictions
+
+```mermaid
+flowchart TD
+AuthIntTests["Authentication Integration Tests"] --> RegLogin["Registration & Login Flow"]
+RegLogin --> Redirect["Chat Redirect Validation"]
+RegLogin --> LogoutFlow["Logout & Re-login"]
+RegLogin --> CompleteWorkflow["Complete User Workflow"]
+AuthIntTests --> ConvIsolation["Conversation Isolation"]
+ConvIsolation --> CreateConv["Conversation Creation"]
+CreateConv --> ListConv["Conversation List Validation"]
+ListConv --> SwitchConv["Conversation Switching"]
+SwitchConv --> UserIsolation["User Conversation Isolation"]
+UserIsolation --> UnauthorizedAccess["Unauthorized Access Blocking"]
+AuthIntTests --> MessageFlow["Message Sending Flow"]
+MessageFlow --> SendMsg["Message Sending Validation"]
+SendMsg --> UnauthorizedMsg["Unauthorized Message Blocking"]
+AuthIntTests --> Security["Security & Access Control"]
+Security --> LogoutRedirect["Logout Redirect Validation"]
+Security --> ChatAccess["Chat Access After Logout"]
+CompleteWorkflow --> TitleGen["Conversation Title Generation"]
+CompleteWorkflow --> MessagePersist["Message Persistence"]
+```
+
+**Diagram sources**
+- [tests/Feature/Auth/IntegrationTest.php:21-45](file://tests/Feature/Auth/IntegrationTest.php#L21-L45)
+- [tests/Feature/Auth/IntegrationTest.php:50-66](file://tests/Feature/Auth/IntegrationTest.php#L50-L66)
+- [tests/Feature/Auth/IntegrationTest.php:71-99](file://tests/Feature/Auth/IntegrationTest.php#L71-L99)
+- [tests/Feature/Auth/IntegrationTest.php:104-126](file://tests/Feature/Auth/IntegrationTest.php#L104-L126)
+- [tests/Feature/Auth/IntegrationTest.php:128-141](file://tests/Feature/Auth/IntegrationTest.php#L128-L141)
+- [tests/Feature/Auth/IntegrationTest.php:146-172](file://tests/Feature/Auth/IntegrationTest.php#L146-L172)
+- [tests/Feature/Auth/IntegrationTest.php:174-197](file://tests/Feature/Auth/IntegrationTest.php#L174-L197)
+- [tests/Feature/Auth/IntegrationTest.php:202-209](file://tests/Feature/Auth/IntegrationTest.php#L202-L209)
+- [tests/Feature/Auth/IntegrationTest.php:214-229](file://tests/Feature/Auth/IntegrationTest.php#L214-L229)
+- [tests/Feature/Auth/IntegrationTest.php:234-301](file://tests/Feature/Auth/IntegrationTest.php#L234-L301)
+- [tests/Feature/Auth/IntegrationTest.php:306-353](file://tests/Feature/Auth/IntegrationTest.php#L306-L353)
+
+**Section sources**
+- [tests/Feature/Auth/IntegrationTest.php:21-45](file://tests/Feature/Auth/IntegrationTest.php#L21-L45)
+- [tests/Feature/Auth/IntegrationTest.php:50-66](file://tests/Feature/Auth/IntegrationTest.php#L50-L66)
+- [tests/Feature/Auth/IntegrationTest.php:71-99](file://tests/Feature/Auth/IntegrationTest.php#L71-L99)
+- [tests/Feature/Auth/IntegrationTest.php:104-126](file://tests/Feature/Auth/IntegrationTest.php#L104-L126)
+- [tests/Feature/Auth/IntegrationTest.php:128-141](file://tests/Feature/Auth/IntegrationTest.php#L128-L141)
+- [tests/Feature/Auth/IntegrationTest.php:146-172](file://tests/Feature/Auth/IntegrationTest.php#L146-L172)
+- [tests/Feature/Auth/IntegrationTest.php:174-197](file://tests/Feature/Auth/IntegrationTest.php#L174-L197)
+- [tests/Feature/Auth/IntegrationTest.php:202-209](file://tests/Feature/Auth/IntegrationTest.php#L202-L209)
+- [tests/Feature/Auth/IntegrationTest.php:214-229](file://tests/Feature/Auth/IntegrationTest.php#L214-L229)
+- [tests/Feature/Auth/IntegrationTest.php:234-301](file://tests/Feature/Auth/IntegrationTest.php#L234-L301)
+- [tests/Feature/Auth/IntegrationTest.php:306-353](file://tests/Feature/Auth/IntegrationTest.php#L306-L353)
 
 ### Action Class Testing
 The action class testing suite validates the business logic layer with comprehensive test coverage:
@@ -870,6 +956,7 @@ Cleanup --> End(["End"])
   - **Updated**: Authentication coverage assertions for redirect validation
   - **Updated**: API endpoint security assertions for 401 status validation
   - **Updated**: User-scoped conversation assertions for ownership validation
+  - **Updated**: Authentication integration assertions for complete workflow validation
   - HTML content assertions for chat interface rendering
   - JSON structure validation for AJAX responses
   - Markdown content validation for formatted messages
@@ -884,6 +971,7 @@ Cleanup --> End(["End"])
 - [tests/Feature/ChatTest.php:411-470](file://tests/Feature/ChatTest.php#L411-L470)
 - [tests/Feature/ChatTest.php:366-404](file://tests/Feature/ChatTest.php#L366-L404)
 - [tests/Feature/Auth/AuthenticationTest.php:11-41](file://tests/Feature/Auth/AuthenticationTest.php#L11-L41)
+- [tests/Feature/Auth/IntegrationTest.php:21-45](file://tests/Feature/Auth/IntegrationTest.php#L21-L45)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 - [tests/Feature/CreateConversationActionTest.php:10-63](file://tests/Feature/CreateConversationActionTest.php#L10-L63)
 - [tests/Feature/GetConversationActionTest.php:85-110](file://tests/Feature/GetConversationActionTest.php#L85-L110)
@@ -904,6 +992,7 @@ Cleanup --> End(["End"])
   - **Updated**: MCP client service mocking with reflection-based property injection for complex state management
   - **Updated**: Action class mocking with dependency injection for isolated testing
   - **Updated**: DTO validation mocking with property verification and immutability testing
+  - **Updated**: Authentication integration mocking with complete workflow validation
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:61-61](file://.agents/skills/pest-testing/SKILL.md#L61-L61)
@@ -927,12 +1016,14 @@ Cleanup --> End(["End"])
   - **Updated**: Authentication redirect validation datasets
   - **Updated**: API endpoint security validation datasets
   - **Updated**: User-scoped conversation validation datasets for ownership scenarios
+  - **Updated**: Authentication integration validation datasets for complete workflow testing
   - MCP tool validation datasets for query types, parameter validation, and error scenarios
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:67-75](file://.agents/skills/pest-testing/SKILL.md#L67-L75)
 - [tests/Feature/ChatTest.php:197-215](file://tests/Feature/ChatTest.php#L197-L215)
 - [tests/Feature/Auth/AuthenticationTest.php:11-41](file://tests/Feature/Auth/AuthenticationTest.php#L11-L41)
+- [tests/Feature/Auth/IntegrationTest.php:21-45](file://tests/Feature/Auth/IntegrationTest.php#L21-L45)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 
 ### Browser and Architecture Testing (Pest 4)
@@ -951,6 +1042,7 @@ Cleanup --> End(["End"])
   - **Updated**: Authentication redirect testing in browser context
   - **Updated**: API endpoint security testing in browser context
   - **Updated**: User-scoped conversation testing in browser context
+  - **Updated**: Authentication integration testing in browser context
   - **Updated**: MCP tool browser testing considerations for tool proxy validation and error handling
 
 **Section sources**
@@ -1153,6 +1245,7 @@ PestBootstrap --> BaseTC["tests/TestCase.php"]
 BaseTC --> UnitTests["tests/Unit/*"]
 BaseTC --> FeatureTests["tests/Feature/*"]
 BaseTC --> AuthTests["tests/Feature/Auth/*"]
+BaseTC --> AuthIntTests["tests/Feature/Auth/IntegrationTest.php"]
 BaseTC --> ActionTests["tests/Feature/* (Action Classes)"]
 BaseTC --> DTOs["tests/Unit/* (DTOs)"]
 BaseTC --> Enums["tests/Unit/* (Enums)"]
@@ -1163,29 +1256,36 @@ BaseTC --> PostLoginTests["tests/Feature/Auth/PostLoginRedirectTest.php"]
 PHPUnitXML["phpunit.xml"] --> DBConfig["SQLite in-memory"]
 DBConfig --> Migrations["database/migrations/*"]
 Migrations --> Factories["database/factories/*"]
-AuthTests --> Controller["ChatController"]
+AuthTests --> AuthControllers["Auth Controllers"]
+AuthIntTests --> AuthControllers
+AuthControllers --> LoginController["AuthenticatedSessionController"]
+AuthControllers --> RegisterController["RegisteredUserController"]
+AuthControllers --> ConfirmController["ConfirmablePasswordController"]
+LoginController --> LoginRequest["LoginRequest"]
 ActionTests --> AC["Action Classes"]
 DTOs --> DTOObjects["DTO Objects"]
 Enums --> EnumObjects["Enum Objects"]
 ViewModelTests --> VMOD["ViewModels"]
-ChatTests --> Controller
-Controller --> DevBot["DevBot Agent"]
+ChatTests --> ChatController["ChatController"]
+ChatController --> DevBot["DevBot Agent"]
 DevBot --> McpClient["McpClientService"]
 McpClient --> McpTools["MCP Tools"]
 McpTools --> DatabaseQuery["DatabaseQueryTool"]
 McpTools --> DatabaseSchema["DatabaseSchemaTool"]
 McpTools --> SearchDocs["SearchDocsTool"]
 McpTools --> Tinker["TinkerTool"]
-Controller --> Views["Chat Blade View"]
-Controller --> Models["Conversation/Message Models"]
-Controller --> Routes["Web Routes"]
+ChatController --> Views["Chat Blade View"]
+ChatController --> Models["Conversation/Message Models"]
+ChatController --> Routes["Web Routes"]
+AuthRoutes["Auth Routes"] --> AuthControllers
 ```
 
 **Diagram sources**
 - [composer.json:24-25](file://composer.json#L24-L25)
 - [tests/Pest.php:16-18](file://tests/Pest.php#L16-L18)
 - [tests/TestCase.php:7-10](file://tests/TestCase.php#L7-L10)
-- [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/AuthenticationTest.php:1-238](file://tests/Feature/Auth/AuthenticationTest.php#L1-L238)
+- [tests/Feature/Auth/IntegrationTest.php:1-354](file://tests/Feature/Auth/IntegrationTest.php#L1-L354)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
@@ -1198,6 +1298,10 @@ Controller --> Routes["Web Routes"]
 - [phpunit.xml:20-35](file://phpunit.xml#L20-L35)
 - [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
 - [database/factories/UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
+- [app/Http/Controllers/Auth/AuthenticatedSessionController.php:1-48](file://app/Http/Controllers/Auth/AuthenticatedSessionController.php#L1-L48)
+- [app/Http/Controllers/Auth/RegisteredUserController.php:1-52](file://app/Http/Controllers/Auth/RegisteredUserController.php#L1-L52)
+- [app/Http/Controllers/Auth/ConfirmablePasswordController.php:1-41](file://app/Http/Controllers/Auth/ConfirmablePasswordController.php#L1-L41)
+- [app/Http/Requests/Auth/LoginRequest.php:1-87](file://app/Http/Requests/Auth/LoginRequest.php#L1-L87)
 - [app/Http/Controllers/ChatController.php:1-182](file://app/Http/Controllers/ChatController.php#L1-L182)
 - [app/Ai/Agents/DevBot.php:1-99](file://app/Ai/Agents/DevBot.php#L1-L99)
 - [app/Services/McpClientService.php:1-279](file://app/Services/McpClientService.php#L1-L279)
@@ -1217,7 +1321,8 @@ Controller --> Routes["Web Routes"]
 - [app/DTOs/SendMessageResponse.php](file://app/DTOs/SendMessageResponse.php)
 - [app/Enums/ConversationStatus.php](file://app/Enums/ConversationStatus.php)
 - [app/Enums/MessageRole.php](file://app/Enums/MessageRole.php)
-- [routes/web.php:1-16](file://routes/web.php#L1-L16)
+- [routes/web.php:1-29](file://routes/web.php#L1-L29)
+- [routes/auth.php:1-60](file://routes/auth.php#L1-L60)
 
 **Section sources**
 - [composer.json:24-25](file://composer.json#L24-L25)
@@ -1243,6 +1348,7 @@ Controller --> Routes["Web Routes"]
     - Pagination limits (50 conversations) for performance optimization
     - Message ordering optimization with database-level sorting
     - **Updated**: User-scoped conversation testing with efficient ownership validation
+    - **Updated**: Authentication integration testing with optimized workflow validation
   - MCP client service performance considerations:
     - Connection pooling and reuse strategies
     - Retry logic optimization with exponential backoff
@@ -1268,6 +1374,7 @@ Common pitfalls and remedies:
   - Prefer model-level assertions for better feedback and type safety
 - **Updated**: Comprehensive troubleshooting guidance:
   - Authentication testing failures - verify route definitions and middleware configuration
+  - Authentication integration testing failures - check user workflow validation and conversation isolation
   - Action class testing failures - check dependency injection and factory usage
   - DTO validation failures - ensure immutability and readonly property enforcement
   - Enum functionality failures - validate backed value compatibility and helper methods
@@ -1282,6 +1389,7 @@ Common pitfalls and remedies:
     - **Updated**: Authentication redirect failures - verify route definitions and redirect logic
     - **Updated**: API endpoint security failures - verify authentication middleware and 401 status handling
     - **Updated**: User-scoped conversation failures - verify ownership validation and user ID scoping
+    - **Updated**: Authentication integration workflow failures - verify complete user lifecycle validation
   - MCP client troubleshooting:
     - Connection initialization failures - verify MCP server availability and command configuration
     - Tool call errors - check argument validation and result extraction logic
@@ -1302,9 +1410,10 @@ Common pitfalls and remedies:
 - [tests/Unit/ToolProxyTest.php:14-17](file://tests/Unit/ToolProxyTest.php#L14-L17)
 
 ## Conclusion
-The project's testing infrastructure combines Pest's expressive DSL with Laravel's robust testing toolkit, now significantly enhanced with comprehensive authentication testing, action class testing, DTO validation, enum functionality testing, ViewModel operations, and MCP client integration. The addition of over 500 lines of ChatTest.php provides extensive coverage of chat interface, message processing, validation, error handling, AI agent integration, MCP tool integration, and enhanced conversation management with pagination limits (50 conversations), message ordering validation, and JSON response structure testing. The new comprehensive test suites cover:
+The project's testing infrastructure combines Pest's expressive DSL with Laravel's robust testing toolkit, now significantly enhanced with comprehensive authentication testing, action class testing, DTO validation, enum functionality testing, ViewModel operations, and MCP client integration. The addition of over 350 lines of Authentication Integration Tests in IntegrationTest.php provides extensive coverage of complete user workflows, conversation isolation, authentication flows, and sophisticated security validation patterns. The new comprehensive test suites cover:
 
 - **Authentication Testing**: Complete coverage of login, registration, password reset, email verification, and password confirmation flows
+- **Authentication Integration Testing**: **Updated**: Over 350 lines of comprehensive user workflow validation spanning registration, login, conversation creation, messaging, and logout
 - **Post-Login Redirect Testing**: **Updated**: Validates redirect behavior after successful authentication
 - **Action Class Testing**: Comprehensive validation of business logic operations (Create, Get, List, Send Message actions)
 - **DTO Validation Testing**: Type-safe data transfer object validation with immutability enforcement
@@ -1321,7 +1430,8 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 
 ### Practical Examples Index
 - Feature test example path: [tests/Feature/ExampleTest.php:1-8](file://tests/Feature/ExampleTest.php#L1-L8)
-- Authentication test path: [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- Authentication test path: [tests/Feature/Auth/AuthenticationTest.php:1-238](file://tests/Feature/Auth/AuthenticationTest.php#L1-L238)
+- Authentication integration test path: [tests/Feature/Auth/IntegrationTest.php:1-354](file://tests/Feature/Auth/IntegrationTest.php#L1-L354)
 - Post-login redirect test path: [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - Action class test path: [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - DTO validation test path: [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
@@ -1332,6 +1442,10 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - Unit test example path: [tests/Unit/ExampleTest.php:1-6](file://tests/Unit/ExampleTest.php#L1-L6)
 - Pest bootstrap path: [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
 - Base TestCase path: [tests/TestCase.php:1-11](file://tests/TestCase.php#L1-L11)
+- Auth controllers path: [app/Http/Controllers/Auth/AuthenticatedSessionController.php:1-48](file://app/Http/Controllers/Auth/AuthenticatedSessionController.php#L1-L48)
+- Registration controller path: [app/Http/Controllers/Auth/RegisteredUserController.php:1-52](file://app/Http/Controllers/Auth/RegisteredUserController.php#L1-L52)
+- Confirm password controller path: [app/Http/Controllers/Auth/ConfirmablePasswordController.php:1-41](file://app/Http/Controllers/Auth/ConfirmablePasswordController.php#L1-L41)
+- Login request path: [app/Http/Requests/Auth/LoginRequest.php:1-87](file://app/Http/Requests/Auth/LoginRequest.php#L1-L87)
 - Chat Controller path: [app/Http/Controllers/ChatController.php:1-182](file://app/Http/Controllers/ChatController.php#L1-L182)
 - DevBot Agent path: [app/Ai/Agents/DevBot.php:1-99](file://app/Ai/Agents/DevBot.php#L1-L99)
 - McpClientService path: [app/Services/McpClientService.php:1-279](file://app/Services/McpClientService.php#L1-L279)
@@ -1341,7 +1455,8 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - TinkerTool path: [app/Ai/Tools/TinkerTool.php:1-84](file://app/Ai/Tools/TinkerTool.php#L1-L84)
 - Conversation Model path: [app/Models/Conversation.php:1-45](file://app/Models/Conversation.php#L1-L45)
 - Chat View path: [resources/views/chat.blade.php:1-731](file://resources/views/chat.blade.php#L1-L731)
-- Routes path: [routes/web.php:1-16](file://routes/web.php#L1-L16)
+- Routes path: [routes/web.php:1-29](file://routes/web.php#L1-L29)
+- Auth Routes path: [routes/auth.php:1-60](file://routes/auth.php#L1-L60)
 - User factory path: [database/factories/UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
 - Users migration path: [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
 - Cache migration path: [database/migrations/0001_01_01_000001_create_cache_table.php:1-36](file://database/migrations/0001_01_01_000001_create_cache_table.php#L1-L36)
@@ -1350,6 +1465,7 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 
 ### Comprehensive Testing Coverage Matrix
 - **Authentication Testing**: ✓ Complete coverage of login, registration, password reset, email verification, and password confirmation flows
+- **Authentication Integration Testing**: ✓ **Updated**: Over 350 lines of comprehensive user workflow validation with conversation isolation and security testing
 - **Post-Login Redirect Testing**: ✓ **Updated**: Validates redirect behavior after successful authentication
 - **Action Class Testing**: ✓ Comprehensive validation of Create, Get, List, and Send Message actions with business logic
 - **DTO Validation Testing**: ✓ Type-safe data transfer object validation with immutability and readonly enforcement
@@ -1377,9 +1493,11 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - **Authentication Coverage**: ✓ **Updated**: Unauthenticated access validation and redirect behavior
 - **API Endpoint Security**: ✓ **Updated**: 401 status validation for unauthenticated API requests
 - **User-Scoped Conversation Testing**: ✓ **Updated**: Ownership validation and user ID scoping
+- **Authentication Integration Workflow Testing**: ✓ **Updated**: Complete user lifecycle validation from registration to messaging
 
 **Section sources**
-- [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/AuthenticationTest.php:1-238](file://tests/Feature/Auth/AuthenticationTest.php#L1-L238)
+- [tests/Feature/Auth/IntegrationTest.php:1-354](file://tests/Feature/Auth/IntegrationTest.php#L1-L354)
 - [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - [tests/Feature/GetConversationActionTest.php:1-111](file://tests/Feature/GetConversationActionTest.php#L1-L111)
@@ -1403,6 +1521,7 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - **User Ownership Validation**: ✓ **Updated**: Tests conversation retrieval returns null for conversations owned by other users
 - **API Security Testing**: ✓ **Updated**: Tests 401 status for unauthenticated API requests
 - **Authentication Redirect Testing**: ✓ **Updated**: Tests redirect behavior after successful login and registration
+- **Authentication Integration Workflow Testing**: ✓ **Updated**: Tests complete user lifecycle from registration to messaging with conversation isolation
 
 **Section sources**
 - [tests/Feature/ChatTest.php:487-593](file://tests/Feature/ChatTest.php#L487-L593)
@@ -1410,5 +1529,7 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 - [tests/Feature/Auth/AuthenticationTest.php:32](file://tests/Feature/Auth/AuthenticationTest.php#L32)
 - [tests/Feature/Auth/AuthenticationTest.php:99](file://tests/Feature/Auth/AuthenticationTest.php#L99)
+- [tests/Feature/Auth/IntegrationTest.php:234-301](file://tests/Feature/Auth/IntegrationTest.php#L234-L301)
+- [tests/Feature/Auth/IntegrationTest.php:306-353](file://tests/Feature/Auth/IntegrationTest.php#L306-L353)
 - [app/Http/Controllers/ChatController.php:40-102](file://app/Http/Controllers/ChatController.php#L40-L102)
 - [app/Models/Conversation.php:26-29](file://app/Models/Conversation.php#L26-L29)

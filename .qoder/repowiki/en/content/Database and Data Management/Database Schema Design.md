@@ -6,8 +6,15 @@
 - [0001_01_01_000001_create_cache_table.php](file://database/migrations/0001_01_01_000001_create_cache_table.php)
 - [0001_01_01_000002_create_jobs_table.php](file://database/migrations/0001_01_01_000002_create_jobs_table.php)
 - [2026_04_02_115916_create_agent_conversations_table.php](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php)
+- [2026_04_05_092017_create_projects_table.php](file://database/migrations/2026_04_05_092017_create_projects_table.php)
 - [User.php](file://app/Models/User.php)
+- [Project.php](file://app/Models/Project.php)
+- [ProjectStatus.php](file://app/Enums/ProjectStatus.php)
+- [ProjectController.php](file://app/Http/Controllers/ProjectController.php)
+- [StoreProjectRequest.php](file://app/Http/Requests/StoreProjectRequest.php)
+- [UpdateProjectRequest.php](file://app/Http/Requests/UpdateProjectRequest.php)
 - [UserFactory.php](file://database/factories/UserFactory.php)
+- [ProjectFactory.php](file://database/factories/ProjectFactory.php)
 - [DatabaseSeeder.php](file://database/seeders/DatabaseSeeder.php)
 - [database.php](file://config/database.php)
 - [auth.php](file://config/auth.php)
@@ -15,6 +22,14 @@
 - [cache.php](file://config/cache.php)
 - [queue.php](file://config/queue.php)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive documentation for the new projects table with user_id foreign keys and status tracking
+- Updated architecture diagrams to include projects management feature
+- Added user ownership enforcement documentation
+- Enhanced dependency analysis to include project relationships
+- Updated performance considerations to include project indexing strategies
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,10 +48,11 @@ This document provides comprehensive database schema documentation for the Larav
 - Password reset tokens table
 - Sessions table for user session management
 - Agent conversations table for AI interaction tracking
+- Projects table for project management with user ownership enforcement
 - Cache table for application caching
 - Jobs table for background processing
 
-The document explains field definitions, data types, primary keys, foreign keys, unique constraints, and indexes. It also describes the relationships between tables and how they support the application's core functionality, including authentication, session management, caching, queue processing, and AI conversation tracking.
+The document explains field definitions, data types, primary keys, foreign keys, unique constraints, and indexes. It also describes the relationships between tables and how they support the application's core functionality, including authentication, session management, caching, queue processing, AI conversation tracking, and project management.
 
 ## Project Structure
 The database schema is defined through Laravel migrations located in the database/migrations directory. Configuration files in config/ define how Laravel interacts with the database, including authentication, session storage, caching, and queue processing.
@@ -48,9 +64,12 @@ U["Users Migration<br/>0001_01_01_000000_create_users_table.php"]
 C["Cache Migration<br/>0001_01_01_000001_create_cache_table.php"]
 J["Jobs Migration<br/>0001_01_01_000002_create_jobs_table.php"]
 A["Agent Conversations Migration<br/>2026_04_02_115916_create_agent_conversations_table.php"]
+P["Projects Migration<br/>2026_04_05_092017_create_projects_table.php"]
 end
 subgraph "Application Models & Factories"
 UM["User Model<br/>app/Models/User.php"]
+PM["Project Model<br/>app/Models/Project.php"]
+PF["Project Factory<br/>database/factories/ProjectFactory.php"]
 UF["User Factory<br/>database/factories/UserFactory.php"]
 DS["Database Seeder<br/>database/seeders/DatabaseSeeder.php"]
 end
@@ -67,10 +86,13 @@ U --> DS
 C --> CA
 J --> QU
 A --> AU
+P --> PM
+P --> PF
 DB --> U
 DB --> C
 DB --> J
 DB --> A
+DB --> P
 AU --> U
 SE --> U
 CA --> C
@@ -82,7 +104,10 @@ QU --> J
 - [0001_01_01_000001_create_cache_table.php:1-36](file://database/migrations/0001_01_01_000001_create_cache_table.php#L1-L36)
 - [0001_01_01_000002_create_jobs_table.php:1-58](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L1-L58)
 - [2026_04_02_115916_create_agent_conversations_table.php:1-51](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L1-L51)
-- [User.php:1-33](file://app/Models/User.php#L1-L33)
+- [2026_04_05_092017_create_projects_table.php:1-34](file://database/migrations/2026_04_05_092017_create_projects_table.php#L1-L34)
+- [User.php:1-61](file://app/Models/User.php#L1-L61)
+- [Project.php:1-35](file://app/Models/Project.php#L1-L35)
+- [ProjectFactory.php:1-70](file://database/factories/ProjectFactory.php#L1-L70)
 - [UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
 - [DatabaseSeeder.php:1-26](file://database/seeders/DatabaseSeeder.php#L1-L26)
 - [database.php:1-185](file://config/database.php#L1-L185)
@@ -96,7 +121,10 @@ QU --> J
 - [0001_01_01_000001_create_cache_table.php:1-36](file://database/migrations/0001_01_01_000001_create_cache_table.php#L1-L36)
 - [0001_01_01_000002_create_jobs_table.php:1-58](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L1-L58)
 - [2026_04_02_115916_create_agent_conversations_table.php:1-51](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L1-L51)
-- [User.php:1-33](file://app/Models/User.php#L1-L33)
+- [2026_04_05_092017_create_projects_table.php:1-34](file://database/migrations/2026_04_05_092017_create_projects_table.php#L1-L34)
+- [User.php:1-61](file://app/Models/User.php#L1-L61)
+- [Project.php:1-35](file://app/Models/Project.php#L1-L35)
+- [ProjectFactory.php:1-70](file://database/factories/ProjectFactory.php#L1-L70)
 - [UserFactory.php:1-46](file://database/factories/UserFactory.php#L1-L46)
 - [DatabaseSeeder.php:1-26](file://database/seeders/DatabaseSeeder.php#L1-L26)
 - [database.php:1-185](file://config/database.php#L1-L185)
@@ -324,8 +352,44 @@ Rationale:
 **Section sources**
 - [2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
 
+### Projects Table
+The projects table manages project entities with user ownership enforcement and status tracking.
+
+Field definitions:
+- id: Auto-incrementing integer primary key
+- user_id: Foreign ID referencing users table with cascade delete
+- name: String field for project name (max 255 characters)
+- description: Text field for project description (nullable, max 5000 characters)
+- status: String field with enum values (draft, active, completed, archived)
+- created_at: Timestamp for project creation
+- updated_at: Timestamp for project updates
+
+Constraints and indexes:
+- Primary key on id
+- Foreign key constraint on user_id referencing users table with cascade delete
+- Default status value of 'draft'
+- Index on user_id for efficient user-specific queries
+- Index on created_at for chronological sorting
+- Status field uses ProjectStatus enum for type safety
+
+Relationships:
+- Foreign key relationship to users table via user_id
+- One-to-many relationship: User has many Projects
+
+Rationale:
+- Implements comprehensive project management with user ownership
+- Uses enum for status tracking with strong typing and validation
+- Supports project lifecycle management from draft to archived
+- Cascade delete ensures data integrity when users are removed
+- Strategic indexing for common query patterns
+
+**Section sources**
+- [2026_04_05_092017_create_projects_table.php:14-23](file://database/migrations/2026_04_05_092017_create_projects_table.php#L14-L23)
+- [Project.php:16-25](file://app/Models/Project.php#L16-L25)
+- [ProjectStatus.php:23-28](file://app/Enums/ProjectStatus.php#L23-L28)
+
 ## Architecture Overview
-The database architecture follows Laravel's standard patterns while adding specialized tables for AI conversation tracking. The design emphasizes performance through strategic indexing and separation of concerns across authentication, session management, caching, queuing, and AI interaction tracking.
+The database architecture follows Laravel's standard patterns while adding specialized tables for AI conversation tracking and project management. The design emphasizes performance through strategic indexing and separation of concerns across authentication, session management, caching, queuing, AI interaction tracking, and project lifecycle management.
 
 ```mermaid
 erDiagram
@@ -414,10 +478,21 @@ text meta
 timestamp created_at
 timestamp updated_at
 }
+PROJECTS {
+int id PK
+int user_id FK
+string name
+text description
+string status
+timestamp created_at
+timestamp updated_at
+}
 USERS ||--o{ SESSIONS : "has many"
 USERS ||--o{ AGENT_CONVERSATIONS : "has many"
 USERS ||--o{ AGENT_CONVERSATION_MESSAGES : "has many"
+USERS ||--o{ PROJECTS : "has many"
 AGENT_CONVERSATIONS ||--o{ AGENT_CONVERSATION_MESSAGES : "contains many"
+PROJECTS ||--|| USERS : "belongs to"
 ```
 
 **Diagram sources**
@@ -425,6 +500,7 @@ AGENT_CONVERSATIONS ||--o{ AGENT_CONVERSATION_MESSAGES : "contains many"
 - [0001_01_01_000001_create_cache_table.php:14-24](file://database/migrations/0001_01_01_000001_create_cache_table.php#L14-L24)
 - [0001_01_01_000002_create_jobs_table.php:14-45](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L14-L45)
 - [2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
+- [2026_04_05_092017_create_projects_table.php:14-23](file://database/migrations/2026_04_05_092017_create_projects_table.php#L14-L23)
 
 ## Detailed Component Analysis
 
@@ -529,25 +605,106 @@ class User {
 +string password
 +getConversations() AgentConversation[]
 +getMessages() AgentConversationMessage[]
++getProjects() Project[]
+}
+class Project {
++int id
++int user_id
++string name
++string description
++string status
++timestamp created_at
++timestamp updated_at
++getUser() User[]
 }
 AgentConversation --> AgentConversationMessage : "contains many"
 User --> AgentConversation : "has many"
 User --> AgentConversationMessage : "has many"
+User --> Project : "has many"
+Project --> User : "belongs to"
 ```
 
 **Diagram sources**
 - [2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
-- [User.php:13-31](file://app/Models/User.php#L13-L31)
+- [User.php:48-59](file://app/Models/User.php#L48-L59)
+- [Project.php:27-33](file://app/Models/Project.php#L27-L33)
+
+### Project Management System
+The project management system provides comprehensive project lifecycle tracking with user ownership enforcement and status management.
+
+```mermaid
+classDiagram
+class Project {
++int id
++int user_id
++string name
++string description
++string status
++timestamp created_at
++timestamp updated_at
++user() User
++getStatus() ProjectStatus
++isDraft() bool
++isActive() bool
++isCompleted() bool
++isArchived() bool
+}
+class User {
++int id
++string name
++string email
++string password
++projects() Project[]
+}
+class ProjectStatus {
+<<enumeration>>
++Draft
++Active
++Completed
++Archived
++label() string
++color() string
++icon() string
++isDraft() bool
++isActive() bool
++isCompleted() bool
++isArchived() bool
+}
+class ProjectController {
++index() view
++create() view
++store(StoreProjectRequest) redirect
++show(Project) view
++edit(Project) view
++update(UpdateProjectRequest, Project) redirect
++destroy(Project) redirect
+-authorizeOwnership(Project) void
+}
+User --> Project : "has many"
+Project --> User : "belongs to"
+Project --> ProjectStatus : "casts status to"
+ProjectController --> Project : "manages"
+```
+
+**Diagram sources**
+- [Project.php:11-35](file://app/Models/Project.php#L11-L35)
+- [User.php:53-59](file://app/Models/User.php#L53-L59)
+- [ProjectStatus.php:23-100](file://app/Enums/ProjectStatus.php#L23-L100)
+- [ProjectController.php:10-97](file://app/Http/Controllers/ProjectController.php#L10-L97)
 
 **Section sources**
 - [0001_01_01_000000_create_users_table.php:14-37](file://database/migrations/0001_01_01_000000_create_users_table.php#L14-L37)
 - [0001_01_01_000001_create_cache_table.php:14-24](file://database/migrations/0001_01_01_000001_create_cache_table.php#L14-L24)
 - [0001_01_01_000002_create_jobs_table.php:14-45](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L14-L45)
 - [2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
+- [2026_04_05_092017_create_projects_table.php:14-23](file://database/migrations/2026_04_05_092017_create_projects_table.php#L14-L23)
 - [User.php:13-31](file://app/Models/User.php#L13-L31)
+- [Project.php:11-35](file://app/Models/Project.php#L11-L35)
+- [ProjectStatus.php:23-100](file://app/Enums/ProjectStatus.php#L23-L100)
+- [ProjectController.php:10-97](file://app/Http/Controllers/ProjectController.php#L10-L97)
 
 ## Dependency Analysis
-The database schema exhibits clear dependency relationships that support Laravel's modular architecture.
+The database schema exhibits clear dependency relationships that support Laravel's modular architecture, now including comprehensive project management capabilities.
 
 ```mermaid
 graph TB
@@ -555,6 +712,7 @@ subgraph "Core Dependencies"
 Users["Users Table"]
 Sessions["Sessions Table"]
 PasswordReset["Password Reset Tokens"]
+Projects["Projects Table"]
 end
 subgraph "Infrastructure"
 Cache["Cache Table"]
@@ -565,6 +723,14 @@ end
 subgraph "AI Features"
 Conversations["Agent Conversations"]
 Messages["Agent Conversation Messages"]
+end
+subgraph "Application Logic"
+UserModel["User Model"]
+ProjectModel["Project Model"]
+ProjectController["Project Controller"]
+ProjectStatus["Project Status Enum"]
+StoreRequest["Store Project Request"]
+UpdateRequest["Update Project Request"]
 end
 subgraph "External Systems"
 DatabaseConfig["Database Config"]
@@ -577,6 +743,13 @@ Users --> Sessions
 Users --> PasswordReset
 Users --> Conversations
 Users --> Messages
+Users --> Projects
+Users --> UserModel
+Projects --> ProjectModel
+Projects --> ProjectStatus
+Projects --> ProjectController
+ProjectController --> StoreRequest
+ProjectController --> UpdateRequest
 Conversations --> Messages
 Cache --> CacheConfig
 Jobs --> QueueConfig
@@ -584,11 +757,12 @@ JobBatches --> QueueConfig
 FailedJobs --> QueueConfig
 Sessions --> SessionConfig
 PasswordReset --> AuthConfig
-Users --> AuthConfig
+UserModel --> AuthConfig
 DatabaseConfig --> Users
 DatabaseConfig --> Cache
 DatabaseConfig --> Jobs
 DatabaseConfig --> Conversations
+DatabaseConfig --> Projects
 ```
 
 **Diagram sources**
@@ -596,6 +770,13 @@ DatabaseConfig --> Conversations
 - [0001_01_01_000001_create_cache_table.php:14-24](file://database/migrations/0001_01_01_000001_create_cache_table.php#L14-L24)
 - [0001_01_01_000002_create_jobs_table.php:14-45](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L14-L45)
 - [2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
+- [2026_04_05_092017_create_projects_table.php:14-23](file://database/migrations/2026_04_05_092017_create_projects_table.php#L14-L23)
+- [User.php:48-59](file://app/Models/User.php#L48-L59)
+- [Project.php:27-33](file://app/Models/Project.php#L27-L33)
+- [ProjectController.php:92-95](file://app/Http/Controllers/ProjectController.php#L92-L95)
+- [ProjectStatus.php:23-28](file://app/Enums/ProjectStatus.php#L23-L28)
+- [StoreProjectRequest.php:17-24](file://app/Http/Requests/StoreProjectRequest.php#L17-L24)
+- [UpdateProjectRequest.php:17-24](file://app/Http/Requests/UpdateProjectRequest.php#L17-L24)
 - [database.php:1-185](file://config/database.php#L1-L185)
 - [auth.php:1-118](file://config/auth.php#L1-L118)
 - [session.php:1-234](file://config/session.php#L1-L234)
@@ -603,9 +784,12 @@ DatabaseConfig --> Conversations
 - [queue.php:1-130](file://config/queue.php#L1-L130)
 
 Key dependency observations:
-- Users table is the foundation for authentication and session management
+- Users table is the foundation for authentication, session management, and project ownership
 - Sessions depend on Users for user identification
 - Password reset tokens depend on Users for email-based identification
+- Projects depend on Users for ownership enforcement and cascade deletion
+- Project models utilize ProjectStatus enum for type-safe status management
+- ProjectController enforces ownership through authorizeOwnership method
 - Cache and queue systems operate independently but integrate with the database configuration
 - AI conversation tables depend on Users for user attribution
 - All tables depend on database configuration for connectivity and behavior
@@ -616,9 +800,11 @@ Key dependency observations:
 - [session.php:1-234](file://config/session.php#L1-L234)
 - [cache.php:1-131](file://config/cache.php#L1-L131)
 - [queue.php:1-130](file://config/queue.php#L1-L130)
+- [User.php:39-43](file://app/Models/User.php#L39-L43)
+- [ProjectController.php:92-95](file://app/Http/Controllers/ProjectController.php#L92-L95)
 
 ## Performance Considerations
-The database schema incorporates several performance optimizations:
+The database schema incorporates several performance optimizations, including new indexing strategies for the projects table:
 
 Indexing Strategy:
 - Sessions table includes indexes on user_id and last_activity for efficient cleanup and user lookup
@@ -626,12 +812,15 @@ Indexing Strategy:
 - Jobs table indexes queue for optimal job retrieval
 - Agent conversations include composite indexes for user-specific queries
 - Agent messages include composite indexes for conversation and user filtering
+- Projects table includes strategic indexes on user_id and created_at for efficient querying
+- Projects table uses enum casting for memory-efficient status storage
 
 Data Type Selection:
 - Uses appropriate integer sizes for timestamps (unsigned integers)
 - Employs medium text for cache values to balance storage and performance
 - Utilizes long text for job payloads and message content
 - String lengths optimized for UUIDs (36 characters) and role constraints (25 characters)
+- Enum fields for status tracking provide type safety with minimal storage overhead
 
 Connection Management:
 - Database configuration supports multiple connection types (SQLite, MySQL, PostgreSQL, SQL Server)
@@ -642,9 +831,17 @@ Storage Patterns:
 - Separate cache and cache_locks tables for distributed locking
 - Dedicated failed_jobs table for error tracking and monitoring
 - Job batching for coordinated processing of multiple related jobs
+- Cascade delete ensures referential integrity without complex cleanup operations
+
+**Updated** Enhanced performance considerations now include project management indexing and enum optimization
+
+**Section sources**
+- [2026_04_05_092017_create_projects_table.php:20-21](file://database/migrations/2026_04_05_092017_create_projects_table.php#L20-L21)
+- [Project.php:23-25](file://app/Models/Project.php#L23-L25)
+- [ProjectStatus.php:23-28](file://app/Enums/ProjectStatus.php#L23-L28)
 
 ## Troubleshooting Guide
-Common database-related issues and their resolutions:
+Common database-related issues and their resolutions, including new project management troubleshooting:
 
 Authentication Issues:
 - Verify users table has unique email constraint
@@ -671,14 +868,25 @@ AI Conversation Issues:
 - Check composite indexes for query performance
 - Monitor user_id indexing for user-specific queries
 
+Project Management Issues:
+- Verify user_id foreign key constraints in projects table
+- Check status enum validation for proper status values
+- Monitor user_id and created_at indexes for query performance
+- Verify cascade delete behavior when users are removed
+- Check authorization logic in ProjectController for ownership enforcement
+
+**Updated** Added troubleshooting guidance for project management functionality including ownership enforcement and status validation
+
 **Section sources**
 - [0001_01_01_000000_create_users_table.php:14-37](file://database/migrations/0001_01_01_000000_create_users_table.php#L14-L37)
 - [0001_01_01_000001_create_cache_table.php:14-24](file://database/migrations/0001_01_01_000001_create_cache_table.php#L14-L24)
 - [0001_01_01_000002_create_jobs_table.php:14-45](file://database/migrations/0001_01_01_000002_create_jobs_table.php#L14-L45)
 - [2026_04_02_115916_create_agent_conversations_table.php:14-39](file://database/migrations/2026_04_02_115916_create_agent_conversations_table.php#L14-L39)
+- [2026_04_05_092017_create_projects_table.php:14-23](file://database/migrations/2026_04_05_092017_create_projects_table.php#L14-L23)
+- [ProjectController.php:92-95](file://app/Http/Controllers/ProjectController.php#L92-L95)
 
 ## Conclusion
-The Laravel Assistant database schema demonstrates a well-architected design that aligns with Laravel's authentication and session management patterns while extending functionality for AI conversation tracking. The schema incorporates strategic indexing, appropriate data types, and clear dependency relationships that support both current functionality and future scalability.
+The Laravel Assistant database schema demonstrates a well-architected design that aligns with Laravel's authentication and session management patterns while extending functionality for AI conversation tracking and comprehensive project management. The schema incorporates strategic indexing, appropriate data types, and clear dependency relationships that support both current functionality and future scalability.
 
 Key design strengths include:
 - Comprehensive authentication infrastructure with password reset support
@@ -686,5 +894,10 @@ Key design strengths include:
 - Robust caching system with distributed locking
 - Scalable queue processing with batch and failure management
 - Specialized AI conversation tracking with structured metadata storage
+- Complete project management system with user ownership enforcement and status tracking
+- Strong type safety through enum casting for project statuses
+- Cascade delete functionality ensuring referential integrity
 
-The schema follows Laravel conventions while providing the flexibility needed for AI-assisted development workflows. The configuration-driven approach ensures compatibility across different deployment environments and database systems.
+The schema follows Laravel conventions while providing the flexibility needed for AI-assisted development workflows and comprehensive project lifecycle management. The configuration-driven approach ensures compatibility across different deployment environments and database systems. The addition of project management capabilities enhances the application's utility for developers managing multiple AI-assisted projects while maintaining strict user ownership enforcement and efficient query performance through strategic indexing.
+
+**Updated** Enhanced conclusion reflects the addition of comprehensive project management capabilities and user ownership enforcement as key design strengths.
