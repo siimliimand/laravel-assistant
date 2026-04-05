@@ -34,18 +34,18 @@
 
 ## 5. Testing
 
-- [ ] 5.1 Create ProjectStatusTest.php with unit tests for enum cases, labels, colors, and helper methods
-- [ ] 5.2 Create ProjectTest.php with unit tests for model relationships and factory
-- [ ] 5.3 Create ProjectControllerTest.php feature test for authentication requirements
-- [ ] 5.4 Create ProjectControllerTest.php feature tests for index showing only user's projects
-- [ ] 5.5 Create ProjectControllerTest.php feature tests for store validation and creation
-- [ ] 5.6 Create ProjectControllerTest.php feature tests for show with ownership verification
-- [ ] 5.7 Create ProjectControllerTest.php feature tests for update with validation and ownership
-- [ ] 5.8 Create ProjectControllerTest.php feature tests for destroy with ownership verification
-- [ ] 5.9 Create ProjectControllerTest.php feature tests preventing access to other user's projects
-- [ ] 5.10 Run all project tests and verify they pass: `php artisan test --compact --filter=Project`
+- [x] 5.1 Create ProjectStatusTest.php with unit tests for enum cases, labels, colors, and helper methods
+- [x] 5.2 Create ProjectTest.php with unit tests for model relationships and factory
+- [x] 5.3 Create ProjectControllerTest.php feature test for authentication requirements
+- [x] 5.4 Create ProjectControllerTest.php feature tests for index showing only user's projects
+- [x] 5.5 Create ProjectControllerTest.php feature tests for store validation and creation
+- [x] 5.6 Create ProjectControllerTest.php feature tests for show with ownership verification
+- [x] 5.7 Create ProjectControllerTest.php feature tests for update with validation and ownership
+- [x] 5.8 Create ProjectControllerTest.php feature tests for destroy with ownership verification
+- [x] 5.9 Create ProjectControllerTest.php feature tests preventing access to other user's projects
+- [x] 5.10 Run all project tests and verify they pass: `php artisan test --compact --filter=Project`
 
 ## 6. Code Quality
 
-- [ ] 6.1 Run Laravel Pint to format all PHP files: `vendor/bin/pint --dirty --format agent`
-- [ ] 6.2 Verify all tests pass: `php artisan test --compact`
+- [x] 6.1 Run Laravel Pint to format all PHP files: `vendor/bin/pint --dirty --format agent`
+- [x] 6.2 Verify all tests pass: `php artisan test --compact`
