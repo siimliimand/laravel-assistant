@@ -8,10 +8,10 @@
 
 ## 2. Database Migration for User Ownership
 
-- [ ] 2.1 Create migration to add foreign key constraint on conversations.user_id
-- [ ] 2.2 Update migration to make user_id non-nullable with cascade delete
-- [ ] 2.3 Run migrations: `php artisan migrate`
-- [ ] 2.4 Verify database schema: check foreign key exists on conversations table
+- [x] 2.1 Create migration to add foreign key constraint on conversations.user_id
+- [x] 2.2 Update migration to make user_id non-nullable with cascade delete
+- [x] 2.3 Run migrations: `php artisan migrate`
+- [x] 2.4 Verify database schema: check foreign key exists on conversations table
 
 ## 3. Update Models with Relationships
 
