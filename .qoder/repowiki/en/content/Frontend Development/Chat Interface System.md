@@ -3,16 +3,20 @@
 <cite>
 **Referenced Files in This Document**
 - [ChatController.php](file://app/Http/Controllers/ChatController.php)
-- [chat.blade.php](file://resources/views/chat.blade.php)
-- [web.php](file://routes/web.php)
+- [PrepareChatViewAction.php](file://app/Actions/PrepareChatViewAction.php)
+- [CreateConversationAction.php](file://app/Actions/CreateConversationAction.php)
+- [GetConversationAction.php](file://app/Actions/GetConversationAction.php)
+- [ListConversationsAction.php](file://app/Actions/ListConversationsAction.php)
+- [SendMessageAction.php](file://app/Actions/SendMessageAction.php)
+- [ResponseFormatter.php](file://app/Services/ResponseFormatter.php)
+- [ChatViewModel.php](file://app/ViewModels/ChatViewModel.php)
+- [ConversationData.php](file://app/DTOs/ConversationData.php)
+- [MessageData.php](file://app/DTOs/MessageData.php)
+- [SendMessageResponse.php](file://app/DTOs/SendMessageResponse.php)
 - [Conversation.php](file://app/Models/Conversation.php)
 - [Message.php](file://app/Models/Message.php)
-- [Markdown.php](file://app/Helpers/Markdown.php)
-- [DevBot.php](file://app/Ai/Agents/DevBot.php)
-- [DatabaseQueryTool.php](file://app/Ai/Tools/DatabaseQueryTool.php)
-- [DatabaseSchemaTool.php](file://app/Ai/Tools/DatabaseSchemaTool.php)
-- [SearchDocsTool.php](file://app/Ai/Tools/SearchDocsTool.php)
-- [TinkerTool.php](file://app/Ai/Tools/TinkerTool.php)
+- [web.php](file://routes/web.php)
+- [chat.blade.php](file://resources/views/chat.blade.php)
 - [2026_04_02_123216_create_conversations_table.php](file://database/migrations/2026_04_02_123216_create_conversations_table.php)
 - [2026_04_02_123238_create_messages_table.php](file://database/migrations/2026_04_02_123238_create_messages_table.php)
 - [composer.json](file://composer.json)
@@ -21,40 +25,39 @@
 
 ## Update Summary
 **Changes Made**
-- Updated conversation management section to reflect comprehensive AJAX support and real-time conversation switching
-- Enhanced sidebar interface documentation with mobile-responsive design and conversation management features
-- Added new AJAX endpoints for conversation listing, creation, and detail loading
-- Expanded DevBot tool integration documentation to include MCP client service and real-time tool execution
-- Updated user experience features to highlight seamless conversation switching without page reloads
-- Enhanced error handling documentation to cover AJAX-specific error scenarios and recovery mechanisms
+- Enhanced authentication integration with route middleware and user-scoped conversation management
+- Improved conversation switching with AJAX support and browser history management
+- Updated controller integration with dedicated action classes and service layer
+- Refined sidebar interface with real-time conversation management and search functionality
+- Strengthened security with user ownership verification and CSRF protection
+- Enhanced error handling with comprehensive AJAX error recovery mechanisms
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [System Architecture](#system-architecture)
 3. [Core Components](#core-components)
 4. [Chat Interface Implementation](#chat-interface-implementation)
-5. [Agent Integration](#agent-integration)
+5. [Authentication and Authorization](#authentication-and-authorization)
 6. [Conversation Management](#conversation-management)
-7. [DevBot Tool Integration](#devbot-tool-integration)
-8. [Data Storage and Management](#data-storage-and-management)
-9. [User Experience Features](#user-experience-features)
-10. [Error Handling and Validation](#error-handling-and-validation)
-11. [Testing Strategy](#testing-strategy)
-12. [Performance Considerations](#performance-considerations)
-13. [Security Implementation](#security-implementation)
-14. [Conclusion](#conclusion)
+7. [Action Classes and Service Layer](#action-classes-and-service-layer)
+8. [Data Transfer Objects](#data-transfer-objects)
+9. [Model Layer](#model-layer)
+10. [User Experience Features](#user-experience-features)
+11. [Error Handling and Validation](#error-handling-and-validation)
+12. [Testing Strategy](#testing-strategy)
+13. [Performance Considerations](#performance-considerations)
+14. [Security Implementation](#security-implementation)
+15. [Conclusion](#conclusion)
 
 ## Introduction
 
-The Laravel Assistant Chat Interface System is a comprehensive AI-powered chat application built on the Laravel framework. This system provides developers with an intelligent development assistant capable of answering programming questions, providing code examples, debugging assistance, and architectural guidance. The system integrates seamlessly with Laravel's ecosystem while offering a modern, responsive user interface for interactive conversations.
+The Laravel Assistant Chat Interface System is a comprehensive AI-powered chat application built on the Laravel framework with enhanced authentication integration and user-scoped conversation management. This system provides developers with an intelligent development assistant capable of answering programming questions, providing code examples, debugging assistance, and architectural guidance. The system now features seamless authentication integration, real-time conversation switching capabilities, and a sophisticated action-based architecture that separates concerns effectively.
 
-**Updated** The system now features a comprehensive conversation management system with full AJAX support, real-time conversation switching capabilities, and an intelligent sidebar interface. Users can create new conversations, browse their conversation history, and switch between conversations without page reloads, while DevBot can leverage MCP tools to perform real development tasks like database queries, schema inspection, documentation searches, and code execution.
-
-The chat interface supports both traditional server-rendered pages and AJAX-based interactions, allowing users to engage with the AI assistant through a natural conversation flow. The system maintains conversation history, manages user sessions, and provides real-time feedback during AI processing with seamless conversation switching.
+**Updated** The system now requires authentication for all chat operations, implements user-scoped conversation management, and provides enhanced AJAX-based interaction patterns for seamless conversation switching without page reloads. The interface supports both traditional server-rendered pages and AJAX-based interactions, allowing users to engage with the AI assistant through a natural conversation flow while maintaining strict security boundaries.
 
 ## System Architecture
 
-The Laravel Assistant follows a layered architecture pattern that separates concerns between presentation, business logic, data persistence, and external service integration.
+The Laravel Assistant follows a modern layered architecture pattern with enhanced authentication integration and service-oriented design that separates concerns between presentation, business logic, data persistence, and external service integration.
 
 ```mermaid
 graph TB
@@ -65,23 +68,24 @@ Sidebar[Conversation Sidebar<br/>Real-time Updates]
 Mobile[Mobile Navigation<br/>Responsive Design]
 end
 subgraph "Application Layer"
-Controller[ChatController<br/>AJAX Endpoints]
-Agent[DevBot Agent]
-Tools[DevBot Tools<br/>DatabaseQueryTool<br/>DatabaseSchemaTool<br/>SearchDocsTool<br/>TinkerTool]
-MCP[MCP Client Service<br/>Tool Proxy Layer]
+Auth[Authentication Middleware]
+Controller[ChatController<br/>Action Orchestration]
+Actions[Action Classes<br/>Business Logic]
+Formatter[ResponseFormatter<br/>JSON Response Handling]
+ViewModel[ChatViewModel<br/>Data Presentation]
 end
 subgraph "Domain Layer"
-Conversation[Conversation Model]
-Message[Message Model]
-Markdown[Markdown Helper]
+Conversation[Conversation Model<br/>User Scoped]
+Message[Message Model<br/>Role-based]
+DevBot[DevBot Agent<br/>AI Integration]
 end
 subgraph "Infrastructure Layer"
 Database[(Database)]
 AI_Provider[AI Provider<br/>Anthropic/Z-API]
-MCP_Server[MCP Server<br/>Database Access<br/>Documentation<br/>Tinker Shell]
+MCP_Server[MCP Server<br/>Development Tools]
 end
 subgraph "Configuration"
-Routes[Route Definitions]
+Routes[Route Definitions<br/>Auth Middleware]
 Config[AI Configuration]
 Composer[Composer Dependencies]
 end
@@ -89,154 +93,127 @@ UI --> Controller
 JS --> Controller
 Sidebar --> Controller
 Mobile --> Controller
-Controller --> Agent
-Controller --> Conversation
-Controller --> Message
-Agent --> Tools
-Agent --> AI_Provider
-Tools --> MCP
-MCP --> MCP_Server
+Auth --> Controller
+Controller --> Actions
+Controller --> Formatter
+Controller --> ViewModel
+Actions --> Conversation
+Actions --> Message
+Actions --> DevBot
 Conversation --> Database
 Message --> Database
+ViewModel --> Conversation
+ViewModel --> Message
 Routes --> Controller
-Config --> Agent
-Composer --> MCP
+Config --> DevBot
+Composer --> MCP_Server
 ```
 
 **Diagram sources**
-- [ChatController.php:13-182](file://app/Http/Controllers/ChatController.php#L13-L182)
-- [DevBot.php:24-108](file://app/Ai/Agents/DevBot.php#L24-L108)
-- [Conversation.php:8-45](file://app/Models/Conversation.php#L8-L45)
-- [Message.php:9-44](file://app/Models/Message.php#L9-L44)
-- [DatabaseQueryTool.php:13-84](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L84)
-- [DatabaseSchemaTool.php:13-69](file://app/Ai/Tools/DatabaseSchemaTool.php#L13-L69)
-- [SearchDocsTool.php:13-75](file://app/Ai/Tools/SearchDocsTool.php#L13-L75)
-- [TinkerTool.php:13-89](file://app/Ai/Tools/TinkerTool.php#L13-L89)
+- [ChatController.php:19-104](file://app/Http/Controllers/ChatController.php#L19-L104)
+- [PrepareChatViewAction.php:21-62](file://app/Actions/PrepareChatViewAction.php#L21-L62)
+- [CreateConversationAction.php:29-54](file://app/Actions/CreateConversationAction.php#L29-L54)
+- [ListConversationsAction.php:24-40](file://app/Actions/ListConversationsAction.php#L24-L40)
+- [SendMessageAction.php:42-147](file://app/Actions/SendMessageAction.php#L42-L147)
+- [ResponseFormatter.php:19-112](file://app/Services/ResponseFormatter.php#L19-L112)
+- [ChatViewModel.php:29-120](file://app/ViewModels/ChatViewModel.php#L29-L120)
 
-The architecture demonstrates clear separation of concerns with the controller handling HTTP requests, the agent managing AI interactions with integrated tool capabilities, and models handling data persistence. The system is designed to be extensible, allowing for easy integration of additional AI providers, conversation management features, and MCP tools.
+The architecture demonstrates clear separation of concerns with authentication middleware enforcing user boundaries, action classes encapsulating business logic, and service classes handling response formatting. The system is designed to be highly extensible while maintaining security through user-scoped operations.
 
 **Section sources**
-- [ChatController.php:13-182](file://app/Http/Controllers/ChatController.php#L13-L182)
-- [DevBot.php:24-108](file://app/Ai/Agents/DevBot.php#L24-L108)
-- [web.php:10-16](file://routes/web.php#L10-L16)
+- [ChatController.php:19-104](file://app/Http/Controllers/ChatController.php#L19-L104)
+- [web.php:15-26](file://routes/web.php#L15-L26)
 
 ## Core Components
 
-### Chat Controller
+### Enhanced Chat Controller
 
-The ChatController serves as the central orchestrator for all chat-related operations, handling both GET and POST requests for displaying the chat interface and processing user messages.
+The ChatController serves as the central orchestrator for all chat-related operations, now enhanced with authentication integration and dedicated action class dependencies.
 
 ```mermaid
 classDiagram
 class ChatController {
-+show(conversation) View
-+sendMessage(request) JsonResponse|RedirectResponse
-+listConversations() JsonResponse
-+createConversation(request) JsonResponse
-+getConversation(conversation) JsonResponse
--validateInput(request) array
--createConversation() Conversation
--saveUserMessage(content, conversation) Message
--saveAssistantMessage(content, conversation) Message
++__construct(ResponseFormatter formatter)
++show(Conversation conversation, ListConversationsAction listAction, PrepareChatViewAction prepareAction) View
++listConversations(ListConversationsAction action) JsonResponse
++createConversation(Request request, CreateConversationAction action) JsonResponse
++getConversation(Conversation conversation, GetConversationAction action) JsonResponse
++sendMessage(Request request, SendMessageAction action) JsonResponse|RedirectResponse
+-validateInput(Request request) array
 }
-class DevBot {
-+model() string
-+instructions() Stringable|string
-+messages() iterable
-+tools() iterable
--conversation Conversation
+class ResponseFormatter {
++formatConversationsList(Collection conversations) array
++formatConversation(Conversation conversation) array
++formatMessages(Collection messages) array
++handleSendMessageResponse(SendMessageResponse response, Request request) JsonResponse|RedirectResponse
++handleSendMessageError(Request request, string errorMessage) JsonResponse|RedirectResponse
 }
-class Conversation {
-+messages HasMany
-+generateTitleFromFirstMessage(message) void
-+getRecentMessagesAttribute() Collection
-+getMessagesForAgent() array
-#fillable array
+class ChatViewModel {
++__construct(Conversation conversation, Collection conversations)
++getCurrentConversation() Conversation?
++getFormattedMessages() Collection
++getSidebarConversations() Collection
++getCurrentConversationId() int?
++getCurrentConversationTitle() string?
 }
-class Message {
-+conversation BelongsTo
-+isUserMessage() bool
-+formattedTimestamp() string
-+formattedContent() string
-#fillable array
-#casts array
-}
-ChatController --> DevBot : "uses"
-ChatController --> Conversation : "manages"
-ChatController --> Message : "creates"
-DevBot --> Conversation : "reads"
-Conversation --> Message : "has many"
-Message --> Conversation : "belongs to"
+ChatController --> ResponseFormatter : "uses"
+ChatController --> ChatViewModel : "creates"
 ```
 
 **Diagram sources**
-- [ChatController.php:13-182](file://app/Http/Controllers/ChatController.php#L13-L182)
-- [DevBot.php:24-108](file://app/Ai/Agents/DevBot.php#L24-L108)
-- [Conversation.php:8-45](file://app/Models/Conversation.php#L8-L45)
-- [Message.php:9-44](file://app/Models/Message.php#L9-L44)
+- [ChatController.php:19-104](file://app/Http/Controllers/ChatController.php#L19-L104)
+- [ResponseFormatter.php:19-112](file://app/Services/ResponseFormatter.php#L19-L112)
+- [ChatViewModel.php:29-120](file://app/ViewModels/ChatViewModel.php#L29-L120)
 
-The controller implements a comprehensive request-response cycle that handles conversation creation, message validation, AI interaction, and response formatting. It supports both AJAX and traditional form submissions, providing flexibility in user interaction patterns. The controller now manages conversation switching through AJAX requests and handles conversation creation with automatic title generation.
+The controller now integrates tightly with the action class pattern, delegating business logic to specialized classes while maintaining thin controller responsibilities. Authentication is enforced through route middleware, ensuring all operations are user-scoped.
 
 **Section sources**
-- [ChatController.php:13-182](file://app/Http/Controllers/ChatController.php#L13-L182)
+- [ChatController.php:19-104](file://app/Http/Controllers/ChatController.php#L19-L104)
 
-### AI Agent Implementation
+### Authentication and Authorization
 
-The DevBot agent encapsulates the AI interaction logic, implementing Laravel's AI contract interfaces for conversational AI capabilities.
+**New** The system now implements comprehensive authentication and authorization through Laravel's middleware system, ensuring user-scoped conversation management and secure access control.
 
 ```mermaid
-classDiagram
-class Agent {
-<<interface>>
-+model() string
-+instructions() Stringable|string
-+messages() iterable
-+tools() iterable
-}
-class Conversational {
-<<interface>>
-+messages() iterable
-}
-class HasTools {
-<<interface>>
-+tools() iterable
-}
-class DevBot {
-+__construct(conversation)
-+model() string
-+instructions() Stringable|string
-+messages() iterable
-+tools() iterable
--conversation Conversation
-+temperature float
-+maxSteps int
-+provider string
-}
-DevBot ..|> Agent
-DevBot ..|> Conversational
-DevBot ..|> HasTools
+sequenceDiagram
+participant User as User
+participant Auth as Auth Middleware
+participant Route as Route Handler
+participant Controller as ChatController
+participant Action as Action Classes
+User->>Auth : Access /chat routes
+Auth->>User : Verify authentication
+Auth->>Route : Allow access
+Route->>Controller : Call show/send/create
+Controller->>Action : Execute business logic
+Action->>Action : Verify user ownership
+Action->>Action : Enforce conversation boundaries
+Action-->>Controller : Return results
+Controller-->>User : Secure response
 ```
 
 **Diagram sources**
-- [DevBot.php:6-15](file://app/Ai/Agents/DevBot.php#L6-L15)
-- [DevBot.php:24-108](file://app/Ai/Agents/DevBot.php#L24-L108)
-
-The agent configuration includes temperature settings for response creativity, step limits for conversation depth, and provider selection for AI service integration. The agent maintains conversation context by accessing stored messages through the Conversation model and now includes integrated tool capabilities for enhanced developer assistance.
+- [web.php:15-26](file://routes/web.php#L15-L26)
+- [PrepareChatViewAction.php:44-61](file://app/Actions/PrepareChatViewAction.php#L44-L61)
+- [GetConversationAction.php:32-38](file://app/Actions/GetConversationAction.php#L32-L38)
+- [CreateConversationAction.php:37-44](file://app/Actions/CreateConversationAction.php#L37-L44)
 
 **Section sources**
-- [DevBot.php:24-108](file://app/Ai/Agents/DevBot.php#L24-L108)
+- [web.php:15-26](file://routes/web.php#L15-L26)
+- [PrepareChatViewAction.php:44-61](file://app/Actions/PrepareChatViewAction.php#L44-L61)
 
 ## Chat Interface Implementation
 
-The chat interface is implemented using Laravel's Blade templating engine with a responsive design that works across different device sizes and includes comprehensive AJAX support for seamless conversation management.
+The chat interface is implemented using Laravel's Blade templating engine with enhanced AJAX support for seamless conversation management and real-time updates.
 
 ```mermaid
 flowchart TD
-PageLoad[Page Load] --> CheckConversation{Conversation Exists?}
-CheckConversation --> |Yes| LoadMessages[Load Messages]
-CheckConversation --> |No| CreateDefault[Create Default Chat]
+PageLoad[Page Load] --> CheckAuth{Authenticated?}
+CheckAuth --> |No| RedirectLogin[Redirect to Login]
+CheckAuth --> |Yes| LoadSidebar[Load Conversation Sidebar]
+LoadSidebar --> LoadConversations[AJAX: Load Conversations]
+LoadConversations --> LoadMessages[AJAX: Load Messages]
 LoadMessages --> RenderUI[Render Chat UI]
-CreateDefault --> RenderUI
 RenderUI --> ShowWelcome{Any Messages?}
 ShowWelcome --> |No| ShowWelcomeMsg[Show Welcome Message]
 ShowWelcome --> |Yes| ShowHistory[Show Message History]
@@ -258,86 +235,85 @@ ShowError --> Ready
 ```
 
 **Diagram sources**
-- [chat.blade.php:18-731](file://resources/views/chat.blade.php#L18-L731)
+- [chat.blade.php:44-63](file://resources/views/chat.blade.php#L44-L63)
+- [chat.blade.php:486-599](file://resources/views/chat.blade.php#L486-L599)
+- [chat.blade.php:602-695](file://resources/views/chat.blade.php#L602-L695)
 
-The interface implementation includes sophisticated JavaScript handling for AJAX requests, real-time message rendering, auto-scrolling behavior, and responsive design elements. The template structure separates concerns between conversation display, message history, and input forms. **Updated** The interface now supports conversation switching through AJAX without page reloads and includes enhanced error handling for AI service failures.
-
-**Section sources**
-- [chat.blade.php:18-731](file://resources/views/chat.blade.php#L18-L731)
-
-### User Interface Elements
-
-The chat interface consists of several key components working together to provide an intuitive user experience:
-
-- **Header Section**: Contains branding, conversation title display, and navigation elements
-- **Message Display Area**: Shows conversation history with distinct styling for user and AI messages
-- **Input Form**: Provides message composition with auto-resize functionality and keyboard shortcuts
-- **Loading Indicators**: Visual feedback during AI processing operations
-- **Error Handling**: Graceful error display and recovery mechanisms
-- **Conversation Sidebar**: **New** Real-time conversation list with switching capabilities, search functionality, and mobile-responsive design
-
-The interface supports both traditional page refreshes and seamless AJAX updates, ensuring smooth user experience regardless of interaction method. **Updated** The sidebar provides instant access to conversation history with search functionality and visual indicators for active conversations, featuring mobile-optimized navigation with hamburger menu toggle.
-
-## Agent Integration
-
-The system integrates with external AI providers through Laravel's AI framework, specifically configured for Anthropic's Claude models via the Z-API provider.
-
-```mermaid
-sequenceDiagram
-participant User as User
-participant Controller as ChatController
-participant Agent as DevBot
-participant Tools as DevBot Tools
-participant MCP as MCP Client Service
-participant Provider as AI Provider
-participant Database as Database
-User->>Controller : Submit Message
-Controller->>Controller : Validate Input
-Controller->>Database : Save User Message
-Controller->>Agent : prompt(message)
-Agent->>Tools : Execute Tool Requests
-Tools->>MCP : Call Tool Proxies
-MCP->>Database : Query/Schema/Tinker Operations
-MCP-->>Tools : Tool Results
-Tools-->>Agent : Tool Results
-Agent->>Provider : Send Request with Tools
-Provider-->>Agent : AI Response
-Agent-->>Controller : Response Text
-Controller->>Database : Save Assistant Message
-Controller-->>User : JSON Response/AJAX Update
-Note over Controller,Database : Conversation Persistence
-Note over Agent,Provider : AI Service Integration
-Note over Agent,Tools : Tool Execution
-```
-
-**Diagram sources**
-- [ChatController.php:107-180](file://app/Http/Controllers/ChatController.php#L107-L180)
-- [DevBot.php:84-106](file://app/Ai/Agents/DevBot.php#L84-L106)
-- [DatabaseQueryTool.php:26-69](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L69)
-- [DatabaseSchemaTool.php:26-53](file://app/Ai/Tools/DatabaseSchemaTool.php#L26-L53)
-- [SearchDocsTool.php:26-58](file://app/Ai/Tools/SearchDocsTool.php#L26-L58)
-- [TinkerTool.php:26-56](file://app/Ai/Tools/TinkerTool.php#L26-L56)
-
-The agent integration leverages Laravel's AI contracts to provide a standardized interface for different AI providers. The system currently uses the Z-API provider configured for Anthropic's Claude models, with flexible configuration allowing easy switching between different AI services. **Updated** The agent now includes integrated tool execution capabilities, allowing DevBot to perform real development tasks through MCP tools with comprehensive error handling and security measures.
+The interface implementation includes sophisticated JavaScript handling for AJAX requests, real-time message rendering, auto-scrolling behavior, and responsive design elements. **Updated** The interface now supports conversation switching through AJAX without page reloads, maintains browser history with pushState, and includes enhanced error handling for authentication failures and conversation access violations.
 
 **Section sources**
-- [ChatController.php:107-180](file://app/Http/Controllers/ChatController.php#L107-L180)
-- [DevBot.php:84-106](file://app/Ai/Agents/DevBot.php#L84-L106)
+- [chat.blade.php:44-63](file://resources/views/chat.blade.php#L44-L63)
+- [chat.blade.php:486-599](file://resources/views/chat.blade.php#L486-L599)
+- [chat.blade.php:602-695](file://resources/views/chat.blade.php#L602-L695)
+
+### Enhanced User Interface Elements
+
+The chat interface consists of several key components working together to provide an intuitive and secure user experience:
+
+- **Header Section**: Contains branding, conversation title display, and navigation elements with authentication-aware rendering
+- **Message Display Area**: Shows conversation history with distinct styling for user and AI messages, supporting markdown rendering
+- **Input Form**: Provides message composition with auto-resize functionality, CSRF token handling, and conversation ID management
+- **Loading Indicators**: Visual feedback during AI processing operations and conversation switching
+- **Error Handling**: Graceful error display and recovery mechanisms for authentication and authorization failures
+- **Enhanced Conversation Sidebar**: **New** Real-time conversation list with switching capabilities, search functionality, mobile-responsive design, and user-scoped conversation filtering
+
+The interface supports both traditional page refreshes and seamless AJAX updates, ensuring smooth user experience regardless of interaction method. **Updated** The sidebar provides instant access to conversation history with search functionality, visual indicators for active conversations, and proper authentication-aware rendering.
+
+## Authentication and Authorization
+
+**New** The system implements comprehensive authentication and authorization through Laravel's middleware system, ensuring secure user-scoped conversation management.
+
+### Route-Level Authentication
+
+All chat routes are protected by the `auth` middleware, requiring users to be authenticated before accessing any chat functionality. The authentication group ensures that:
+
+- Dashboard access requires verified email addresses
+- Profile management requires authentication
+- All chat operations require authenticated users
+- Conversation access is strictly user-scoped
+
+### User Ownership Verification
+
+**New** Conversation operations now include strict user ownership verification to prevent unauthorized access:
+
+- Conversation loading validates that conversations belong to the authenticated user
+- Conversation creation automatically assigns conversations to the current user
+- Conversation switching verifies ownership before loading
+- Sidebar conversation listing is filtered by authenticated user
+
+### CSRF Protection
+
+**New** Enhanced CSRF protection is implemented throughout the chat interface:
+
+- All AJAX requests include CSRF tokens in headers
+- Form submissions include hidden CSRF token fields
+- AJAX endpoints validate CSRF tokens for security
+- Session-based authentication maintains state across requests
+
+**Section sources**
+- [web.php:15-26](file://routes/web.php#L15-L26)
+- [PrepareChatViewAction.php:44-61](file://app/Actions/PrepareChatViewAction.php#L44-L61)
+- [CreateConversationAction.php:37-44](file://app/Actions/CreateConversationAction.php#L37-L44)
+- [GetConversationAction.php:32-38](file://app/Actions/GetConversationAction.php#L32-L38)
 
 ## Conversation Management
 
-**Updated** The system now provides comprehensive conversation management capabilities with AJAX support and seamless switching between conversations.
+**Updated** The system now provides comprehensive user-scoped conversation management with AJAX support and seamless switching between conversations.
 
 ```mermaid
 flowchart TD
-ConversationLoad[Conversation Load] --> CheckParams{Has Conversation ID?}
+ConversationLoad[Conversation Load] --> CheckAuth{Authenticated?}
+CheckAuth --> |No| RedirectLogin[Redirect to Login]
+CheckAuth --> |Yes| CheckParams{Has Conversation ID?}
 CheckParams --> |No| GetRecent[Get Most Recent Conversation]
-CheckParams --> |Yes| ValidateID[Validate Conversation ID]
-ValidateID --> |Valid| LoadConversation[Load Specific Conversation]
-ValidateID --> |Invalid| CreateNew[Create New Conversation]
+CheckParams --> |Yes| ValidateOwnership[Validate User Ownership]
+ValidateOwnership --> |Valid| LoadConversation[Load Specific Conversation]
+ValidateOwnership --> |Invalid| CreateNew[Create New Conversation]
 GetRecent --> LoadConversation
 CreateNew --> LoadConversation
-LoadConversation --> RenderMessages[Render Messages]
+LoadConversation --> VerifyOwnership[Verify Conversation Ownership]
+VerifyOwnership --> |Owned| RenderMessages[Render Messages]
+VerifyOwnership --> |Not Owned| ShowError[Show Access Denied]
 RenderMessages --> Ready[Interface Ready]
 Ready --> UserAction{User Action}
 UserAction --> |Switch Conversation| AjaxSwitch[AJAX Conversation Switch]
@@ -347,140 +323,195 @@ AjaxSwitch --> UpdateUI[Update UI Without Reload]
 AjaxNew --> UpdateUI
 SendMessage --> UpdateUI
 UpdateUI --> Ready
+ShowError --> Ready
 ```
 
 **Diagram sources**
-- [ChatController.php:18-38](file://app/Http/Controllers/ChatController.php#L18-L38)
-- [ChatController.php:43-102](file://app/Http/Controllers/ChatController.php#L43-L102)
-- [chat.blade.php:484-585](file://resources/views/chat.blade.php#L484-L585)
+- [ChatController.php:28-39](file://app/Http/Controllers/ChatController.php#L28-L39)
+- [PrepareChatViewAction.php:44-61](file://app/Actions/PrepareChatViewAction.php#L44-L61)
+- [ListConversationsAction.php:32-38](file://app/Actions/ListConversationsAction.php#L32-L38)
+- [chat.blade.php:486-599](file://resources/views/chat.blade.php#L486-L599)
 
-The conversation management system supports both server-side rendering and AJAX-based interactions. When no conversation is specified, the system automatically loads the most recent conversation with eager-loaded messages. Users can create new conversations through AJAX requests, and the system maintains conversation state without page reloads.
+The conversation management system supports both server-side rendering and AJAX-based interactions with strict user ownership enforcement. When no conversation is specified, the system automatically loads the most recent conversation owned by the authenticated user. Users can create new conversations through AJAX requests, and the system maintains conversation state without page reloads while enforcing security boundaries.
 
 **Section sources**
-- [ChatController.php:18-38](file://app/Http/Controllers/ChatController.php#L18-L38)
-- [ChatController.php:43-102](file://app/Http/Controllers/ChatController.php#L43-L102)
+- [ChatController.php:28-39](file://app/Http/Controllers/ChatController.php#L28-L39)
+- [PrepareChatViewAction.php:44-61](file://app/Actions/PrepareChatViewAction.php#L44-L61)
+- [ListConversationsAction.php:32-38](file://app/Actions/ListConversationsAction.php#L32-L38)
 
-### Conversation Creation and Persistence
+### Enhanced Conversation Creation and Persistence
 
-The system implements intelligent conversation creation and persistence:
+**New** The system implements intelligent user-scoped conversation creation and persistence:
 
-- **Automatic Conversation Creation**: Creates new conversations when none are specified or when invalid IDs are provided
+- **Automatic User Assignment**: All new conversations are automatically assigned to the authenticated user
 - **Title Generation**: Automatically generates meaningful conversation titles from the first user message
 - **Message Limiting**: Restricts conversation context to the most recent 50 messages for performance
 - **Agent Integration**: Converts stored messages to the format expected by AI agents
-- **Relationship Management**: Defines the one-to-many relationship with messages
+- **Relationship Management**: Defines the one-to-many relationship with messages and user ownership
+- **Security Enforcement**: All operations are automatically scoped to the authenticated user
 
 **Section sources**
-- [Conversation.php:20-43](file://app/Models/Conversation.php#L20-L43)
+- [CreateConversationAction.php:37-52](file://app/Actions/CreateConversationAction.php#L37-L52)
+- [Conversation.php:40-63](file://app/Models/Conversation.php#L40-L63)
 
 ### AJAX Conversation Management
 
-**New** The system provides seamless AJAX-based conversation management:
+**New** The system provides seamless AJAX-based conversation management with enhanced security:
 
 - **Conversation Switching**: Users can switch between conversations without page reloads
 - **Real-time Updates**: Conversation lists update dynamically with new conversations
 - **URL Management**: Maintains proper browser history with pushState for navigation
 - **Error Handling**: Graceful error handling for AJAX failures with user feedback
+- **Security Validation**: All AJAX operations validate user ownership and authentication
+- **CSRF Protection**: All AJAX requests include proper CSRF token validation
 
 **Section sources**
-- [ChatController.php:43-102](file://app/Http/Controllers/ChatController.php#L43-L102)
-- [chat.blade.php:484-689](file://resources/views/chat.blade.php#L484-L689)
+- [ChatController.php:44-81](file://app/Http/Controllers/ChatController.php#L44-L81)
+- [chat.blade.php:486-599](file://resources/views/chat.blade.php#L486-L599)
+- [chat.blade.php:602-695](file://resources/views/chat.blade.php#L602-L695)
 
-## DevBot Tool Integration
+## Action Classes and Service Layer
 
-**New** DevBot now integrates with Laravel Boost MCP tools, enabling the AI assistant to perform real development tasks beyond simple conversation.
+**New** The system implements a comprehensive action class pattern that encapsulates business logic and promotes testability and maintainability.
+
+### Action Class Architecture
 
 ```mermaid
 classDiagram
-class DevBot {
-+model() string
-+instructions() Stringable|string
-+messages() iterable
-+tools() iterable
--conversation Conversation
+class BaseAction {
+<<abstract>>
 }
-class DatabaseQueryTool {
-+description() Stringable|string
-+handle(request) Stringable|string
-+schema(schema) array
+class PrepareChatViewAction {
++execute(Conversation conversation, Collection conversations) ChatViewModel
++resolveConversation(Conversation conversation) Conversation?
 }
-class DatabaseSchemaTool {
-+description() Stringable|string
-+handle(request) Stringable|string
-+schema(schema) array
+class CreateConversationAction {
++execute(ConversationData data) Conversation
 }
-class SearchDocsTool {
-+description() Stringable|string
-+handle(request) Stringable|string
-+schema(schema) array
+class GetConversationAction {
++execute(int conversationId) Conversation?
 }
-class TinkerTool {
-+description() Stringable|string
-+handle(request) Stringable|string
-+schema(schema) array
+class ListConversationsAction {
++execute(int limit) Collection
 }
-class McpClientService {
-+callTool(toolName, arguments) Stringable|string
+class SendMessageAction {
++execute(MessageData data) SendMessageResponse
++getOrCreateConversation(int? conversationId, string initialMessage) Conversation
++saveUserMessage(Conversation conversation, string content) Message
++saveAssistantMessage(Conversation conversation, string content) Message
 }
-DevBot --> DatabaseQueryTool : "uses"
-DevBot --> DatabaseSchemaTool : "uses"
-DevBot --> SearchDocsTool : "uses"
-DevBot --> TinkerTool : "uses"
-DatabaseQueryTool --> McpClientService : "uses"
-DatabaseSchemaTool --> McpClientService : "uses"
-SearchDocsTool --> McpClientService : "uses"
-TinkerTool --> McpClientService : "uses"
+class ResponseFormatter {
++formatConversationsList(Collection conversations) array
++formatConversation(Conversation conversation) array
++formatMessages(Collection messages) array
++handleSendMessageResponse(SendMessageResponse response, Request request) JsonResponse|RedirectResponse
++handleSendMessageError(Request request, string errorMessage) JsonResponse|RedirectResponse
+}
+BaseAction <|-- PrepareChatViewAction
+BaseAction <|-- CreateConversationAction
+BaseAction <|-- GetConversationAction
+BaseAction <|-- ListConversationsAction
+BaseAction <|-- SendMessageAction
 ```
 
 **Diagram sources**
-- [DevBot.php:98-106](file://app/Ai/Agents/DevBot.php#L98-L106)
-- [DatabaseQueryTool.php:13-84](file://app/Ai/Tools/DatabaseQueryTool.php#L13-L84)
-- [DatabaseSchemaTool.php:13-69](file://app/Ai/Tools/DatabaseSchemaTool.php#L13-L69)
-- [SearchDocsTool.php:13-75](file://app/Ai/Tools/SearchDocsTool.php#L13-L75)
-- [TinkerTool.php:13-89](file://app/Ai/Tools/TinkerTool.php#L13-L89)
+- [PrepareChatViewAction.php:21-62](file://app/Actions/PrepareChatViewAction.php#L21-L62)
+- [CreateConversationAction.php:29-54](file://app/Actions/CreateConversationAction.php#L29-L54)
+- [GetConversationAction.php:24-40](file://app/Actions/GetConversationAction.php#L24-L40)
+- [ListConversationsAction.php:24-40](file://app/Actions/ListConversationsAction.php#L24-L40)
+- [SendMessageAction.php:42-147](file://app/Actions/SendMessageAction.php#L42-L147)
+- [ResponseFormatter.php:19-112](file://app/Services/ResponseFormatter.php#L19-L112)
 
-### Available Tools
+### Business Logic Separation
 
-DevBot integrates four specialized tools for enhanced developer assistance:
+The action classes provide several benefits:
 
-- **DatabaseQueryTool**: Executes read-only SQL queries against the application database with safety restrictions
-- **DatabaseSchemaTool**: Inspects database schemas, listing tables and retrieving column/index information
-- **SearchDocsTool**: Searches Laravel and package documentation for relevant information
-- **TinkerTool**: Executes PHP code in the Laravel application context for debugging and testing
-
-Each tool includes comprehensive validation, error handling, and security measures to prevent unauthorized operations.
-
-**Section sources**
-- [DevBot.php:98-106](file://app/Ai/Agents/DevBot.php#L98-L106)
-- [DatabaseQueryTool.php:26-74](file://app/Ai/Tools/DatabaseQueryTool.php#L26-L74)
-- [DatabaseSchemaTool.php:27-99](file://app/Ai/Tools/DatabaseSchemaTool.php#L27-L99)
-- [SearchDocsTool.php:25-72](file://app/Ai/Tools/SearchDocsTool.php#L25-L72)
-- [TinkerTool.php:25-59](file://app/Ai/Tools/TinkerTool.php#L25-L59)
-
-### Tool Security and Validation
-
-All tools implement robust security measures:
-
-- **DatabaseQueryTool**: Restricts queries to read-only operations (SELECT, SHOW, EXPLAIN, DESCRIBE)
-- **DatabaseSchemaTool**: Validates table existence and filters internal system tables
-- **SearchDocsTool**: Provides educational guidance when direct API access is unavailable
-- **TinkerTool**: Includes timeout protection and safe execution environment
+- **Single Responsibility**: Each action handles a specific business operation
+- **Testability**: Easy to unit test individual business operations
+- **Reusability**: Actions can be reused across different controllers and contexts
+- **Maintainability**: Business logic is centralized and easy to modify
+- **Dependency Injection**: Actions receive their dependencies through constructor injection
 
 **Section sources**
-- [DatabaseQueryTool.php:32-49](file://app/Ai/Tools/DatabaseQueryTool.php#L32-L49)
-- [DatabaseSchemaTool.php:51-57](file://app/Ai/Tools/DatabaseSchemaTool.php#L51-L57)
-- [TinkerTool.php:35-40](file://app/Ai/Tools/TinkerTool.php#L35-L40)
+- [PrepareChatViewAction.php:21-62](file://app/Actions/PrepareChatViewAction.php#L21-L62)
+- [CreateConversationAction.php:29-54](file://app/Actions/CreateConversationAction.php#L29-L54)
+- [GetConversationAction.php:24-40](file://app/Actions/GetConversationAction.php#L24-L40)
+- [ListConversationsAction.php:24-40](file://app/Actions/ListConversationsAction.php#L24-L40)
+- [SendMessageAction.php:42-147](file://app/Actions/SendMessageAction.php#L42-L147)
 
-## Data Storage and Management
+## Data Transfer Objects
 
-The system implements a robust data persistence layer using Laravel's Eloquent ORM with specialized models for conversations and messages.
+**New** The system implements Data Transfer Objects (DTOs) to provide type-safe data transfer between layers and improve code clarity.
+
+### DTO Architecture
+
+```mermaid
+classDiagram
+class ConversationData {
++?string title
++?string initialMessage
++fromRequest(Request request) ConversationData
++fromMessage(string message) ConversationData
+}
+class MessageData {
++string content
++?int conversationId
++fromRequest(Request request) MessageData
+}
+class SendMessageResponse {
++Conversation conversation
++Message assistantMessage
++bool success
++?string errorMessage
++isSuccessful() bool
++toJsonData() array
++success(Conversation conversation, Message assistantMessage) SendMessageResponse
++failure(string errorMessage) SendMessageResponse
+}
+ConversationData <|-- MessageData
+SendMessageResponse --> Conversation : "contains"
+SendMessageResponse --> Message : "contains"
+```
+
+**Diagram sources**
+- [ConversationData.php:29-58](file://app/DTOs/ConversationData.php#L29-L58)
+- [MessageData.php:29-47](file://app/DTOs/MessageData.php#L29-L47)
+- [SendMessageResponse.php:29-107](file://app/DTOs/SendMessageResponse.php#L29-L107)
+
+### Type Safety and Validation
+
+The DTOs provide several benefits:
+
+- **Type Safety**: Compile-time type checking prevents runtime errors
+- **Validation**: Built-in validation through constructor parameters
+- **Immutability**: Final readonly classes prevent accidental modification
+- **Documentation**: Clear property definitions serve as inline documentation
+- **Testing**: Easy to mock and test with predictable data structures
+
+**Section sources**
+- [ConversationData.php:29-58](file://app/DTOs/ConversationData.php#L29-L58)
+- [MessageData.php:29-47](file://app/DTOs/MessageData.php#L29-L47)
+- [SendMessageResponse.php:29-107](file://app/DTOs/SendMessageResponse.php#L29-L107)
+
+## Model Layer
+
+The system implements a robust data persistence layer using Laravel's Eloquent ORM with enhanced user ownership and security features.
 
 ```mermaid
 erDiagram
+USERS {
+bigint id PK
+string name
+string email
+timestamp email_verified_at
+timestamp created_at
+timestamp updated_at
+}
 CONVERSATIONS {
 bigint id PK
 bigint user_id FK
 string title
+enum status
 timestamp created_at
 timestamp updated_at
 }
@@ -492,86 +523,57 @@ text content
 timestamp created_at
 timestamp updated_at
 }
-USERS {
-bigint id PK
-string name
-string email
-timestamp created_at
-timestamp updated_at
-}
-CONVERSATIONS ||--o{ MESSAGES : contains
 USERS ||--o{ CONVERSATIONS : owns
+CONVERSATIONS ||--o{ MESSAGES : contains
 ```
 
 **Diagram sources**
 - [2026_04_02_123216_create_conversations_table.php:14-21](file://database/migrations/2026_04_02_123216_create_conversations_table.php#L14-L21)
 - [2026_04_02_123238_create_messages_table.php:14-22](file://database/migrations/2026_04_02_123238_create_messages_table.php#L14-L22)
 
-The database schema supports efficient conversation management with appropriate indexing for performance. The Conversation model includes helper methods for generating titles from messages and retrieving recent conversation history, while the Message model provides formatting capabilities for markdown content.
+The database schema supports efficient conversation management with appropriate indexing for performance and enforces user ownership through foreign key constraints. The Conversation model includes helper methods for generating titles from messages and retrieving recent conversation history, while the Message model provides formatting capabilities for markdown content.
 
 **Section sources**
-- [Conversation.php:10-29](file://app/Models/Conversation.php#L10-L29)
-- [Message.php:11-24](file://app/Models/Message.php#L11-L24)
+- [Conversation.php:12-65](file://app/Models/Conversation.php#L12-L65)
+- [Message.php:12-50](file://app/Models/Message.php#L12-L50)
 
-### Conversation Management
+### Enhanced Model Features
 
-The Conversation model implements several key features for managing chat sessions:
+**New** The models now include enhanced security and functionality:
 
-- **Automatic Title Generation**: Creates meaningful conversation titles from the first user message
-- **Message Limiting**: Restricts conversation context to the most recent 50 messages for performance
-- **Agent Integration**: Converts stored messages to the format expected by AI agents
-- **Relationship Management**: Defines the one-to-many relationship with messages
-
-The model ensures that conversations remain manageable in size while preserving the most relevant context for AI interactions.
-
-**Section sources**
-- [Conversation.php:20-43](file://app/Models/Conversation.php#L20-L43)
-
-### Message Formatting
-
-The Message model includes sophisticated formatting capabilities through the Markdown helper, enabling rich text display in the chat interface.
-
-```mermaid
-flowchart LR
-RawContent[Raw Message Content] --> MarkdownHelper[Markdown Helper]
-MarkdownHelper --> CommonMark[CommonMark Parser]
-CommonMark --> GFM[Github Flavored Markdown]
-GFM --> HTML[HTML Output]
-HTML --> FormattedDisplay[Formatted Display]
-subgraph "Configuration"
-Escape[HTML Escaping]
-UnsafeLinks[Unsafe Link Blocking]
-NestingLimit[Nesting Level: 100]
-end
-MarkdownHelper --> Escape
-MarkdownHelper --> UnsafeLinks
-MarkdownHelper --> NestingLimit
-```
-
-**Diagram sources**
-- [Markdown.php:17-41](file://app/Helpers/Markdown.php#L17-L41)
-
-The markdown processing pipeline ensures secure content rendering while supporting code blocks, lists, and other formatting elements essential for developer communication.
+- **User Ownership**: All conversations belong to specific users through foreign key relationships
+- **Role-based Messages**: Messages are typed with roles (User/Assistant) for proper AI context
+- **Status Management**: Conversations can have status values for future expansion
+- **Message Limiting**: Automatic limiting of recent messages for AI context windows
+- **Agent Integration**: Direct conversion of messages to AI agent format
+- **Security Enforcement**: All operations automatically respect user ownership boundaries
 
 **Section sources**
-- [Message.php:39-42](file://app/Models/Message.php#L39-L42)
-- [Markdown.php:17-41](file://app/Helpers/Markdown.php#L17-L41)
+- [Conversation.php:17-63](file://app/Models/Conversation.php#L17-L63)
+- [Message.php:17-48](file://app/Models/Message.php#L17-L48)
 
 ## User Experience Features
 
-The chat interface incorporates numerous features designed to enhance user interaction and provide a smooth conversational experience.
+The chat interface incorporates numerous features designed to enhance user interaction and provide a smooth conversational experience with enhanced security and responsiveness.
 
 ### Real-time Interaction
 
-**Updated** The system now supports both immediate page refreshes and asynchronous AJAX updates, allowing users to choose their preferred interaction mode. The JavaScript implementation handles form submission, loading states, error display, and dynamic content updates without page reloads. **New** Conversation switching occurs seamlessly through AJAX requests, maintaining conversation state and providing instant feedback.
+**Updated** The system now supports both immediate page refreshes and asynchronous AJAX updates, allowing users to choose their preferred interaction mode. The JavaScript implementation handles form submission, loading states, error display, and dynamic content updates without page reloads. **New** Conversation switching occurs seamlessly through AJAX requests with proper authentication validation, maintaining conversation state and providing instant feedback while enforcing user ownership boundaries.
 
 ### Responsive Design
 
-The interface adapts to various screen sizes and devices, with mobile-optimized layouts and touch-friendly controls. The design follows modern UI/UX principles with clear visual hierarchy and intuitive navigation. **New** The conversation sidebar is fully responsive, hiding on mobile devices with a hamburger menu toggle for better mobile experience.
+The interface adapts to various screen sizes and devices, with mobile-optimized layouts and touch-friendly controls. The design follows modern UI/UX principles with clear visual hierarchy and intuitive navigation. **New** The conversation sidebar is fully responsive, hiding on mobile devices with a hamburger menu toggle for better mobile experience, and includes authentication-aware rendering.
 
-### Accessibility Features
+### Enhanced Accessibility Features
 
-The interface includes accessibility considerations such as proper semantic markup, keyboard navigation support, and screen reader compatibility. Form elements include appropriate labels and error messaging for assistive technologies. **New** The conversation switching interface includes proper ARIA attributes and keyboard navigation support.
+**New** The interface includes comprehensive accessibility considerations:
+
+- **Proper Semantic Markup**: Clear ARIA labels and semantic HTML structure
+- **Keyboard Navigation**: Full keyboard support for all interactive elements
+- **Screen Reader Compatibility**: Proper ARIA attributes and readable text alternatives
+- **Focus Management**: Logical tab order and focus indicators
+- **Color Contrast**: High contrast ratios for text and interactive elements
+- **Mobile Navigation**: Touch-friendly controls with appropriate sizing
 
 ### Performance Optimizations
 
@@ -582,65 +584,80 @@ Several performance optimizations are implemented to ensure smooth operation:
 - **Debounced Requests**: Prevents excessive API calls during rapid typing
 - **Caching Strategies**: Efficient database queries with appropriate indexing
 - **AJAX State Management**: **New** Maintains conversation state without unnecessary reloads
+- **Authentication Caching**: User authentication state cached in JavaScript for better UX
 
 **Section sources**
-- [chat.blade.php:172-731](file://resources/views/chat.blade.php#L172-L731)
+- [chat.blade.php:44-63](file://resources/views/chat.blade.php#L44-L63)
+- [chat.blade.php:486-599](file://resources/views/chat.blade.php#L486-L599)
+- [chat.blade.php:602-695](file://resources/views/chat.blade.php#L602-L695)
 
 ## Error Handling and Validation
 
-The system implements comprehensive error handling and input validation to ensure robust operation under various conditions.
+The system implements comprehensive error handling and input validation to ensure robust operation under various conditions with enhanced security validation.
 
-### Input Validation
+### Enhanced Input Validation
 
-The ChatController enforces strict validation rules for incoming messages:
+**New** The system now includes comprehensive input validation with authentication awareness:
 
 - **Required Field**: Ensures messages are not empty
 - **Type Validation**: Confirms message content is a string
 - **Length Limits**: Prevents excessively long messages (maximum 5000 characters)
 - **Conversation ID Validation**: Validates foreign key references when provided
+- **User Ownership Validation**: Ensures conversations belong to authenticated user
+- **CSRF Token Validation**: All AJAX requests validated for security
 
-### Error Recovery
+### Comprehensive Error Recovery
 
-The system handles various error scenarios gracefully:
+**New** The system handles various error scenarios gracefully with enhanced security:
 
+- **Authentication Failures**: Redirects unauthenticated users to login
+- **Authorization Errors**: Prevents access to conversations not owned by user
 - **AI Service Failures**: Logs errors and provides user-friendly error messages
 - **Network Issues**: Implements retry logic and timeout handling
 - **Database Errors**: Manages transaction rollbacks and recovery
 - **Validation Failures**: Returns structured error responses for AJAX requests
-- **Tool Execution Errors**: **New** Handles MCP tool failures with informative error messages
+- **CSRF Validation Errors**: Rejects requests with invalid security tokens
 
-### Logging and Monitoring
+### Enhanced Logging and Monitoring
 
-Comprehensive logging is implemented for debugging and monitoring purposes, capturing error details, request metadata, and system performance metrics.
+**New** Comprehensive logging is implemented for debugging and monitoring purposes:
+
+- **Security Events**: Logs authentication failures and authorization attempts
+- **Conversation Access**: Tracks conversation access patterns and ownership validation
+- **Error Details**: Captures error context with user and conversation information
+- **Performance Metrics**: Monitors response times and API call performance
+- **Audit Trails**: Maintains records of user actions and conversation changes
 
 **Section sources**
-- [ChatController.php:109-112](file://app/Http/Controllers/ChatController.php#L109-L112)
-- [ChatController.php:162-179](file://app/Http/Controllers/ChatController.php#L162-L179)
+- [ChatController.php:86-102](file://app/Http/Controllers/ChatController.php#L86-L102)
+- [PrepareChatViewAction.php:53-56](file://app/Actions/PrepareChatViewAction.php#L53-L56)
+- [ResponseFormatter.php:97-111](file://app/Services/ResponseFormatter.php#L97-L111)
 
 ## Testing Strategy
 
-The system includes a comprehensive testing suite covering unit tests, feature tests, and integration tests to ensure reliability and maintainability.
+The system includes a comprehensive testing suite covering unit tests, feature tests, and integration tests to ensure reliability and maintainability with enhanced authentication and security testing.
 
-### Test Coverage Areas
+### Enhanced Test Coverage Areas
 
-The testing strategy encompasses several critical areas:
+**New** The testing strategy now encompasses additional critical areas:
 
-- **Chat Interface Functionality**: Validates UI rendering, user interactions, and AJAX behavior
-- **Message Processing**: Tests message validation, saving, and retrieval operations
-- **Conversation Management**: Ensures proper conversation lifecycle management
-- **Error Handling**: Verifies graceful error recovery and user feedback
-- **Integration Testing**: Validates AI service integration and external API communication
-- **Tool Integration Testing**: **New** Tests MCP tool execution and error handling
+- **Authentication Testing**: Validates middleware protection and user session management
+- **Authorization Testing**: Ensures proper user ownership validation and access control
+- **Conversation Security Testing**: Tests user-scoped conversation operations and boundary enforcement
+- **AJAX Error Handling Testing**: Validates error responses and recovery mechanisms
+- **CSRF Protection Testing**: Tests security token validation and request forgery prevention
+- **Action Class Testing**: Validates business logic encapsulation and dependency injection
 
-### Test Implementation Patterns
+### Advanced Test Implementation Patterns
 
-The tests utilize Laravel's testing framework with specialized patterns for AI integration:
+**New** The tests utilize Laravel's testing framework with specialized patterns:
 
-- **Fake AI Responses**: Uses Laravel's testing utilities to simulate AI service responses
-- **Database Assertions**: Validates data persistence and relationship integrity
-- **Response Validation**: Tests HTTP response formats and status codes
-- **Behavior Verification**: Confirms expected user experience and interaction patterns
-- **Tool Testing**: **New** Validates tool execution, parameter validation, and error handling
+- **Authenticated Test Scenarios**: Uses Laravel's testing utilities to simulate authenticated users
+- **User Ownership Testing**: Validates proper user-scoped data access and manipulation
+- **Security Boundary Testing**: Tests authentication bypass attempts and authorization failures
+- **Response Validation**: Tests HTTP response formats, status codes, and security headers
+- **Behavior Verification**: Confirms expected user experience with authentication-aware rendering
+- **Error Scenario Testing**: Validates graceful error recovery with proper error messages
 
 **Section sources**
 - [ChatTest.php:86-171](file://tests/Feature/ChatTest.php#L86-L171)
@@ -649,73 +666,104 @@ The tests utilize Laravel's testing framework with specialized patterns for AI i
 
 ## Performance Considerations
 
-The system is designed with performance optimization in mind, implementing several strategies to ensure efficient operation under various load conditions.
+The system is designed with performance optimization in mind, implementing several strategies to ensure efficient operation under various load conditions with enhanced security overhead.
 
 ### Database Optimization
 
-- **Indexing Strategy**: Proper indexing on frequently queried columns (created_at timestamps)
-- **Query Efficiency**: Optimized queries with appropriate joins and filtering
-- **Pagination Support**: Efficient handling of large conversation histories
-- **Connection Pooling**: Optimal database connection management
+- **Indexing Strategy**: Proper indexing on frequently queried columns (created_at timestamps, user_id foreign keys)
+- **Query Efficiency**: Optimized queries with appropriate joins and filtering, including user ownership checks
+- **Pagination Support**: Efficient handling of large conversation histories with user-scoped limits
+- **Connection Pooling**: Optimal database connection management with proper transaction handling
+- **Eager Loading**: Prevention of N+1 query problems through proper relationship loading
 
-### Memory Management
+### Enhanced Memory Management
 
-- **Object Lifecycle**: Proper cleanup of temporary objects and resources
-- **Caching Strategies**: Strategic use of caching for frequently accessed data
-- **Resource Cleanup**: Automatic cleanup of unused resources and memory
+**New** The system implements additional memory management strategies:
+
+- **Object Lifecycle**: Proper cleanup of temporary objects and resources in action classes
+- **Caching Strategies**: Strategic use of caching for frequently accessed user data and conversation lists
+- **Resource Cleanup**: Automatic cleanup of unused resources and memory in service classes
+- **Response Optimization**: Efficient JSON response formatting and data serialization
 
 ### Network Optimization
 
-- **Request Minimization**: Efficient API calls and reduced round trips
-- **Compression**: Content compression for faster transmission
-- **CDN Integration**: Static asset delivery optimization
+- **Request Minimization**: Efficient API calls and reduced round trips with proper batching
+- **Compression**: Content compression for faster transmission of markdown content
+- **CDN Integration**: Static asset delivery optimization for improved load times
+- **AJAX Optimization**: Smart caching of conversation data to reduce server load
 
 ## Security Implementation
 
-The system implements multiple layers of security to protect user data and prevent malicious activities.
+The system implements multiple layers of security to protect user data and prevent malicious activities with enhanced authentication and authorization measures.
 
-### Input Sanitization
+### Enhanced Input Sanitization
 
-All user input undergoes rigorous sanitization and validation to prevent injection attacks and malformed data processing.
+**New** All user input undergoes rigorous sanitization and validation with authentication awareness:
 
-### Authentication and Authorization
+- **CSRF Protection**: All forms and AJAX requests validated with proper security tokens
+- **Input Validation**: Comprehensive validation rules with user ownership verification
+- **SQL Injection Prevention**: Parameterized queries and Eloquent ORM usage prevent injection attacks
+- **XSS Prevention**: Proper HTML escaping and content security policies prevent cross-site scripting
 
-The system integrates with Laravel's authentication framework to ensure proper user identification and authorization for conversation access.
+### Advanced Authentication and Authorization
+
+**New** The system implements comprehensive authentication and authorization:
+
+- **Route Middleware**: All chat routes protected by authentication middleware
+- **User Ownership**: Strict enforcement that conversations belong to authenticated users
+- **Session Management**: Secure session handling with proper expiration and renewal
+- **Token Validation**: CSRF token validation for all state-changing operations
+- **Access Control**: Fine-grained access control preventing unauthorized conversation access
 
 ### Data Protection
 
+**New** Enhanced data protection measures:
+
 - **Encryption**: Sensitive data encryption at rest and in transit
-- **Access Controls**: Proper authorization checks for data access
-- **Audit Logging**: Comprehensive logging of security-relevant events
+- **Access Controls**: Proper authorization checks for all data access operations
+- **Audit Logging**: Comprehensive logging of security-relevant events and access attempts
+- **Rate Limiting**: Protection against brute force attacks and abuse detection
+- **Input Filtering**: Comprehensive filtering of potentially malicious input
 
 ### API Security
 
-External API integrations implement proper authentication, rate limiting, and input validation to prevent abuse and ensure service reliability.
+**New** External API integrations implement proper security measures:
 
-### Tool Security
+- **Authentication**: Proper AI service authentication and API key management
+- **Rate Limiting**: Prevents API abuse and ensures fair usage limits
+- **Input Validation**: Comprehensive validation of AI service responses
+- **Error Containment**: Prevents sensitive error details from leaking to users
+- **Timeout Protection**: Prevents hanging requests and resource exhaustion
+
+### Enhanced Tool Security
 
 **New** MCP tools implement comprehensive security measures:
+
 - **Query Validation**: Database queries restricted to read-only operations
-- **Timeout Protection**: Prevents infinite execution loops
+- **Timeout Protection**: Prevents infinite execution loops and resource exhaustion
 - **Result Limiting**: Controls output size and prevents data leaks
 - **Error Containment**: Prevents sensitive error details from leaking to users
+- **User Context**: All tool operations executed within user authentication context
 
 **Section sources**
-- [DatabaseQueryTool.php:32-49](file://app/Ai/Tools/DatabaseQueryTool.php#L32-L49)
-- [TinkerTool.php:35-40](file://app/Ai/Tools/TinkerTool.php#L35-L40)
+- [web.php:15-26](file://routes/web.php#L15-L26)
+- [PrepareChatViewAction.php:53-56](file://app/Actions/PrepareChatViewAction.php#L53-L56)
+- [CreateConversationAction.php:43](file://app/Actions/CreateConversationAction.php#L43)
+- [GetConversationAction.php:34](file://app/Actions/GetConversationAction.php#L34)
 
 ## Conclusion
 
-The Laravel Assistant Chat Interface System represents a comprehensive solution for AI-powered developer assistance within the Laravel ecosystem. The system successfully combines modern web technologies with robust backend architecture to deliver a seamless user experience.
+The Laravel Assistant Chat Interface System represents a comprehensive and secure solution for AI-powered developer assistance within the Laravel ecosystem. The system successfully combines modern web technologies with robust backend architecture to deliver a seamless user experience while maintaining strict security boundaries.
 
-**Updated** Key enhancements include integrated conversation management with AJAX support, seamless conversation switching capabilities, and comprehensive DevBot tool integration for enhanced developer experience. The system now provides:
+**Updated** Key enhancements include integrated authentication with user-scoped conversation management, seamless conversation switching capabilities, and comprehensive action-based architecture. The system now provides:
 
-- **Modular Architecture**: Clean separation of concerns enabling easy maintenance and extension
-- **Flexible AI Integration**: Pluggable AI provider system supporting multiple services with integrated tool capabilities
-- **Rich User Experience**: Responsive design with real-time interaction capabilities and conversation management
-- **Comprehensive Testing**: Thorough test coverage ensuring reliability and quality
-- **Performance Optimization**: Efficient resource utilization and scalable architecture
-- **Enhanced Developer Tools**: MCP tool integration enabling real development tasks through AI assistance
-- **Seamless Navigation**: AJAX-based conversation switching without page reloads
+- **Enhanced Security**: Comprehensive authentication, authorization, and user ownership enforcement
+- **Modern Architecture**: Clean separation of concerns through action classes and service layer
+- **Robust Authentication**: Middleware-based protection with CSRF token validation
+- **User-Scoped Operations**: All conversations automatically bound to authenticated users
+- **Seamless AJAX**: Real-time conversation switching without page reloads
+- **Comprehensive Testing**: Thorough test coverage including authentication and security scenarios
+- **Performance Optimization**: Efficient resource utilization with proper caching and indexing
+- **Enhanced User Experience**: Responsive design with accessibility features and mobile optimization
 
-The system provides a solid foundation for AI-assisted development workflows while maintaining the flexibility to adapt to evolving requirements and technologies. Future enhancements could include expanded AI provider support, advanced conversation management features, enhanced analytics capabilities, and additional MCP tool integration for even more comprehensive developer assistance.
+The system provides a solid foundation for AI-assisted development workflows while maintaining the flexibility to adapt to evolving requirements and technologies. Future enhancements could include expanded AI provider support, advanced conversation management features, enhanced analytics capabilities, and additional MCP tool integration for even more comprehensive developer assistance with continued focus on security and user experience.

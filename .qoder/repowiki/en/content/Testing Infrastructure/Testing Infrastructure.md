@@ -15,6 +15,7 @@
 - [tests/Feature/Auth/PasswordResetTest.php](file://tests/Feature/Auth/PasswordResetTest.php)
 - [tests/Feature/Auth/PasswordUpdateTest.php](file://tests/Feature/Auth/PasswordUpdateTest.php)
 - [tests/Feature/Auth/RegistrationTest.php](file://tests/Feature/Auth/RegistrationTest.php)
+- [tests/Feature/Auth/PostLoginRedirectTest.php](file://tests/Feature/Auth/PostLoginRedirectTest.php)
 - [tests/Feature/ChatViewModelTest.php](file://tests/Feature/ChatViewModelTest.php)
 - [tests/Feature/CreateConversationActionTest.php](file://tests/Feature/CreateConversationActionTest.php)
 - [tests/Feature/GetConversationActionTest.php](file://tests/Feature/GetConversationActionTest.php)
@@ -71,6 +72,10 @@
 - Included ViewModel testing for ChatViewModel operations and data formatting
 - Enhanced test coverage for pagination limits (50 conversations), message ordering validation, and JSON response structure testing
 - Expanded MCP client integration testing with sophisticated mocking strategies
+- **Updated**: Added new PostLoginRedirectTest.php for authentication flow validation with login and registration redirect tests
+- **Updated**: Enhanced ChatTest.php with comprehensive authentication coverage, API endpoint security testing, and user-scoped conversation testing
+- **Updated**: Enhanced AuthenticationTest.php with redirect tests for authenticated users
+- **Updated**: Enhanced GetConversationActionTest.php with user-scoped conversation ownership validation
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -124,6 +129,7 @@ MT["Markdown Tests<br/>tests/Feature/MarkdownRenderingTest.php"]
 MCU["MCP Client Unit Tests<br/>tests/Unit/McpClientServiceTest.php"]
 MPT["MCP Tools Unit Tests<br/>tests/Unit/McpToolsTest.php"]
 TP["Tool Proxy Tests<br/>tests/Unit/ToolProxyTest.php"]
+PLRT["Post-Login Redirect Tests<br/>tests/Feature/Auth/PostLoginRedirectTest.php"]
 end
 subgraph "Laravel Testing"
 PU["PHPUnit Config<br/>phpunit.xml"]
@@ -164,6 +170,7 @@ TC --> MT
 TC --> MCU
 TC --> MPT
 TC --> TP
+TC --> PLRT
 PU --> TC
 DB --> TC
 FCT --> TC
@@ -190,10 +197,10 @@ R --> DC
 **Diagram sources**
 - [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
 - [tests/TestCase.php:1-11](file://tests/TestCase.php#L1-L11)
-- [tests/Feature/ChatTest.php:1-934](file://tests/Feature/ChatTest.php#L1-L934)
+- [tests/Feature/ChatTest.php:1-968](file://tests/Feature/ChatTest.php#L1-L968)
 - [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
-- [tests/Feature/GetConversationActionTest.php:1-78](file://tests/Feature/GetConversationActionTest.php#L1-L78)
+- [tests/Feature/GetConversationActionTest.php:1-111](file://tests/Feature/GetConversationActionTest.php#L1-L111)
 - [tests/Feature/ListConversationsActionTest.php:1-61](file://tests/Feature/ListConversationsActionTest.php#L1-L61)
 - [tests/Feature/SendMessageActionTest.php:1-213](file://tests/Feature/SendMessageActionTest.php#L1-L213)
 - [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
@@ -202,6 +209,7 @@ R --> DC
 - [tests/Unit/SendMessageResponseTest.php:1-171](file://tests/Unit/SendMessageResponseTest.php#L1-L171)
 - [tests/Unit/ConversationStatusTest.php:1-57](file://tests/Unit/ConversationStatusTest.php#L1-L57)
 - [tests/Unit/MessageRoleTest.php:1-44](file://tests/Unit/MessageRoleTest.php#L1-L44)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [phpunit.xml:1-37](file://phpunit.xml#L1-L37)
 - [config/services.php:38-43](file://config/services.php#L38-L43)
 - [database/migrations/0001_01_01_000000_create_users_table.php:1-50](file://database/migrations/0001_01_01_000000_create_users_table.php#L1-L50)
@@ -277,6 +285,7 @@ participant Pest as "Pest Runner"
 participant Boot as "tests/Pest.php"
 participant BaseTC as "tests/TestCase.php"
 participant AuthTest as "Authentication Tests"
+participant PostLoginTest as "Post-Login Redirect Tests"
 participant ActionTest as "Action Class Tests"
 participant DTO as "DTO Validation Tests"
 participant EnumTest as "Enum Functionality Tests"
@@ -291,11 +300,13 @@ Dev->>Pest : "Run comprehensive test suites"
 Pest->>Boot : "Load bootstrap"
 Boot->>BaseTC : "Extend TestCase for all test suites"
 Pest->>AuthTest : "Execute authentication tests"
+Pest->>PostLoginTest : "Execute post-login redirect tests"
 Pest->>ActionTest : "Execute action class tests"
 Pest->>DTO : "Execute DTO validation tests"
 Pest->>EnumTest : "Execute enum functionality tests"
 Pest->>ViewModelTest : "Execute ViewModel tests"
 AuthTest->>Controller : "Test authentication flows"
+PostLoginTest->>Controller : "Test login/registration redirects"
 ActionTest->>Controller : "Test action class operations"
 DTO->>Controller : "Test DTO validation"
 EnumTest->>Controller : "Test enum functionality"
@@ -313,11 +324,13 @@ HTTP-->>Controller : "Response"
 Controller->>DB : "Run assertions / factories"
 DB-->>Controller : "State snapshot"
 Controller-->>AuthTest : "Authentication responses"
+Controller-->>PostLoginTest : "Redirect validation"
 Controller-->>ActionTest : "Action results"
 Controller-->>DTO : "Validation results"
 Controller-->>EnumTest : "Enum operations"
 Controller-->>ViewModelTest : "ViewModel data"
 AuthTest-->>Pest : "Auth test results"
+PostLoginTest-->>Pest : "Post-login redirect test results"
 ActionTest-->>Pest : "Action test results"
 DTO-->>Pest : "DTO test results"
 EnumTest-->>Pest : "Enum test results"
@@ -329,6 +342,7 @@ Pest-->>Dev : "All test results"
 - [tests/Pest.php:16-18](file://tests/Pest.php#L16-L18)
 - [tests/TestCase.php:7-10](file://tests/TestCase.php#L7-L10)
 - [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
 - [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
@@ -385,6 +399,7 @@ Practical implications:
   - Password reset functionality and email verification
   - Password confirmation and update processes
   - Logout functionality and session management
+  - **Updated**: Post-login redirect validation for login and registration flows
 - **Updated**: Action class testing patterns:
   - Conversation creation with title generation and persistence
   - Conversation retrieval with eager loading and message ordering
@@ -400,7 +415,10 @@ Practical implications:
   - Validation and error handling
   - Conversation management and persistence
   - AI agent integration and mocking
-  - Enhanced conversation management testing with:
+  - **Updated**: Authentication coverage with unauthenticated access validation
+  - **Updated**: API endpoint security testing with 401 status validation
+  - **Updated**: User-scoped conversation testing with ownership validation
+  - **Updated**: Enhanced conversation management testing with:
     - Pagination limits (50 conversations)
     - Message ordering validation
     - JSON response structure validation
@@ -412,8 +430,9 @@ Practical implications:
 - [tests/Feature/ExampleTest.php:3-7](file://tests/Feature/ExampleTest.php#L3-L7)
 - [tests/Feature/ChatTest.php:18-77](file://tests/Feature/ChatTest.php#L18-L77)
 - [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
-- [tests/Feature/GetConversationActionTest.php:1-78](file://tests/Feature/GetConversationActionTest.php#L1-L78)
+- [tests/Feature/GetConversationActionTest.php:1-111](file://tests/Feature/GetConversationActionTest.php#L1-L111)
 - [tests/Feature/ListConversationsActionTest.php:1-61](file://tests/Feature/ListConversationsActionTest.php#L1-L61)
 - [tests/Feature/SendMessageActionTest.php:1-213](file://tests/Feature/SendMessageActionTest.php#L1-L213)
 - [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
@@ -441,6 +460,9 @@ The authentication test suite provides comprehensive coverage of Laravel's authe
 - **Password Confirmation Testing**
   - Tests password confirmation for sensitive operations
   - Validates secure access control mechanisms
+- **Post-Login Redirect Testing**
+  - **Updated**: Validates that successful login redirects to chat route
+  - **Updated**: Validates that successful registration redirects to chat route and authenticates user
 
 ```mermaid
 flowchart TD
@@ -453,6 +475,9 @@ AuthTests --> Register["Registration Tests"]
 AuthTests --> Reset["Password Reset Tests"]
 AuthTests --> Email["Email Verification Tests"]
 AuthTests --> Confirm["Password Confirmation Tests"]
+AuthTests --> PostLogin["Post-Login Redirect Tests"]
+PostLogin --> LoginRedirect["Login Redirect to Chat"]
+PostLogin --> RegisterRedirect["Registration Redirect to Chat"]
 Screen --> Redirect["Dashboard Redirect"]
 Success --> Session["Authenticated Session"]
 Failure --> Guest["Guest State"]
@@ -461,6 +486,8 @@ Register --> Account["Account Creation"]
 Reset --> EmailFlow["Email Flow"]
 Email --> Activate["User Activation"]
 Confirm --> SecureAccess["Secure Access"]
+LoginRedirect --> ChatRoute["route('chat.show')"]
+RegisterRedirect --> ChatRoute
 ```
 
 **Diagram sources**
@@ -469,6 +496,7 @@ Confirm --> SecureAccess["Secure Access"]
 - [tests/Feature/Auth/PasswordResetTest.php](file://tests/Feature/Auth/PasswordResetTest.php)
 - [tests/Feature/Auth/EmailVerificationTest.php](file://tests/Feature/Auth/EmailVerificationTest.php)
 - [tests/Feature/Auth/PasswordConfirmationTest.php](file://tests/Feature/Auth/PasswordConfirmationTest.php)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 
 **Section sources**
 - [tests/Feature/Auth/AuthenticationTest.php:5-41](file://tests/Feature/Auth/AuthenticationTest.php#L5-L41)
@@ -476,6 +504,7 @@ Confirm --> SecureAccess["Secure Access"]
 - [tests/Feature/Auth/PasswordResetTest.php](file://tests/Feature/Auth/PasswordResetTest.php)
 - [tests/Feature/Auth/EmailVerificationTest.php](file://tests/Feature/Auth/EmailVerificationTest.php)
 - [tests/Feature/Auth/PasswordConfirmationTest.php](file://tests/Feature/Auth/PasswordConfirmationTest.php)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 
 ### Action Class Testing
 The action class testing suite validates the business logic layer with comprehensive test coverage:
@@ -492,6 +521,8 @@ The action class testing suite validates the business logic layer with comprehen
   - Tests eager loading of messages to prevent N+1 queries
   - Validates message ordering by created_at ascending
   - Tests empty conversation handling
+  - **Updated**: Tests user-scoped conversation ownership validation
+  - **Updated**: Tests conversation retrieval returns null for conversations owned by other users
 - **ListConversationsAction Testing**
   - Tests recent conversations retrieval
   - Validates limit parameter functionality (default 50)
@@ -517,6 +548,9 @@ Create --> Persistence["Database Persistence"]
 ActionTests --> Get["GetConversationAction"]
 Get --> EagerLoad["Eager Loading"]
 Get --> OrderBy["Message Ordering"]
+Get --> Ownership["Ownership Validation"]
+Ownership --> OtherUser["Other User Conversations"]
+Get --> EmptyConv["Empty Conversation Handling"]
 ActionTests --> List["ListConversationsAction"]
 List --> Limit["Limit Functionality"]
 List --> Sort["Latest-First Sorting"]
@@ -528,13 +562,13 @@ Send --> Exception["Exception Handling"]
 
 **Diagram sources**
 - [tests/Feature/CreateConversationActionTest.php:10-63](file://tests/Feature/CreateConversationActionTest.php#L10-L63)
-- [tests/Feature/GetConversationActionTest.php:10-77](file://tests/Feature/GetConversationActionTest.php#L10-L77)
+- [tests/Feature/GetConversationActionTest.php:10-110](file://tests/Feature/GetConversationActionTest.php#L10-L110)
 - [tests/Feature/ListConversationsActionTest.php:9-60](file://tests/Feature/ListConversationsActionTest.php#L9-L60)
 - [tests/Feature/SendMessageActionTest.php:22-212](file://tests/Feature/SendMessageActionTest.php#L22-L212)
 
 **Section sources**
 - [tests/Feature/CreateConversationActionTest.php:10-63](file://tests/Feature/CreateConversationActionTest.php#L10-L63)
-- [tests/Feature/GetConversationActionTest.php:10-77](file://tests/Feature/GetConversationActionTest.php#L10-L77)
+- [tests/Feature/GetConversationActionTest.php:10-110](file://tests/Feature/GetConversationActionTest.php#L10-L110)
 - [tests/Feature/ListConversationsActionTest.php:9-60](file://tests/Feature/ListConversationsActionTest.php#L9-L60)
 - [tests/Feature/SendMessageActionTest.php:22-212](file://tests/Feature/SendMessageActionTest.php#L22-L212)
 
@@ -701,6 +735,16 @@ Sidebar --> Timestamps["Timestamp Formatting"]
   - Validates DevBot tool registration and interface compliance
   - Tests MCP tool proxy functionality with sophisticated mocking strategies
   - Includes end-to-end integration scenarios for database queries, documentation search, and PHP execution
+- **Authentication Coverage Tests**
+  - **Updated**: Validates unauthenticated access to chat redirects to login
+  - **Updated**: Validates unauthenticated access to chat API endpoints returns 401 status
+  - **Updated**: Validates authenticated user can access chat and API endpoints
+- **API Endpoint Security Tests**
+  - **Updated**: Tests 401 status for unauthenticated API requests
+  - **Updated**: Tests proper authentication for authenticated API requests
+- **User-Scoped Conversation Tests**
+  - **Updated**: Tests conversation retrieval returns null for conversations owned by other users
+  - **Updated**: Tests conversation ownership validation in action classes
 
 **Section sources**
 - [tests/Feature/ChatTest.php:18-77](file://tests/Feature/ChatTest.php#L18-L77)
@@ -713,13 +757,14 @@ Sidebar --> Timestamps["Timestamp Formatting"]
 - [tests/Feature/ChatTest.php:477-534](file://tests/Feature/ChatTest.php#L477-L534)
 - [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
 - [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
-- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
+- [tests/Feature/ChatTest.php:843-968](file://tests/Feature/ChatTest.php#L843-L968)
 
 ### Conversation Management Testing
 - **Conversation Listing Tests**
   - Validates JSON endpoint for retrieving conversations with pagination limits (50 conversations)
   - Tests sorting by created_at descending order
   - Validates JSON structure with id, title, created_at, and updated_at fields
+  - **Updated**: Tests user-scoped conversation listing with automatic user ID scoping
 - **Conversation Creation Tests**
   - Tests POST endpoint for creating new conversations
   - Validates JSON response structure with success flag and conversation details
@@ -728,6 +773,7 @@ Sidebar --> Timestamps["Timestamp Formatting"]
   - Tests GET endpoint for retrieving conversation details and messages
   - Validates message ordering by created_at ascending order
   - Tests JSON response structure with conversation and messages arrays
+  - **Updated**: Tests user-scoped conversation retrieval with ownership validation
 - **Enhanced Message Sending Tests**
   - Tests AJAX message sending with enhanced response validation
   - Validates conversation_title field is included in JSON response
@@ -743,6 +789,7 @@ Sidebar --> Timestamps["Timestamp Formatting"]
 - [tests/Feature/ChatTest.php:541-556](file://tests/Feature/ChatTest.php#L541-L556)
 - [tests/Feature/ChatTest.php:562-622](file://tests/Feature/ChatTest.php#L562-L622)
 - [tests/Feature/ChatTest.php:655-685](file://tests/Feature/ChatTest.php#L655-L685)
+- [tests/Feature/GetConversationActionTest.php:85-110](file://tests/Feature/GetConversationActionTest.php#L85-L110)
 
 ### Database Testing and Factories
 - In-memory SQLite configuration
@@ -756,6 +803,7 @@ Sidebar --> Timestamps["Timestamp Formatting"]
   - AI agent conversation tables for DevBot integration
   - Support for chat history, message ordering, and pagination limits
   - Recent messages attribute with 50-message limit for performance optimization
+  - User ownership validation for conversations and messages
 
 ```mermaid
 flowchart TD
@@ -764,6 +812,7 @@ LoadConfig --> Seed["Optional: Seed / Migrate"]
 Seed --> CreateFactory["Use Factory to create models<br/>Conversation, Message, User"]
 CreateFactory --> Exercise["Exercise application features<br/>Auth, Actions, DTOs, Enums, ViewModels"]
 Exercise --> Pagination["Apply Pagination Limits (50)<br/>Message Ordering Asc"]
+Exercise --> Ownership["Apply User Ownership Scoping"]
 Exercise --> Assert["Assert response / model state<br/>HTML, JSON, Database"]
 Assert --> Cleanup["Cleanup / Reset"]
 Cleanup --> End(["End"])
@@ -804,7 +853,7 @@ Cleanup --> End(["End"])
 - [tests/Feature/ChatTest.php:315-359](file://tests/Feature/ChatTest.php#L315-L359)
 - [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
 - [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
-- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
+- [tests/Feature/ChatTest.php:843-968](file://tests/Feature/ChatTest.php#L843-L968)
 
 ### Assertion Syntax and Patterns
 - Prefer semantic assertions
@@ -818,6 +867,9 @@ Cleanup --> End(["End"])
   - Enum functionality assertions for type-safe operations
   - ViewModel assertions for presentation layer validation
   - Chat-specific assertion patterns for interface rendering and message processing
+  - **Updated**: Authentication coverage assertions for redirect validation
+  - **Updated**: API endpoint security assertions for 401 status validation
+  - **Updated**: User-scoped conversation assertions for ownership validation
   - HTML content assertions for chat interface rendering
   - JSON structure validation for AJAX responses
   - Markdown content validation for formatted messages
@@ -832,7 +884,9 @@ Cleanup --> End(["End"])
 - [tests/Feature/ChatTest.php:411-470](file://tests/Feature/ChatTest.php#L411-L470)
 - [tests/Feature/ChatTest.php:366-404](file://tests/Feature/ChatTest.php#L366-L404)
 - [tests/Feature/Auth/AuthenticationTest.php:11-41](file://tests/Feature/Auth/AuthenticationTest.php#L11-L41)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 - [tests/Feature/CreateConversationActionTest.php:10-63](file://tests/Feature/CreateConversationActionTest.php#L10-L63)
+- [tests/Feature/GetConversationActionTest.php:85-110](file://tests/Feature/GetConversationActionTest.php#L85-L110)
 - [tests/Unit/ConversationDataTest.php:6-61](file://tests/Unit/ConversationDataTest.php#L6-L61)
 - [tests/Unit/ConversationStatusTest.php:5-56](file://tests/Unit/ConversationStatusTest.php#L5-L56)
 
@@ -870,12 +924,16 @@ Cleanup --> End(["End"])
   - Action class parameter variations
   - DTO property combinations
   - Enum value testing
+  - **Updated**: Authentication redirect validation datasets
+  - **Updated**: API endpoint security validation datasets
+  - **Updated**: User-scoped conversation validation datasets for ownership scenarios
   - MCP tool validation datasets for query types, parameter validation, and error scenarios
 
 **Section sources**
 - [.agents/skills/pest-testing/SKILL.md:67-75](file://.agents/skills/pest-testing/SKILL.md#L67-L75)
 - [tests/Feature/ChatTest.php:197-215](file://tests/Feature/ChatTest.php#L197-L215)
 - [tests/Feature/Auth/AuthenticationTest.php:11-41](file://tests/Feature/Auth/AuthenticationTest.php#L11-L41)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
 
 ### Browser and Architecture Testing (Pest 4)
 - Browser testing
@@ -890,6 +948,9 @@ Cleanup --> End(["End"])
   - Pagination and conversation switching in browser context
   - Action class testing in browser context
   - ViewModel rendering validation
+  - **Updated**: Authentication redirect testing in browser context
+  - **Updated**: API endpoint security testing in browser context
+  - **Updated**: User-scoped conversation testing in browser context
   - **Updated**: MCP tool browser testing considerations for tool proxy validation and error handling
 
 **Section sources**
@@ -1098,6 +1159,7 @@ BaseTC --> Enums["tests/Unit/* (Enums)"]
 BaseTC --> ViewModelTests["tests/Feature/* (ViewModels)"]
 BaseTC --> ChatTests["tests/Feature/ChatTest.php"]
 BaseTC --> McpTests["tests/Unit/Mcp*Test.php"]
+BaseTC --> PostLoginTests["tests/Feature/Auth/PostLoginRedirectTest.php"]
 PHPUnitXML["phpunit.xml"] --> DBConfig["SQLite in-memory"]
 DBConfig --> Migrations["database/migrations/*"]
 Migrations --> Factories["database/factories/*"]
@@ -1124,11 +1186,12 @@ Controller --> Routes["Web Routes"]
 - [tests/Pest.php:16-18](file://tests/Pest.php#L16-L18)
 - [tests/TestCase.php:7-10](file://tests/TestCase.php#L7-L10)
 - [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
 - [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
 - [tests/Unit/ConversationStatusTest.php:1-57](file://tests/Unit/ConversationStatusTest.php#L1-L57)
-- [tests/Feature/ChatTest.php:1-934](file://tests/Feature/ChatTest.php#L1-L934)
+- [tests/Feature/ChatTest.php:1-968](file://tests/Feature/ChatTest.php#L1-L968)
 - [tests/Unit/McpClientServiceTest.php:1-193](file://tests/Unit/McpClientServiceTest.php#L1-L193)
 - [tests/Unit/McpToolsTest.php:1-236](file://tests/Unit/McpToolsTest.php#L1-L236)
 - [tests/Unit/ToolProxyTest.php:1-313](file://tests/Unit/ToolProxyTest.php#L1-L313)
@@ -1179,6 +1242,7 @@ Controller --> Routes["Web Routes"]
     - Efficient conversation and message creation patterns
     - Pagination limits (50 conversations) for performance optimization
     - Message ordering optimization with database-level sorting
+    - **Updated**: User-scoped conversation testing with efficient ownership validation
   - MCP client service performance considerations:
     - Connection pooling and reuse strategies
     - Retry logic optimization with exponential backoff
@@ -1215,6 +1279,9 @@ Common pitfalls and remedies:
     - Conversation persistence - validate foreign key relationships and timestamps
     - Pagination limit issues - verify 50-conversation limit in controller and model
     - Message ordering problems - check created_at asc sorting in controller and model
+    - **Updated**: Authentication redirect failures - verify route definitions and redirect logic
+    - **Updated**: API endpoint security failures - verify authentication middleware and 401 status handling
+    - **Updated**: User-scoped conversation failures - verify ownership validation and user ID scoping
   - MCP client troubleshooting:
     - Connection initialization failures - verify MCP server availability and command configuration
     - Tool call errors - check argument validation and result extraction logic
@@ -1238,6 +1305,7 @@ Common pitfalls and remedies:
 The project's testing infrastructure combines Pest's expressive DSL with Laravel's robust testing toolkit, now significantly enhanced with comprehensive authentication testing, action class testing, DTO validation, enum functionality testing, ViewModel operations, and MCP client integration. The addition of over 500 lines of ChatTest.php provides extensive coverage of chat interface, message processing, validation, error handling, AI agent integration, MCP tool integration, and enhanced conversation management with pagination limits (50 conversations), message ordering validation, and JSON response structure testing. The new comprehensive test suites cover:
 
 - **Authentication Testing**: Complete coverage of login, registration, password reset, email verification, and password confirmation flows
+- **Post-Login Redirect Testing**: **Updated**: Validates redirect behavior after successful authentication
 - **Action Class Testing**: Comprehensive validation of business logic operations (Create, Get, List, Send Message actions)
 - **DTO Validation Testing**: Type-safe data transfer object validation with immutability enforcement
 - **Enum Functionality Testing**: Type-safe status and role management with helper methods
@@ -1245,6 +1313,7 @@ The project's testing infrastructure combines Pest's expressive DSL with Laravel
 - **MCP Client Service Testing**: Connection management, tool calling, error handling, and configuration validation
 - **MCP Tools Testing**: Database query, schema, documentation search, and PHP execution tools
 - **Tool Proxy Testing**: Sophisticated mocking strategies for MCP tool integration
+- **Enhanced Chat Functionality Testing**: **Updated**: Authentication coverage, API endpoint security, and user-scoped conversation testing
 
 The configuration emphasizes speed and isolation via in-memory SQLite, while the Pest bootstrap and shared expectations streamline Feature test authoring. Following the best practices outlined here ensures maintainable, readable, and performant tests that integrate smoothly with AI-assisted development and CI pipelines.
 
@@ -1253,11 +1322,12 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 ### Practical Examples Index
 - Feature test example path: [tests/Feature/ExampleTest.php:1-8](file://tests/Feature/ExampleTest.php#L1-L8)
 - Authentication test path: [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- Post-login redirect test path: [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - Action class test path: [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
 - DTO validation test path: [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
 - Enum functionality test path: [tests/Unit/ConversationStatusTest.php:1-57](file://tests/Unit/ConversationStatusTest.php#L1-L57)
 - ViewModel test path: [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
-- Chat functionality test path: [tests/Feature/ChatTest.php:1-934](file://tests/Feature/ChatTest.php#L1-L934)
+- Chat functionality test path: [tests/Feature/ChatTest.php:1-968](file://tests/Feature/ChatTest.php#L1-L968)
 - Markdown rendering test path: [tests/Feature/MarkdownRenderingTest.php:1-116](file://tests/Feature/MarkdownRenderingTest.php#L1-L116)
 - Unit test example path: [tests/Unit/ExampleTest.php:1-6](file://tests/Unit/ExampleTest.php#L1-L6)
 - Pest bootstrap path: [tests/Pest.php:1-50](file://tests/Pest.php#L1-L50)
@@ -1280,6 +1350,7 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 
 ### Comprehensive Testing Coverage Matrix
 - **Authentication Testing**: ✓ Complete coverage of login, registration, password reset, email verification, and password confirmation flows
+- **Post-Login Redirect Testing**: ✓ **Updated**: Validates redirect behavior after successful authentication
 - **Action Class Testing**: ✓ Comprehensive validation of Create, Get, List, and Send Message actions with business logic
 - **DTO Validation Testing**: ✓ Type-safe data transfer object validation with immutability and readonly enforcement
 - **Enum Functionality Testing**: ✓ Type-safe status and role management with helper methods and backed value compatibility
@@ -1303,31 +1374,19 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - **MCP Tool Testing**: ✓ Database query, schema, documentation search, and PHP execution tools
 - **MCP Client Testing**: ✓ Connection management, tool calling, error handling, and configuration validation
 - **Tool Proxy Testing**: ✓ Sophisticated mocking strategies for MCP tool integration
+- **Authentication Coverage**: ✓ **Updated**: Unauthenticated access validation and redirect behavior
+- **API Endpoint Security**: ✓ **Updated**: 401 status validation for unauthenticated API requests
+- **User-Scoped Conversation Testing**: ✓ **Updated**: Ownership validation and user ID scoping
 
 **Section sources**
 - [tests/Feature/Auth/AuthenticationTest.php:1-42](file://tests/Feature/Auth/AuthenticationTest.php#L1-L42)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:1-30](file://tests/Feature/Auth/PostLoginRedirectTest.php#L1-L30)
 - [tests/Feature/CreateConversationActionTest.php:1-64](file://tests/Feature/CreateConversationActionTest.php#L1-L64)
-- [tests/Feature/GetConversationActionTest.php:1-78](file://tests/Feature/GetConversationActionTest.php#L1-L78)
-- [tests/Feature/ListConversationsActionTest.php:1-61](file://tests/Feature/ListConversationsActionTest.php#L1-L61)
-- [tests/Feature/SendMessageActionTest.php:1-213](file://tests/Feature/SendMessageActionTest.php#L1-L213)
-- [tests/Unit/ConversationDataTest.php:1-62](file://tests/Unit/ConversationDataTest.php#L1-L62)
-- [tests/Unit/MessageDataTest.php:1-61](file://tests/Unit/MessageDataTest.php#L1-L61)
-- [tests/Unit/ApiResponseDataTest.php:1-109](file://tests/Unit/ApiResponseDataTest.php#L1-L109)
-- [tests/Unit/SendMessageResponseTest.php:1-171](file://tests/Unit/SendMessageResponseTest.php#L1-L171)
-- [tests/Unit/ConversationStatusTest.php:1-57](file://tests/Unit/ConversationStatusTest.php#L1-L57)
-- [tests/Unit/MessageRoleTest.php:1-44](file://tests/Unit/MessageRoleTest.php#L1-L44)
-- [tests/Feature/ChatViewModelTest.php:1-112](file://tests/Feature/ChatViewModelTest.php#L1-L112)
-- [tests/Feature/ChatTest.php:18-77](file://tests/Feature/ChatTest.php#L18-L77)
-- [tests/Feature/ChatTest.php:86-171](file://tests/Feature/ChatTest.php#L86-L171)
-- [tests/Feature/ChatTest.php:178-236](file://tests/Feature/ChatTest.php#L178-L236)
-- [tests/Feature/ChatTest.php:243-308](file://tests/Feature/ChatTest.php#L243-L308)
-- [tests/Feature/ChatTest.php:315-359](file://tests/Feature/ChatTest.php#L315-L359)
-- [tests/Feature/ChatTest.php:366-404](file://tests/Feature/ChatTest.php#L366-L404)
-- [tests/Feature/ChatTest.php:411-470](file://tests/Feature/ChatTest.php#L411-L470)
-- [tests/Feature/ChatTest.php:477-534](file://tests/Feature/ChatTest.php#L477-L534)
-- [tests/Feature/ChatTest.php:541-589](file://tests/Feature/ChatTest.php#L541-L589)
-- [tests/Feature/ChatTest.php:747-800](file://tests/Feature/ChatTest.php#L747-L800)
-- [tests/Feature/ChatTest.php:843-934](file://tests/Feature/ChatTest.php#L843-L934)
+- [tests/Feature/GetConversationActionTest.php:1-111](file://tests/Feature/GetConversationActionTest.php#L1-L111)
+- [tests/Feature/GetConversationActionTest.php:85-110](file://tests/Feature/GetConversationActionTest.php#L85-L110)
+- [tests/Feature/ChatTest.php:51-82](file://tests/Feature/ChatTest.php#L51-L82)
+- [tests/Feature/ChatTest.php:487-593](file://tests/Feature/ChatTest.php#L487-L593)
+- [tests/Feature/ChatTest.php:747-968](file://tests/Feature/ChatTest.php#L747-L968)
 - [tests/Unit/McpClientServiceTest.php:16-193](file://tests/Unit/McpClientServiceTest.php#L16-L193)
 - [tests/Unit/McpToolsTest.php:18-236](file://tests/Unit/McpToolsTest.php#L18-L236)
 - [tests/Unit/ToolProxyTest.php:19-313](file://tests/Unit/ToolProxyTest.php#L19-L313)
@@ -1341,14 +1400,15 @@ The configuration emphasizes speed and isolation via in-memory SQLite, while the
 - **Controller Endpoint Testing**: ✓ Tests all conversation-related endpoints (list, create, get, show)
 - **Performance Optimization**: ✓ Tests pagination and message ordering for performance scalability
 - **Action Class Integration**: ✓ Tests all conversation operations through action classes with proper validation
+- **User Ownership Validation**: ✓ **Updated**: Tests conversation retrieval returns null for conversations owned by other users
+- **API Security Testing**: ✓ **Updated**: Tests 401 status for unauthenticated API requests
+- **Authentication Redirect Testing**: ✓ **Updated**: Tests redirect behavior after successful login and registration
 
 **Section sources**
-- [tests/Feature/ChatTest.php:418-480](file://tests/Feature/ChatTest.php#L418-L480)
-- [tests/Feature/ChatTest.php:482-540](file://tests/Feature/ChatTest.php#L482-L540)
-- [tests/Feature/ChatTest.php:541-556](file://tests/Feature/ChatTest.php#L541-L556)
-- [tests/Feature/ChatTest.php:655-685](file://tests/Feature/ChatTest.php#L655-L685)
-- [tests/Feature/CreateConversationActionTest.php:10-63](file://tests/Feature/CreateConversationActionTest.php#L10-L63)
-- [tests/Feature/GetConversationActionTest.php:10-77](file://tests/Feature/GetConversationActionTest.php#L10-L77)
-- [tests/Feature/ListConversationsActionTest.php:9-60](file://tests/Feature/ListConversationsActionTest.php#L9-L60)
+- [tests/Feature/ChatTest.php:487-593](file://tests/Feature/ChatTest.php#L487-L593)
+- [tests/Feature/GetConversationActionTest.php:85-110](file://tests/Feature/GetConversationActionTest.php#L85-L110)
+- [tests/Feature/Auth/PostLoginRedirectTest.php:6-29](file://tests/Feature/Auth/PostLoginRedirectTest.php#L6-L29)
+- [tests/Feature/Auth/AuthenticationTest.php:32](file://tests/Feature/Auth/AuthenticationTest.php#L32)
+- [tests/Feature/Auth/AuthenticationTest.php:99](file://tests/Feature/Auth/AuthenticationTest.php#L99)
 - [app/Http/Controllers/ChatController.php:40-102](file://app/Http/Controllers/ChatController.php#L40-L102)
 - [app/Models/Conversation.php:26-29](file://app/Models/Conversation.php#L26-L29)
