@@ -9,16 +9,16 @@
 
 ## 2. Validation and Controllers
 
-- [ ] 2.1 Create StoreProjectRequest with validation rules for name, description, and status
-- [ ] 2.2 Create UpdateProjectRequest with validation rules matching StoreProjectRequest
-- [ ] 2.3 Create ProjectController resource controller with all CRUD methods
-- [ ] 2.4 Implement index() method scoped to auth()->user()->projects()
-- [ ] 2.5 Implement create() method to show creation form
-- [ ] 2.6 Implement store() method with ownership via auth()->user()->projects()->create()
-- [ ] 2.7 Implement show() method with ownership verification
-- [ ] 2.8 Implement edit() method with ownership verification
-- [ ] 2.9 Implement update() method with ownership verification and validation
-- [ ] 2.10 Implement destroy() method with ownership verification
+- [x] 2.1 Create StoreProjectRequest with validation rules for name, description, and status
+- [x] 2.2 Create UpdateProjectRequest with validation rules matching StoreProjectRequest
+- [x] 2.3 Create ProjectController resource controller with all CRUD methods
+- [x] 2.4 Implement index() method scoped to auth()->user()->projects()
+- [x] 2.5 Implement create() method to show creation form
+- [x] 2.6 Implement store() method with ownership via auth()->user()->projects()->create()
+- [x] 2.7 Implement show() method with ownership verification
+- [x] 2.8 Implement edit() method with ownership verification
+- [x] 2.9 Implement update() method with ownership verification and validation
+- [x] 2.10 Implement destroy() method with ownership verification
 
 ## 3. Routes and Navigation
 
