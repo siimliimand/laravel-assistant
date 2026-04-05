@@ -41,10 +41,10 @@
 
 ## 6. Configure Post-Login Redirect
 
-- [ ] 6.1 Update `.env` to set `HOME=/chat` or update RouteServiceProvider
-- [ ] 6.2 Test login redirects to `/chat` instead of `/dashboard`
-- [ ] 6.3 Test registration redirects to `/chat`
-- [ ] 6.4 (Optional) Customize dashboard view or remove if not needed
+- [x] 6.1 Update `.env` to set `HOME=/chat` or update RouteServiceProvider
+- [x] 6.2 Test login redirects to `/chat` instead of `/dashboard`
+- [x] 6.3 Test registration redirects to `/chat`
+- [x] 6.4 (Optional) Customize dashboard view or remove if not needed
 
 ## 7. Update Tests for Authentication
 
