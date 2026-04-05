@@ -15,11 +15,11 @@
 
 ## 3. Update Models with Relationships
 
-- [ ] 3.1 Add `conversations()` relationship to User model: `return $this->hasMany(Conversation::class)`
-- [ ] 3.2 Add `user()` relationship to Conversation model: `return $this->belongsTo(User::class)`
-- [ ] 3.3 Add cascade delete to User model (optional): override `delete()` or use model events
-- [ ] 3.4 Update Conversation factory to create associated user: `user_id: User::factory()`
-- [ ] 3.5 Update User factory if needed for test scenarios
+- [x] 3.1 Add `conversations()` relationship to User model: `return $this->hasMany(Conversation::class)`
+- [x] 3.2 Add `user()` relationship to Conversation model: `return $this->belongsTo(User::class)`
+- [x] 3.3 Add cascade delete to User model (optional): override `delete()` or use model events
+- [x] 3.4 Update Conversation factory to create associated user: `user_id: User::factory()`
+- [x] 3.5 Update User factory if needed for test scenarios
 
 ## 4. Update Actions to Scope by Authenticated User
 

@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\ConversationStatus;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +21,7 @@ class ConversationFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::factory(),
             'title' => fake()->sentence(3),
             'status' => ConversationStatus::Active,
         ];
