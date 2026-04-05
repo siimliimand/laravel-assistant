@@ -74,8 +74,8 @@
 
 ## 9. Documentation and Cleanup
 
-- [ ] 9.1 Update AGENTS.md if needed with auth workflow notes
-- [ ] 9.2 Review and update any outdated comments in Actions
-- [ ] 9.3 Verify all routes are named correctly: `php artisan route:list`
-- [ ] 9.4 Check browser logs for JavaScript errors during auth flow
-- [ ] 9.5 Final test suite run: `php artisan test --compact` (all green)
+- [x] 9.1 Update AGENTS.md if needed with auth workflow notes
+- [x] 9.2 Review and update any outdated comments in Actions
+- [x] 9.3 Verify all routes are named correctly: `php artisan route:list`
+- [x] 9.4 Check browser logs for JavaScript errors during auth flow
+- [x] 9.5 Final test suite run: `php artisan test --compact` (all green)

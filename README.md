@@ -4,6 +4,8 @@ DevBot is an AI-powered development assistant built with Laravel. It provides an
 
 ## Features
 
+- **User Authentication** - Email/password authentication with Laravel Breeze
+- **User Isolation** - Each user has their own private conversation history
 - **Interactive Chat Interface** - Modern, responsive UI with real-time messaging
 - **Conversation Management** - Create, switch, and search through conversation history
 - **AI-Powered Responses** - Powered by Laravel AI with support for multiple providers (Anthropic, OpenAI, Gemini, etc.)
@@ -144,10 +146,28 @@ npm run dev
 ### Accessing the Application
 
 1. Navigate to `http://localhost:8000`
-2. Click "New Chat" to start a conversation
-3. Ask questions about Laravel, PHP, or development topics
+2. **Register** a new account or **Login** with existing credentials
+3. After authentication, you'll be redirected to the chat interface
+4. Click "New Chat" to start a conversation
+5. Ask questions about Laravel, PHP, or development topics
+
+**Note:** All conversations are private to your user account. Other users cannot access your conversation history.
 
 ### Available Routes
+
+#### Authentication Routes
+
+| Route              | Method | Description                  |
+| ------------------ | ------ | ---------------------------- |
+| `/login`           | GET    | Login form                   |
+| `/login`           | POST   | Process login                |
+| `/register`        | GET    | Registration form            |
+| `/register`        | POST   | Process registration         |
+| `/logout`          | POST   | Logout                       |
+| `/forgot-password` | GET    | Password reset request form  |
+| `/reset-password`  | GET    | Password reset form          |
+
+#### Chat Routes (Requires Authentication)
 
 | Route            | Method | Description                          |
 | ---------------- | ------ | ------------------------------------ |

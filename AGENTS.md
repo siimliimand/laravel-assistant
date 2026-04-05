@@ -47,6 +47,16 @@ This project has domain-specific skills available. You MUST activate the relevan
 - Stick to existing directory structure; don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
+## Authentication Workflow
+
+- All chat-related routes require authentication via Laravel Breeze (email/password).
+- Conversations are scoped to authenticated users via `user_id` foreign key.
+- Always use `auth()->id()` when creating or querying conversations.
+- All Actions (ListConversationsAction, GetConversationAction, CreateConversationAction, SendMessageAction, PrepareChatViewAction) automatically scope to the authenticated user.
+- After login/registration, users are redirected to `/chat` (not `/dashboard`).
+- Tests must use `actingAs($user)` to authenticate before testing chat features.
+- User model has `conversations()` relationship; Conversation model has `user()` relationship.
+
 ## Frontend Bundling
 
 - If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
